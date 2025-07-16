@@ -1,0 +1,39 @@
+# Python .gitignore
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+*.sqlite3
+*.db
+*.env
+.env*
+*.venv/
+venv/
+ENV/
+.envrc
+.mypy_cache/
+.pytest_cache/
+.ipynb_checkpoints/
+*.coverage
+.coverage
+htmlcov/
+.tox/
+.cache/
+*.bak
+*.swp
+*.swo
+.DS_Store
+# VS Code
+.vscode/
+# Jupyter
+*.ipynb
+# MacOS
+*.DS_Store
+.bash_history
+tmp/
