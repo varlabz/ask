@@ -10,7 +10,7 @@ authors = [
     { name = "varlabz", email = "varlabz@umdoze.com" }
 ]
 dependencies = [
-    "pydantic-ai[mcp]",
+    "pydantic-ai",
     "mcp[cli]",
     "pyyaml"
 ]
