@@ -192,6 +192,6 @@ llm:
 - **Multi-provider LLM support**: OpenAI, Ollama, OpenRouter
 - **MCP server integration**: stdio, SSE, HTTP transports
 - **Dual mode operation**: CLI agent + MCP server
-- **Rich tool ecosystem**: Web search, file ops, memory, YouTube transcripts
+- **Rich tool ecosystem**: Web search, file ops, memory, YouTube transcripts, any MCP tool
 - **Environment variable support**: Secure API key management
 - **YAML configuration**: Simple, readable config format
