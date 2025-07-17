@@ -35,7 +35,6 @@ def create_agent(config: Config) -> AgentASK:
         model_settings=model_settings,
     )
 
-
 async def run_agent(prompt: str, agent: AgentASK) -> str:
     """Run the agent and return the output."""
     if agent.use_mcp_servers:

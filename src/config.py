@@ -24,12 +24,21 @@ class LLMConfig(BaseModel):
 
     @field_validator("api_key", mode="before")
     def resolve_api_key(cls, v):
-        if isinstance(v, str) and v.startswith("env/"):
+        if isinstance(v, str) and v.startswith("env:"):
             env_var = v[4:]
             env_val = os.environ.get(env_var)
             if env_val is None:
                 raise ValueError(f"Environment variable '{env_var}' not set for '{v}'")
             return env_val
+        elif isinstance(v, str) and v.startswith("file:"):
+            file_path = v[5:]
+            # if file start with a tilde, expand it
+            if file_path.startswith("~"): file_path = os.path.expanduser(file_path)
+            try:
+                with open(file_path, 'r') as f:
+                    return f.read().strip()
+            except FileNotFoundError:
+                raise ValueError(f"File '{file_path}' not found for '{v}'")
         return v
 
 class MCPServerConfig(BaseModel):

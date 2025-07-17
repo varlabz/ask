@@ -13,7 +13,7 @@ agent:
   instructions: "Test instructions."
 llm:
   model: "openai:gpt-4o"
-  api_key: "env/TEST_API_KEY"
+  api_key: "env:TEST_API_KEY"
 '''
     config_path = tmp_path / "config.yaml"
     config_path.write_text(config_yaml)
@@ -30,7 +30,7 @@ agent:
   instructions: "Test instructions."
 llm:
   model: "openai:gpt-4o"
-  api_key: "env/NOT_SET_ENV"
+  api_key: "env:NOT_SET_ENV"
 '''
     config_path = tmp_path / "config.yaml"
     config_path.write_text(config_yaml)
@@ -58,7 +58,7 @@ agent:
   instructions: 12345  # Should be str
 llm:
   model: 67890         # Should be str
-  api_key: "env/TEST_API_KEY"
+  api_key: "env:TEST_API_KEY"
 '''
     config_path = tmp_path / "config.yaml"
     config_path.write_text(config_yaml)
@@ -72,7 +72,7 @@ def test_load_config_missing_required(tmp_path):
     config_yaml = '''
 llm:
   model: "openai:gpt-4o"
-  api_key: "env/TEST_API_KEY"
+  api_key: "env:TEST_API_KEY"
 '''
     config_path = tmp_path / "config.yaml"
     config_path.write_text(config_yaml)
@@ -88,7 +88,7 @@ agent:
   extra_field: "should not be here"
 llm:
   model: "openai:gpt-4o"
-  api_key: "env/TEST_API_KEY"
+  api_key: "env:TEST_API_KEY"
   another_extra: "nope"
 '''
     config_path = tmp_path / "config.yaml"
