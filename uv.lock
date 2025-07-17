@@ -108,7 +108,7 @@ wheels = [
 
 [[package]]
 name = "ask"
-version = "0.1.4"
+version = "0.2.1"
 source = { editable = "." }
 dependencies = [
     { name = "mcp", extra = ["cli"] },
@@ -125,7 +125,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "mcp", extras = ["cli"] },
-    { name = "pydantic-ai", extras = ["mcp"] },
+    { name = "pydantic-ai" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pytest-asyncio", marker = "extra == 'dev'" },
     { name = "pyyaml" },
