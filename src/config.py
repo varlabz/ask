@@ -18,9 +18,9 @@ class LLMConfig(BaseModel):
     model: str
     api_key: Optional[str] = None
     base_url: Optional[str] = None
-    temperature: float = 0.7
-    max_tokens: int = 1000
-    timeout: float = 30.0
+    temperature: Optional[float] = None
+    max_tokens: Optional[int] = None
+    timeout: Optional[float] = None
 
     @field_validator("api_key", mode="before")
     def resolve_api_key(cls, v):
