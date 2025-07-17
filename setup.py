@@ -11,8 +11,8 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "cli=src.cli_main:cli_main",
-            "mcp=src.mcp_main:mcp_main"
+            "cli=cli_main:cli_main",
+            "mcp=mcp_main:mcp_main"
         ]
     },
     python_requires=">=3.8",
