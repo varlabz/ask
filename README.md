@@ -1,10 +1,11 @@
+
 # ASK Agent Swiss Knife
 
 **PydanticAI-powered CLI agent with Model Context Protocol (MCP) server support**
 
 ASK is a versatile AI agent that works both as a CLI tool with MCP server integrations and as an MCP server itself to extend other LLMs like Claude and VS Code Copilot.
 
-## 🚀 Quick Usage with uvx
+## Quick Usage with uvx
 
 Use ASK directly without installation:
 
@@ -27,7 +28,7 @@ llm:
 uvx --from git+https://github.com/varlabz/ask cli -c .ask.yaml "Explain machine learning"
 ```
 
-## 📋 Configuration
+## Configuration
 
 ### Simple .ask.yaml Configuration
 
@@ -45,7 +46,7 @@ llm:
 mcp:
   fetch:
     command: ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
-    
+  
   search:
     enabled: true
     command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
@@ -76,23 +77,23 @@ mcp:
   filesystem:
     enabled: true
     command: ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
-    
+  
   memory:
     enabled: true
     command: ["npx", "-y", "@modelcontextprotocol/server-memory"]
-    
+  
   fetch:
     enabled: true
     command: ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
-    
+  
   youtube:
     enabled: true
     command: ["npx", "-y", "https://github.com/varlabz/youtube-mcp", "--mcp"]
-      
+    
   sequential_thinking:
     enabled: true
     command: ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
-    
+  
   searxng:
     enabled: true
     command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
@@ -100,7 +101,7 @@ mcp:
       SEARX_HOST: "http://localhost:8080"
 ```
 
-## 🔧 Use as MCP Server
+## Use as MCP Server
 
 ASK can extend other LLMs by running as an MCP server, providing access to your configured AI agent.
 
@@ -146,7 +147,7 @@ Add to VS Code settings (`mcp.json`):
 }
 ```
 
-## 🛠 Development Setup
+## Development Setup
 
 ### Clone and Setup
 
@@ -168,7 +169,7 @@ pytest
 pip install -e .
 ```
 
-## 🔑 Environment Variables
+## Environment Variables
 
 Set API keys as environment variables:
 
@@ -186,7 +187,7 @@ llm:
   api_key: "env/OPENAI_API_KEY"
 ```
 
-## 📖 Features
+## Features
 
 - **Multi-provider LLM support**: OpenAI, Ollama, OpenRouter
 - **MCP server integration**: stdio, SSE, HTTP transports
