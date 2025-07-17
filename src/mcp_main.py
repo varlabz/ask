@@ -2,24 +2,32 @@
 mcp_main.py CLI entry point for MCP client
 """
 import argparse
-import sys
 
 from config import load_config
-from mcp_client import create_mcp_servers
+from mcp.server.fastmcp import FastMCP
+from pydantic_ai import Agent
+
+from agent import create_agent, run_agent
+
+server = FastMCP('ASK Server')
+agent: Agent = None
+
+@server.tool()
+async def ask(request: str) -> str:
+    """ASK request handler"""
+    return await run_agent(request, agent)
 
 def mcp_main() -> None:
     """Main function for MCP CLI entry point.
-    
-    Parses arguments, loads config, and initializes MCP clients.
     """
-    parser = argparse.ArgumentParser(description="Run MCP client.")
+    parser = argparse.ArgumentParser(description="Run MCP server.")
     parser.add_argument('-c', '--config', type=str, default=".ask.yaml", help='Path to ask config yaml')
     args = parser.parse_args()
 
     config = load_config(args.config)
-    mcp_config = getattr(config, 'mcp', None)
-    clients = create_mcp_servers(mcp_config)
-    print(f"Initialized {len(clients)} MCP client(s).")
+    global agent
+    agent = create_agent(config)
+    server.run()
 
 if __name__ == "__main__":
     mcp_main()
