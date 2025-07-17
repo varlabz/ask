@@ -1,27 +1,41 @@
-# ASK Agent - Python Package
+# ASK Agent Swiss Knife
 
-A PydanticAI-based agent with Model Context Protocol (MCP) server support.
+**PydanticAI-powered CLI agent with Model Context Protocol (MCP) server support**
 
-## Features
+ASK is a versatile AI agent that works both as a CLI tool with MCP server integrations and as an MCP server itself to extend other LLMs like Claude and VS Code Copilot.
 
-- **Multi-Provider LLM Support**: OpenAI, Ollama, OpenRouter
-- **MCP Server Integration**: Support for stdio, SSE, and HTTP transports
-- **Configuration Management**: YAML-based configuration with environment variable support
-- **CLI Interface**: Command-line tools for running agents and MCP clients
-- **Type Safety**: Built with Pydantic for robust type checking
+## 🚀 Quick Usage with uvx
 
-## Installation
+Use ASK directly without installation:
 
 ```bash
-pip install -e .
+uvx --from git+https://github.com/varlabz/ask cli "What is Python?"
 ```
 
-## Quick Start
+With with a simple config:
 
-1. **Create a configuration file** (`.ask.yaml`):
+```bash
+# Create minimal config
+echo "agent:
+  instructions: 'You are a helpful AI assistant.'
+llm:
+  model: 'ollama:qwen2.5:14b'
+  base_url: 'http://localhost:11434/v1'
+  temperature: 0.1" > .ask.yaml
+
+# Run with uvx
+uvx --from git+https://github.com/varlabz/ask cli -c .ask.yaml "Explain machine learning"
+```
+
+## 📋 Configuration
+
+### Simple .ask.yaml Configuration
+
+Create a minimal `.ask.yaml` file:
+
 ```yaml
 agent:
-  instructions: "You are a helpful AI assistant."
+  instructions: "You are a helpful AI assistant with access to web search and file operations."
 
 llm:
   model: "ollama:qwen2.5:14b"
@@ -30,83 +44,153 @@ llm:
 
 mcp:
   fetch:
-    enabled: true
-    transport: "stdio"
     command: ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
+    
+  search:
+    enabled: true
+    command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
+    env:
+      SEARX_HOST: "http://localhost:8080"
 ```
 
-2. **Run the agent**:
+### Complete Configuration Example
+
+```yaml
+agent:
+  instructions: |
+    You are a helpful AI assistant with access to various tools and services.
+    Provide accurate, helpful, and concise responses. When using tools, explain
+    what you're doing and why. Be proactive in suggesting useful tools when appropriate.
+
+llm:
+  model: "ollama:qwen2.5:14b"
+  base_url: "http://localhost:11434/v1"
+  temperature: 0.1
+  # Alternative providers:
+  # model: "openai:gpt-4o"
+  # api_key: "env/OPENAI_API_KEY"
+  # model: "openrouter:anthropic/claude-3.5-sonnet"
+  # api_key: "env/OPENROUTER_API_KEY"
+
+mcp:
+  filesystem:
+    enabled: true
+    command: ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    
+  memory:
+    enabled: true
+    command: ["npx", "-y", "@modelcontextprotocol/server-memory"]
+    
+  fetch:
+    enabled: true
+    command: ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
+    
+  youtube:
+    enabled: true
+    command: ["npx", "-y", "https://github.com/varlabz/youtube-mcp", "--mcp"]
+      
+  sequential_thinking:
+    enabled: true
+    command: ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
+    
+  searxng:
+    enabled: true
+    command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
+    env:
+      SEARX_HOST: "http://localhost:8080"
+```
+
+## 🔧 Use as MCP Server
+
+ASK can extend other LLMs by running as an MCP server, providing access to your configured AI agent.
+
+### Claude Desktop Configuration
+
+Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "ask": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/varlabz/ask",
+        "ask",
+        "-c",
+        "/path/to/your/.ask.yaml"
+      ]
+    }
+  }
+}
+```
+
+### VS Code MCP Extension Configuration
+
+Add to VS Code settings (`mcp.json`):
+
+```json
+{
+  "mcp.servers": {
+    "ask": {
+      "command": "uvx",
+      "args": [
+        "--from", 
+        "git+https://github.com/varlabz/ask",
+        "ask",
+        "-c",
+        "${workspaceFolder}/.ask.yaml"
+      ]
+    }
+  }
+}
+```
+
+## 🛠 Development Setup
+
+### Clone and Setup
+
 ```bash
-cli -c .ask.yaml "What is the weather like today?"
+git clone https://github.com/varlabz/ask.git
+cd ask
+uv sync --dev
 ```
 
-3. **Run MCP client**:
+### Run Tests
+
 ```bash
-mcp -c .ask.yaml
+pytest 
 ```
 
-## Configuration
+### Local Installation
 
-### Agent Configuration
-- `instructions`: System prompt for the agent
-
-### LLM Configuration
-- `model`: Format: `provider:model_name` (e.g., `"openai:gpt-4o"`, `"ollama:llama2"`)
-- `api_key`: API key (supports `env/VARIABLE_NAME` format)
-- `base_url`: Custom endpoint URL
-- `temperature`: Sampling temperature (0.0 - 2.0)
-
-### MCP Server Configuration
-Each MCP server can be configured with:
-- `enabled`: Whether to enable the server
-- `transport`: Transport type (`stdio`, `sse`, `http`)
-- `command`: Command array for stdio transport
-- `url`: URL for SSE/HTTP transports
-- `tool_prefix`: Prefix for tool names
-- `cwd`: Working directory for stdio commands
-
-## Project Structure
-
-```
-src/
-├── __init__.py          # Package initialization
-├── agent.py             # PydanticAI agent wrapper
-├── cli.py               # CLI entry point
-├── config.py            # Configuration models
-├── mcp_cli.py           # MCP CLI entry point  
-├── mcp_client.py        # MCP server management
-└── model.py             # LLM model creation
-
-tests/
-├── test_config.py       # Configuration tests
-├── test_llm_config.py   # LLM configuration tests
-└── test_mcp_client.py   # MCP client tests
-```
-
-## Development
-
-### Running Tests
 ```bash
-python -m pytest tests/ -v
+pip install -e .
 ```
 
-### Code Quality
-The package includes:
-- Type hints throughout
-- Comprehensive test coverage
-- Pydantic data validation
-- Error handling with descriptive messages
+## 🔑 Environment Variables
 
-## API Reference
+Set API keys as environment variables:
 
-### Core Functions
+```bash
+export OPENAI_API_KEY="your-openai-key"
+export OPENROUTER_API_KEY="your-openrouter-key"
+export SEARX_HOST="http://localhost:8080"
+```
 
-- `create_agent(config: Config) -> AgentASK`: Create a configured agent
-- `run_agent(prompt: str, agent: AgentASK) -> str`: Run agent with prompt
-- `load_config(path: str) -> Config`: Load configuration from YAML
-- `create_model(llm_config: LLMConfig) -> OpenAIModel`: Create LLM model
-- `create_mcp_servers(mcp_config: Dict[str, MCPServerConfig]) -> List[...]`: Create MCP servers
+Reference them in config:
 
-## License
+```yaml
+llm:
+  model: "openai:gpt-4o"
+  api_key: "env/OPENAI_API_KEY"
+```
 
-This project is released under the MIT License.
+## 📖 Features
+
+- **Multi-provider LLM support**: OpenAI, Ollama, OpenRouter
+- **MCP server integration**: stdio, SSE, HTTP transports
+- **Dual mode operation**: CLI agent + MCP server
+- **Rich tool ecosystem**: Web search, file ops, memory, YouTube transcripts
+- **Environment variable support**: Secure API key management
+- **YAML configuration**: Simple, readable config format
