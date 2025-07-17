@@ -13,13 +13,13 @@ dependencies = [
     "pydantic-ai[mcp]",
     "pyyaml"
 ]
+requires-python = ">=3.13"
 
 [project.optional-dependencies]
 dev = [
     "pytest",
     "pytest-asyncio"
 ]
-requires-python = ">=3.8"
 
 [project.scripts]
 cli = "src.cli_main:cli_main"
