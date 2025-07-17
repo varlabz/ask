@@ -4,10 +4,10 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 from pydantic_ai.mcp import MCPServerSSE, MCPServerStreamableHTTP, MCPServerStdio
-from mcp_client import create_mcp_clients
+from mcp_client import create_mcp_servers
 from config import MCPServerConfig
 
-class TestCreateMCPClients:
+class TestCreateMCPServers:
     def test_sse_positive(self):
         config = {
             "sse_server": MCPServerConfig(
@@ -16,7 +16,7 @@ class TestCreateMCPClients:
                 url="http://localhost:3001/sse",
             )
         }
-        clients = create_mcp_clients(config)
+        clients = create_mcp_servers(config)
         assert len(clients) == 1
         assert isinstance(clients[0], MCPServerSSE)
         assert clients[0].url == "http://localhost:3001/sse"
@@ -29,7 +29,7 @@ class TestCreateMCPClients:
                 url="http://localhost:8000/mcp",
             )
         }
-        clients = create_mcp_clients(config)
+        clients = create_mcp_servers(config)
         assert len(clients) == 1
         assert isinstance(clients[0], MCPServerStreamableHTTP)
         assert clients[0].url == "http://localhost:8000/mcp"
@@ -42,7 +42,7 @@ class TestCreateMCPClients:
                 command=["python", "server.py"],
             )
         }
-        clients = create_mcp_clients(config)
+        clients = create_mcp_servers(config)
         assert len(clients) == 1
         assert isinstance(clients[0], MCPServerStdio)
         assert clients[0].args == ["server.py"]
@@ -55,7 +55,7 @@ class TestCreateMCPClients:
                 url="http://localhost:3001/sse",
             )
         }
-        clients = create_mcp_clients(config)
+        clients = create_mcp_servers(config)
         assert clients == []
 
     def test_missing_url_sse(self):
@@ -67,7 +67,7 @@ class TestCreateMCPClients:
             )
         }
         with pytest.raises(ValueError, match="SSE transport requires 'url'"):
-            create_mcp_clients(config)
+            create_mcp_servers(config)
 
     def test_missing_url_http(self):
         config = {
@@ -78,7 +78,7 @@ class TestCreateMCPClients:
             )
         }
         with pytest.raises(ValueError, match="HTTP transport requires 'url'"):
-            create_mcp_clients(config)
+            create_mcp_servers(config)
 
     def test_missing_command_stdio(self):
         config = {
@@ -89,5 +89,5 @@ class TestCreateMCPClients:
             )
         }
         with pytest.raises(ValueError, match="Stdio transport requires 'command'"):
-            create_mcp_clients(config)
+            create_mcp_servers(config)
 

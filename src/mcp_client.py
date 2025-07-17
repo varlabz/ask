@@ -1,8 +1,9 @@
 from typing import Dict, List, Optional, Union
 from pydantic_ai.mcp import MCPServerSSE, MCPServerStreamableHTTP, MCPServerStdio
+
 from config import MCPServerConfig
 
-def create_mcp_clients(mcp_config: Optional[Dict[str, MCPServerConfig]]) -> List[Union[MCPServerSSE, MCPServerStreamableHTTP, MCPServerStdio]]:
+def create_mcp_servers(mcp_config: Optional[Dict[str, MCPServerConfig]]) -> List[Union[MCPServerSSE, MCPServerStreamableHTTP, MCPServerStdio]]:
     """Create MCP client/server objects from config."""
     if not mcp_config:
         return []

@@ -1,19 +1,20 @@
 """
-cli.py
+cli_main.py
 
 CLI entry point for the agent. Run with:
-    python src/cli.py "Your prompt here"
+    python src/cli_main.py "Your prompt here"
 """
 import argparse
 import asyncio
 import sys
+
 from agent import run_agent, create_agent
 from config import load_config
 
-def main():
+def cli_main():
     """Main function for the CLI."""
     parser = argparse.ArgumentParser(description="Run agent.")
-    parser.add_argument('-c', '--config', type=str, default="config.yaml", help='Path to config yaml')
+    parser.add_argument('-c', '--config', type=str, default=".ask.yaml", help='Path to ask config yaml')
     parser.add_argument('-s', '--system-prompt', type=str, default=None, help='Overwrite system prompt/instructions')
     parser.add_argument('prompt', nargs='*', help='Prompt for the agent')
     args = parser.parse_args()
@@ -38,4 +39,4 @@ def main():
     print(result)
 
 if __name__ == '__main__':
-    main()
+    cli_main()

@@ -1,10 +1,11 @@
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.providers.openrouter import OpenRouterProvider
+
 from config import LLMConfig, ProviderEnum
 
 
-def create_model_from_llm_config(llm_config: LLMConfig) -> OpenAIModel:
+def create_model(llm_config: LLMConfig) -> OpenAIModel:
     """Create an OpenAIModel from an LLMConfig instance, selecting provider by model prefix.
     
     Args:
@@ -41,3 +42,15 @@ def create_model_from_llm_config(llm_config: LLMConfig) -> OpenAIModel:
         provider=provider,
     )
     return model
+
+
+def create_model_from_llm_config(llm_config: LLMConfig) -> OpenAIModel:
+    """Alias for create_model function for backward compatibility.
+    
+    Args:
+        llm_config: LLMConfig object containing model and provider settings.
+    
+    Returns:
+        OpenAIModel: Configured OpenAIModel instance.
+    """
+    return create_model(llm_config)

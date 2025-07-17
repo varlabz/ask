@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ask"
+version = "0.1.0"
+description = "ASK CLI/MCP"
+authors = [
+    { name = "varlabz", email = "varlabz@umdoze.com" }
+]
+dependencies = [
+    "pydantic-ai[mcp]",
+    "pyyaml"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio"
+]
+requires-python = ">=3.8"
+
+[project.scripts]
+cli = "src.cli_main:cli_main"
+mcp = "src.mcp_main:mcp_main"
