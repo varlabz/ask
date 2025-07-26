@@ -8,7 +8,7 @@ import argparse
 import asyncio
 import sys
 
-from agent import run_agent, create_agent
+from agent import create_agent
 from config import load_config
 
 def cli_main():
@@ -35,7 +35,7 @@ def cli_main():
         parser.print_help(file=sys.stderr)
         sys.exit(1)
 
-    result = asyncio.run(run_agent(prompt_str, agent))
+    result = asyncio.run(agent.run(prompt_str))
     print(result)
 
 if __name__ == '__main__':

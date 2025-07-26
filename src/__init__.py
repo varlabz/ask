@@ -2,7 +2,7 @@
 ASK - A PydanticAI-based agent with MCP server support.
 """
 
-from .agent import create_agent, run_agent, AgentASK
+from .agent import create_agent, AgentASK
 from .config import Config, load_config
 from .model import create_model
 from .mcp_client import create_mcp_servers
@@ -11,7 +11,6 @@ from .mcp_main import mcp_main
 
 __all__ = [
     "create_agent",
-    "run_agent", 
     "AgentASK",
     "Config",
     "load_config",

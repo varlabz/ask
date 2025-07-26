@@ -1,13 +1,11 @@
 """
 agent.py
-
-A streaming agent example using PydanticAI. Run with:
-    python src/agent.py --prompt "Your prompt here"
 """
+from functools import singledispatch
 from pydantic_ai import Agent
 from pydantic_ai.settings import ModelSettings
 
-from config import Config
+from config import Config, load_config
 from mcp_client import create_mcp_servers
 from model import create_model
 
@@ -18,7 +16,14 @@ class AgentASK(Agent):
         super().__init__(**kwargs)
         self.use_mcp_servers = bool(kwargs.get('mcp_servers'))
 
+    async def run(self, prompt: str) -> str:
+        """Run the agent with the given prompt."""
+        if self.use_mcp_servers:
+            async with self.run_mcp_servers():
+                return (await super().run(prompt)).output.strip()
+        return (await super().run(prompt)).output.strip()
 
+@singledispatch
 def create_agent(config: Config) -> AgentASK:
     """Create a PydanticAI Agent from a Config instance."""
     llm = config.llm
@@ -35,13 +40,9 @@ def create_agent(config: Config) -> AgentASK:
         model_settings=model_settings,
     )
 
-async def run_agent(prompt: str, agent: AgentASK) -> str:
-    """Run the agent and return the output."""
-    if agent.use_mcp_servers:
-        async with agent.run_mcp_servers():
-            result = await agent.run(prompt)
-            return result.output.strip()
-
-    result = await agent.run(prompt)
-    return result.output.strip()
+@create_agent.register
+def _(config_path: str) -> AgentASK:
+    """Create a PydanticAI Agent from a config file path."""
+    config = load_config(config_path)
+    return create_agent(config)
 

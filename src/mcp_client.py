@@ -18,15 +18,33 @@ def create_mcp_servers(mcp_config: Optional[Dict[str, MCPServerConfig]]) -> List
         if transport == "sse":
             if not cfg.url:
                 raise ValueError(f"SSE transport requires 'url' for server '{name}'")
-            servers.append(MCPServerSSE(url=cfg.url, tool_prefix=cfg.tool_prefix))
+            servers.append(
+                MCPServerSSE(
+                    url=cfg.url, 
+                    tool_prefix=cfg.tool_prefix
+                )
+            )
         elif transport == "http":
             if not cfg.url:
                 raise ValueError(f"HTTP transport requires 'url' for server '{name}'")
-            servers.append(MCPServerStreamableHTTP(cfg.url, tool_prefix=cfg.tool_prefix))
+            servers.append(
+                MCPServerStreamableHTTP(
+                    cfg.url, 
+                    tool_prefix=cfg.tool_prefix
+                    )
+                )
         elif transport == "stdio":
             if not command:
                 raise ValueError(f"Stdio transport requires 'command' for server '{name}'")
-            servers.append(MCPServerStdio(command[0], args=command[1:], tool_prefix=cfg.tool_prefix, cwd=cfg.cwd))
+            servers.append(
+                MCPServerStdio(
+                    command[0],
+                    args=command[1:],
+                    tool_prefix=cfg.tool_prefix,
+                    cwd=cfg.cwd,
+                    env=cfg.env
+                )
+            )
         else:
             raise ValueError(f"Unknown MCP transport '{transport}' for server '{name}'")
         

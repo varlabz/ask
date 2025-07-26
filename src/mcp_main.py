@@ -7,7 +7,7 @@ from config import load_config
 from mcp.server.fastmcp import FastMCP
 from pydantic_ai import Agent
 
-from agent import create_agent, run_agent
+from agent import create_agent
 
 server = FastMCP('ASK Server')
 agent: Agent = None
@@ -15,7 +15,7 @@ agent: Agent = None
 @server.tool()
 async def ask(request: str) -> str:
     """ASK request handler"""
-    return await run_agent(request, agent)
+    return await agent.run(request)
 
 def mcp_main() -> None:
     """Main function for MCP CLI entry point.

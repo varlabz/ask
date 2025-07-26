@@ -42,14 +42,30 @@ class LLMConfig(BaseModel):
         return v
 
 class MCPServerConfig(BaseModel):
+    """Configuration for an MCP server tool/service."""
     enabled: bool = True
     transport: Optional[Literal["sse", "http", "stdio"]] = "stdio"
-    command: Optional[List[str]] = None # for stdio transport
-    url: Optional[str] = None           # for sse and http transports
+    command: Optional[List[str]] = None  # for stdio transport
+    url: Optional[str] = None            # for sse and http transports
     tool_prefix: Optional[str] = None
     cwd: Optional[str] = None
+    env: Optional[Dict[str, str]] = None
+
+    @field_validator("env", mode="before")
+    @classmethod
+    def validate_env(cls, v):
+        """Validate that env is a dict of str to str, or None."""
+        if v is None:
+            return None
+        if not isinstance(v, dict):
+            raise ValueError("env must be a dictionary of str to str")
+        for k, val in v.items():
+            if not isinstance(k, str) or not isinstance(val, str):
+                raise ValueError("env keys and values must be strings")
+        return v
 
 class Config(BaseModel):
+    """Top-level configuration for the agent, LLM, and MCP tools/services."""
     agent: AgentConfig
     llm: LLMConfig
     mcp: Optional[Dict[str, MCPServerConfig]] = None

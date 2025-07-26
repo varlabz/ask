@@ -102,3 +102,74 @@ llm:
     assert cfg.agent.instructions == "Test instructions."
     assert cfg.llm.api_key == "dummy-key"
     assert cfg.llm.model == "openai:gpt-4o"
+
+
+def test_mcp_env_field_success(tmp_path, monkeypatch):
+    """Test MCPServerConfig env field loads and validates correctly."""
+    config_yaml = '''
+agent:
+  instructions: "Test instructions."
+llm:
+  model: "openai:gpt-4o"
+  api_key: "env:TEST_API_KEY"
+mcp:
+  fetch:
+    enabled: true
+    command: ["uvx", "mcp-server-fetch"]
+    env:
+      FOO: "bar"
+      BAZ: "qux"
+'''
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(config_yaml)
+    monkeypatch.setenv("TEST_API_KEY", "dummy-key")
+    cfg = load_config(str(config_path))
+    assert isinstance(cfg, Config)
+    assert cfg.mcp["fetch"].env == {"FOO": "bar", "BAZ": "qux"}
+
+def test_mcp_env_field_invalid_type(tmp_path, monkeypatch):
+    """Test MCPServerConfig env field with invalid type (not a dict)."""
+    config_yaml = '''
+agent:
+  instructions: "Test instructions."
+llm:
+  model: "openai:gpt-4o"
+  api_key: "env:TEST_API_KEY"
+mcp:
+  fetch:
+    enabled: true
+    command: ["uvx", "mcp-server-fetch"]
+    env: "not-a-dict"
+'''
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(config_yaml)
+    monkeypatch.setenv("TEST_API_KEY", "dummy-key")
+    with pytest.raises(RuntimeError) as exc:
+        load_config(str(config_path))
+    assert "env must be a dictionary" in str(exc.value)
+
+def test_mcp_env_field_non_str_key_value(tmp_path, monkeypatch):
+    """Test MCPServerConfig env field with non-string key or value."""
+    config_yaml = '''
+agent:
+  instructions: "Test instructions."
+llm:
+  model: "openai:gpt-4o"
+  api_key: "env:TEST_API_KEY"
+mcp:
+  fetch:
+    enabled: true
+    command: ["uvx", "mcp-server-fetch"]
+    env:
+      123: "bar"
+      FOO: 456
+'''
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(config_yaml)
+    monkeypatch.setenv("TEST_API_KEY", "dummy-key")
+    with pytest.raises(RuntimeError) as exc:
+        load_config(str(config_path))
+    assert "env keys and values must be strings" in str(exc.value)
+
+
+
