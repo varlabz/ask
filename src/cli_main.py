@@ -8,7 +8,7 @@ import argparse
 import asyncio
 import sys
 
-from agent import create_agent
+from agent import AgentASK
 from config import load_config
 
 def cli_main():
@@ -22,7 +22,7 @@ def cli_main():
     config = load_config(args.config)
     if args.system_prompt: config.agent.instructions = args.system_prompt
     
-    agent = create_agent(config)
+    agent = AgentASK.create(config)
     prompt_str = ' '.join(args.prompt).strip()
     if not prompt_str:
         if not sys.stdin.isatty():

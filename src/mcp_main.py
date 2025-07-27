@@ -7,7 +7,7 @@ from config import load_config
 from mcp.server.fastmcp import FastMCP
 from pydantic_ai import Agent
 
-from agent import create_agent
+from agent import AgentASK
 
 server = FastMCP('ASK Server')
 agent: Agent = None
@@ -26,7 +26,7 @@ def mcp_main() -> None:
 
     config = load_config(args.config)
     global agent
-    agent = create_agent(config)
+    agent = AgentASK.create(config)
     server.run()
 
 if __name__ == "__main__":

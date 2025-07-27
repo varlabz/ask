@@ -1,6 +1,6 @@
 import os
 import yaml
-from typing import Literal, Optional, List, Dict
+from typing import Any, Literal, Optional, List, Dict
 from enum import Enum
 from pydantic import BaseModel, ValidationError, field_validator
 
@@ -10,9 +10,11 @@ class ProviderEnum(str, Enum):
     OLLAMA = "ollama"
     OPENAI = "openai"
     OPENROUTER = "openrouter"
+    LMSTUDIO = "lmstudio"
 
 class AgentConfig(BaseModel):
     instructions: str
+    output_type: Optional[Any] = str
 
 class LLMConfig(BaseModel):
     model: str
@@ -68,7 +70,7 @@ class Config(BaseModel):
     """Top-level configuration for the agent, LLM, and MCP tools/services."""
     agent: AgentConfig
     llm: LLMConfig
-    mcp: Optional[Dict[str, MCPServerConfig]] = None
+    mcp: Optional[dict[str, MCPServerConfig]] = None
 
 def load_config(path: str) -> Config:
     try:

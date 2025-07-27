@@ -25,6 +25,10 @@ def create_model(llm_config: LLMConfig) -> OpenAIModel:
         provider = OpenAIProvider(
             base_url=llm_config.base_url or "http://localhost:11434/v1",
         )
+    elif provider_name == ProviderEnum.LMSTUDIO.value:
+        provider = OpenAIProvider(
+            base_url=llm_config.base_url or "http://localhost:1234/v1",
+        )
     elif provider_name == ProviderEnum.OPENAI.value:
         provider = OpenAIProvider(
             base_url=llm_config.base_url,
