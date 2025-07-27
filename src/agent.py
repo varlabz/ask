@@ -43,8 +43,8 @@ class AgentASK(Agent):
             output_type=config.agent.output_type,
         )
 
-    @create.register
     @staticmethod
+    @create.register
     def _(config_path: str) -> 'AgentASK':
         """Create a PydanticAI Agent from a config file path."""
         config = load_config(config_path)
