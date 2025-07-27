@@ -25,7 +25,6 @@ class AgentASK(Agent):
         return (await super().run(prompt)).output
 
     @staticmethod
-    @singledispatch
     def create(config: Config) -> 'AgentASK':
         """Create a PydanticAI Agent from a Config instance."""
         llm = config.llm
@@ -44,8 +43,7 @@ class AgentASK(Agent):
         )
 
     @staticmethod
-    @create.register
-    def _from_path(config_path: str) -> 'AgentASK':
+    def create_from_file(config_path: str) -> 'AgentASK':
         """Create a PydanticAI Agent from a config file path."""
         config = load_config(config_path)
         return AgentASK.create(config)
