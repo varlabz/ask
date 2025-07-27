@@ -26,7 +26,7 @@ class AgentASK(Agent):
 
     @staticmethod
     @singledispatch
-    def create(config: 'Config') -> 'AgentASK':
+    def create(config: Config) -> 'AgentASK':
         """Create a PydanticAI Agent from a Config instance."""
         llm = config.llm
         model_settings = ModelSettings(
@@ -45,9 +45,7 @@ class AgentASK(Agent):
 
     @staticmethod
     @create.register
-    def _(config_path: str) -> 'AgentASK':
+    def _from_path(config_path: str) -> 'AgentASK':
         """Create a PydanticAI Agent from a config file path."""
         config = load_config(config_path)
         return AgentASK.create(config)
-
-
