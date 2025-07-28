@@ -11,6 +11,7 @@ class ProviderEnum(str, Enum):
     OPENAI = "openai"
     OPENROUTER = "openrouter"
     LMSTUDIO = "lmstudio"
+    GOOGLE = "google"
 
 class AgentConfig(BaseModel):
     instructions: str

@@ -1,11 +1,9 @@
-from pydantic_ai.models.openai import OpenAIModel
-from pydantic_ai.providers.openai import OpenAIProvider
-from pydantic_ai.providers.openrouter import OpenRouterProvider
+from pydantic_ai.models import Model
 
 from config import LLMConfig, ProviderEnum
 
 
-def create_model(llm_config: LLMConfig) -> OpenAIModel:
+def create_model(llm_config: LLMConfig) -> Model:
     """Create an OpenAIModel from an LLMConfig instance, selecting provider by model prefix.
     
     Args:
@@ -20,6 +18,22 @@ def create_model(llm_config: LLMConfig) -> OpenAIModel:
     else:
         raise ValueError(f"Invalid model format: {model_str}. Expected 'provider:model_name' format.")
 
+    provider_name = provider_name.lower()
+    if provider_name == ProviderEnum.GOOGLE.value:
+        from pydantic_ai.models.gemini import GeminiModel
+        from pydantic_ai.providers.google_gla import GoogleGLAProvider
+        provider = GoogleGLAProvider(
+            api_key=llm_config.api_key,
+        )
+        return GeminiModel(
+            model_name,
+            provider=provider,
+        )
+
+    # openai compatible models
+    from pydantic_ai.models.openai import OpenAIModel
+    from pydantic_ai.providers.openai import OpenAIProvider
+    from pydantic_ai.providers.openrouter import OpenRouterProvider
     provider = None
     if provider_name == ProviderEnum.OLLAMA.value:
         provider = OpenAIProvider(
@@ -48,13 +62,3 @@ def create_model(llm_config: LLMConfig) -> OpenAIModel:
     return model
 
 
-def create_model_from_llm_config(llm_config: LLMConfig) -> OpenAIModel:
-    """Alias for create_model function for backward compatibility.
-    
-    Args:
-        llm_config: LLMConfig object containing model and provider settings.
-    
-    Returns:
-        OpenAIModel: Configured OpenAIModel instance.
-    """
-    return create_model(llm_config)
