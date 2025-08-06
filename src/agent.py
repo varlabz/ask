@@ -10,7 +10,6 @@ from mcp_client import create_mcp_servers
 from model import create_model
 
 
-
 class AgentASK(Agent):
     """Agent wrapper with MCP server support."""
     def __init__(self, **kwargs):
@@ -25,7 +24,7 @@ class AgentASK(Agent):
         return (await super().run(prompt)).output
 
     @staticmethod
-    def create(config: Config) -> 'AgentASK':
+    def create(config: Config, name: str = "ASK Agent") -> 'AgentASK':
         """Create a PydanticAI Agent from a Config instance."""
         llm = config.llm
         model_settings = ModelSettings(
@@ -34,7 +33,7 @@ class AgentASK(Agent):
             timeout=llm.timeout,
         )
         return AgentASK(
-            name="ASK",
+            name=name,
             model=create_model(llm),
             system_prompt=config.agent.instructions,
             mcp_servers=create_mcp_servers(config.mcp),
@@ -43,7 +42,7 @@ class AgentASK(Agent):
         )
 
     @staticmethod
-    def create_from_file(config_path: str) -> 'AgentASK':
+    def create_from_file(paths: list[str], name: str = "ASK Agent") -> 'AgentASK':
         """Create a PydanticAI Agent from a config file path."""
-        config = load_config(config_path)
-        return AgentASK.create(config)
+        config = load_config(paths)
+        return AgentASK.create(config, name)
