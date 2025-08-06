@@ -12,6 +12,7 @@ class ProviderEnum(str, Enum):
     OPENROUTER = "openrouter"
     LMSTUDIO = "lmstudio"
     GOOGLE = "google"
+    ANTHROPIC = "anthropic"
 
 class AgentConfig(BaseModel):
     instructions: str
@@ -73,19 +74,38 @@ class Config(BaseModel):
     llm: LLMConfig
     mcp: Optional[dict[str, MCPServerConfig]] = None
 
-def load_config(path: str) -> Config:
-    try:
-        with open(path, "r") as f:
-            raw = yaml.safe_load(f)
-    except FileNotFoundError:
-        raise RuntimeError(f"Configuration file '{path}' not found.")
-    except yaml.YAMLError as e:
-        raise RuntimeError(f"YAML syntax error: {e}")
-    except Exception as e:
-        raise RuntimeError(f"Error loading config file: {e}")
+def load_config(paths: List[str]) -> Config:
+    """Load and merge configuration from multiple YAML files.
+
+    Args:
+        paths: List of file paths to YAML config files.
+
+    Returns:
+        Config: Merged configuration object.
+
+    Raises:
+        RuntimeError: If any config file is missing or invalid.
+        ValueError: If YAML syntax is invalid.
+    """
+    merged_raw: dict = {}
+    for p in paths:
+        try:
+            with open(p, "r") as f:
+                raw = yaml.safe_load(f)
+                if not isinstance(raw, dict):
+                    raise ValueError(f"Config file '{p}' must contain a dictionary at the root.")
+                merged_raw = {**merged_raw, **raw}
+        except FileNotFoundError:
+            raise RuntimeError(f"Configuration file '{p}' not found.")
+        except yaml.YAMLError as e:
+            raise RuntimeError(f"YAML syntax error in '{p}': {e}")
+        except ValueError:
+            raise
+        except Exception as e:
+            raise RuntimeError(f"Error loading config file '{p}': {e}")
 
     try:
-        return Config(**raw)
+        return Config(**merged_raw)
     except ValidationError as e:
         raise RuntimeError(f"Config validation error: {e}")
 

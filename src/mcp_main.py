@@ -5,28 +5,28 @@ import argparse
 
 from config import load_config
 from mcp.server.fastmcp import FastMCP
-from pydantic_ai import Agent
-
 from agent import AgentASK
 
 server = FastMCP('ASK Server')
-agent: Agent = None
+_agent = None
 
 @server.tool()
 async def ask(request: str) -> str:
     """ASK request handler"""
-    return await agent.run(request)
+    return await _agent.run(request)
 
 def mcp_main() -> None:
-    """Main function for MCP CLI entry point.
-    """
+    """Main function for MCP CLI entry point."""
+    global _agent
+    
     parser = argparse.ArgumentParser(description="Run MCP server.")
-    parser.add_argument('-c', '--config', type=str, default=".ask.yaml", help='Path to ask config yaml')
+    parser.add_argument('-c', '--config', type=str, action='append', help='Path to config yaml (can be used multiple times)')
     args = parser.parse_args()
 
-    config = load_config(args.config)
-    global agent
-    agent = AgentASK.create(config)
+    # Use default config if none provided
+    config = load_config(args.config or [".ask.yaml"])
+    
+    _agent = AgentASK.create(config)
     server.run()
 
 if __name__ == "__main__":

@@ -18,7 +18,7 @@ llm:
     config_path = tmp_path / "config.yaml"
     config_path.write_text(config_yaml)
     monkeypatch.setenv("TEST_API_KEY", "dummy-key")
-    cfg = load_config(str(config_path))
+    cfg = load_config([str(config_path)])
     assert isinstance(cfg, Config)
     assert cfg.llm.api_key == "dummy-key"
     assert cfg.agent.instructions == "Test instructions."
@@ -36,12 +36,12 @@ llm:
     config_path.write_text(config_yaml)
     monkeypatch.delenv("NOT_SET_ENV", raising=False)
     with pytest.raises(RuntimeError) as exc:
-        load_config(str(config_path))
+        load_config([str(config_path)])
     assert "Environment variable 'NOT_SET_ENV' not set" in str(exc.value)
 
 def test_load_config_file_not_found():
     with pytest.raises(RuntimeError) as exc:
-        load_config("/nonexistent/config.yaml")
+        load_config(["/nonexistent/config.yaml"])
     assert "not found" in str(exc.value)
 
 def test_load_config_yaml_error(tmp_path):
@@ -49,7 +49,7 @@ def test_load_config_yaml_error(tmp_path):
     config_path = tmp_path / "config.yaml"
     config_path.write_text(config_yaml)
     with pytest.raises(RuntimeError) as exc:
-        load_config(str(config_path))
+        load_config([str(config_path)])
     assert "YAML syntax error" in str(exc.value)
 
 def test_load_config_invalid_types(tmp_path, monkeypatch):
@@ -64,7 +64,7 @@ llm:
     config_path.write_text(config_yaml)
     monkeypatch.setenv("TEST_API_KEY", "dummy-key")
     with pytest.raises(RuntimeError) as exc:
-        load_config(str(config_path))
+        load_config([str(config_path)])
     assert "Config validation error" in str(exc.value)
 
 
@@ -77,7 +77,7 @@ llm:
     config_path = tmp_path / "config.yaml"
     config_path.write_text(config_yaml)
     with pytest.raises(RuntimeError) as exc:
-        load_config(str(config_path))
+        load_config([str(config_path)])
     assert "Config validation error" in str(exc.value)
 
 
@@ -97,7 +97,7 @@ llm:
     # Pydantic by default ignores extra fields unless you set extra=forbid
     # To make this a true negative test, update the Config model to use extra=forbid
     # For now, this test will pass if config loads and extra fields are ignored
-    cfg = load_config(str(config_path))
+    cfg = load_config([str(config_path)])
     assert isinstance(cfg, Config)
     assert cfg.agent.instructions == "Test instructions."
     assert cfg.llm.api_key == "dummy-key"
@@ -123,7 +123,7 @@ mcp:
     config_path = tmp_path / "config.yaml"
     config_path.write_text(config_yaml)
     monkeypatch.setenv("TEST_API_KEY", "dummy-key")
-    cfg = load_config(str(config_path))
+    cfg = load_config([str(config_path)])
     assert isinstance(cfg, Config)
     assert cfg.mcp["fetch"].env == {"FOO": "bar", "BAZ": "qux"}
 
@@ -145,7 +145,7 @@ mcp:
     config_path.write_text(config_yaml)
     monkeypatch.setenv("TEST_API_KEY", "dummy-key")
     with pytest.raises(RuntimeError) as exc:
-        load_config(str(config_path))
+        load_config([str(config_path)])
     assert "env must be a dictionary" in str(exc.value)
 
 def test_mcp_env_field_non_str_key_value(tmp_path, monkeypatch):
@@ -168,7 +168,7 @@ mcp:
     config_path.write_text(config_yaml)
     monkeypatch.setenv("TEST_API_KEY", "dummy-key")
     with pytest.raises(RuntimeError) as exc:
-        load_config(str(config_path))
+        load_config([str(config_path)])
     assert "env keys and values must be strings" in str(exc.value)
 
 

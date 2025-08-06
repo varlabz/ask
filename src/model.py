@@ -1,16 +1,8 @@
 from pydantic_ai.models import Model
-
 from config import LLMConfig, ProviderEnum
 
-
 def create_model(llm_config: LLMConfig) -> Model:
-    """Create an OpenAIModel from an LLMConfig instance, selecting provider by model prefix.
-    
-    Args:
-        llm_config: LLMConfig object containing model and provider settings.
-    
-    Returns:
-        OpenAIModel: Configured OpenAIModel instance.
+    """Create an Model from an LLMConfig instance, selecting provider by model prefix.
     """
     model_str = llm_config.model
     if ":" in model_str:
@@ -26,6 +18,17 @@ def create_model(llm_config: LLMConfig) -> Model:
             api_key=llm_config.api_key,
         )
         return GeminiModel(
+            model_name,
+            provider=provider,
+        )
+
+    if provider_name == ProviderEnum.ANTHROPIC.value:
+        from pydantic_ai.models.anthropic import AnthropicModel
+        from pydantic_ai.providers.anthropic import AnthropicProvider
+        provider = AnthropicProvider(
+            api_key=llm_config.api_key,
+        )
+        return AnthropicModel(
             model_name,
             provider=provider,
         )
@@ -55,10 +58,10 @@ def create_model(llm_config: LLMConfig) -> Model:
     else:
         raise ValueError(f"Unsupported provider: {provider_name}")
 
-    model = OpenAIModel(
+    return OpenAIModel(
         model_name,
         provider=provider,
     )
-    return model
+    
 
 
