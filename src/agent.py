@@ -16,7 +16,7 @@ class AgentASK(Agent):
         super().__init__(**kwargs)
         self.use_mcp_servers = bool(kwargs.get('mcp_servers'))
 
-    async def run(self, prompt: str) -> str:
+    async def run(self, prompt: str):
         """Run the agent with the given prompt."""
         if self.use_mcp_servers:
             async with self.run_mcp_servers():
