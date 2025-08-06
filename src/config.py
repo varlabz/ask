@@ -1,5 +1,7 @@
 import os
 import yaml
+import builtins
+import typing
 from typing import Any, Literal, Optional, List, Dict
 from enum import Enum
 from pydantic import BaseModel, ValidationError, field_validator
@@ -17,6 +19,38 @@ class ProviderEnum(str, Enum):
 class AgentConfig(BaseModel):
     instructions: str
     output_type: Optional[Any] = str
+
+    @field_validator("output_type", mode="before")
+    def convert_output_type(cls, v):
+        """Convert string type descriptions to Python types.
+        
+        Args:
+            v: Type description as string or actual type
+            
+        Returns:
+            Python type object
+            
+        Raises:
+            ValueError: If type string is not a valid Python type
+        """
+        if v is None:
+            return str
+        if isinstance(v, type) or hasattr(v, '__origin__'):
+            return v
+        if not isinstance(v, str):
+            return v
+
+        # Create a safe namespace for parsing type strings
+        safe_namespace = {
+            **{name: getattr(typing, name) for name in typing.__all__},
+            **{name: getattr(builtins, name) for name in dir(builtins)}
+        }
+
+        try:
+            # Use eval in a restricted environment to parse the type string
+            return eval(v, {"__builtins__": {}}, safe_namespace)
+        except (NameError, SyntaxError) as e:
+            raise ValueError(f"Unknown or invalid type string: {v}") from e
 
 class LLMConfig(BaseModel):
     model: str
