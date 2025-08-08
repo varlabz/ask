@@ -7,9 +7,9 @@ agent:
     what you're doing and why. Be proactive in suggesting useful tools when appropriate.
 
 llm:
-  model: openai:gpt-4.1-mini-2025-04-14
-  api_key: file:~/.config/ask/openai  # Load from file
-  #api_key: "env:OPENAI_API_KEY"      # Load from environment variable 
+  base_url: "http://localhost:12345/v1/"
+  model: "lmstudio:qwen3-30b-a3b-instruct-2507-mlx"
+  temperature: 0.8
 
 mcp:
   fetch:
@@ -21,5 +21,5 @@ mcp:
   search:
     command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
     env:
-      SEARX_HOST: "http://bacook.local:8080" 
+      SEARX_HOST: "http://localhost:8080"
 
