@@ -17,9 +17,6 @@ dependencies = [
 requires-python = ">=3.13"
 
 [project.optional-dependencies]
-openai = [
-    "openai==1.92.1"
-]
 dev = [
     "pytest",
     "pytest-asyncio"
