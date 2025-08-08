@@ -1,15 +1,10 @@
-#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask cli -c 
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask cli -c ~/.config/ask/llm.yaml -c 
 
 agent:
   instructions: |
     You are a helpful AI assistant with access to various tools and services.
     Provide accurate, helpful, and concise responses. When using tools, explain
     what you're doing and why. Be proactive in suggesting useful tools when appropriate.
-
-llm:
-  base_url: "http://localhost:12345/v1/"
-  model: "lmstudio:qwen3-30b-a3b-instruct-2507-mlx"
-  temperature: 0.8
 
 mcp:
   fetch:
@@ -20,6 +15,4 @@ mcp:
       
   search:
     command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
-    env:
-      SEARX_HOST: "http://localhost:8080"
 

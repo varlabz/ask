@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask cli -c llm.yaml -c
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask cli -c ~/.config/ask/llm.yaml -c
 
 agent:
   instructions: |
@@ -26,8 +26,6 @@ mcp:
     
   search:
     command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
-    env:
-      SEARX_HOST: "http://bacook.local:8080"  
 
   sequential_thinking:
     command: ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
