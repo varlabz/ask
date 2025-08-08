@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ask"
-version = "0.4.0"
+version = "0.5.0"
 description = "ASK CLI/MCP"
 authors = [
     { name = "varlabz", email = "varlabz@umdoze.com" }
@@ -14,7 +14,12 @@ dependencies = [
     "mcp[cli]",
     "pyyaml"
 ]
-requires-python = ">=3.12,<3.13"
+
+[project.optional-dependencies]
+openai = [
+    "openai==1.92.1"
+]
+requires-python = ">=3.13"
 
 [project.optional-dependencies]
 dev = [
