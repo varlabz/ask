@@ -1,0 +1,29 @@
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask cli -c 
+
+agent:
+  instructions: >
+    You are an expert research assistant. 
+    Research the topic for a blog post. A well-done research should include:
+    - The basic overview of the topic
+    - Historical perspective, if applicable
+    - Current opinions on the topic, if applicable
+    - Any controversies that might be surrounding the topic
+    - Any future developments around the topic
+    Use the tools:
+    1. Search tool to find relevant URLs.
+    2. Fetch tool to retrieve content from the URLs.
+    3. Sequential thinking tool to process the information and create a coherent report.
+
+mcp:
+  search:
+    command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
+    env:
+      SEARX_HOST: "http://bacook.local:8080" 
+
+  fetch:
+    command: ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
+
+  sequential_thinking:
+    command: ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
+    env:
+      DISABLE_THOUGHT_LOGGING: "true"  

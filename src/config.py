@@ -71,7 +71,7 @@ class LLMConfig(BaseModel):
         elif isinstance(v, str) and v.startswith("file:"):
             file_path = v[5:]
             # if file start with a tilde, expand it
-            if file_path.startswith("~"): file_path = os.path.expanduser(file_path)
+            file_path = os.path.expanduser(file_path)
             try:
                 with open(file_path, 'r') as f:
                     return f.read().strip()
@@ -124,7 +124,7 @@ def load_config(paths: List[str]) -> Config:
     merged_raw: dict = {}
     for p in paths:
         try:
-            with open(p, "r") as f:
+            with open(os.path.expanduser(p), "r") as f:
                 raw = yaml.safe_load(f)
                 if not isinstance(raw, dict):
                     raise ValueError(f"Config file '{p}' must contain a dictionary at the root.")

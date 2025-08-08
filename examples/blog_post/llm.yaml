@@ -1,0 +1,7 @@
+llm:
+  model: openrouter:openrouter/horizon-beta
+  api_key: file:~/.config/ask/openrouter
+
+  # base_url: "http://bacook.local:12345/v1/"
+  # model: "lmstudio:qwen3-30b-a3b-instruct-2507-mlx"
+  # temperature: 0.8
