@@ -12,7 +12,8 @@ authors = [
 dependencies = [
     "pydantic-ai",
     "mcp[cli]",
-    "pyyaml"
+    "pyyaml",
+    "openai<=1.99.1",  # Pin to avoid Union instantiation bug with pydantic-ai 0.6.x
 ]
 requires-python = ">=3.13"
 

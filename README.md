@@ -48,7 +48,6 @@ mcp:
     command: ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
   
   search:
-    enabled: true
     command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
     env:
       SEARX_HOST: "http://localhost:8080"
@@ -75,27 +74,21 @@ llm:
 
 mcp:
   filesystem:
-    enabled: true
     command: ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
   
   memory:
-    enabled: true
     command: ["npx", "-y", "@modelcontextprotocol/server-memory"]
   
   fetch:
-    enabled: true
     command: ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
   
   youtube:
-    enabled: true
     command: ["npx", "-y", "https://github.com/varlabz/youtube-mcp", "--mcp"]
     
   sequential_thinking:
-    enabled: true
     command: ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
   
   searxng:
-    enabled: true
     command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
     env:
       SEARX_HOST: "http://localhost:8080"
