@@ -10,21 +10,24 @@ from mcp_client import create_mcp_servers
 from model import create_model
 
 
-class AgentASK(Agent):
+class AgentASK:
+    _agent: Agent
+    _use_mcp_servers: bool 
+
     """Agent wrapper with MCP server support."""
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.use_mcp_servers = bool(kwargs.get('mcp_servers'))
+        self._agent = Agent(**kwargs)
+        self._use_mcp_servers = bool(kwargs.get('mcp_servers'))
 
     async def run(self, prompt: str):
         """Run the agent with the given prompt."""
-        if self.use_mcp_servers:
-            async with self.run_mcp_servers():
-                return (await super().run(prompt)).output
-        return (await super().run(prompt)).output
+        if self._use_mcp_servers:
+            async with self._agent.run_mcp_servers():
+                return (await self._agent.run(prompt)).output
+        return (await self._agent.run(prompt)).output
 
-    @staticmethod
-    def create(config: Config, name: str = "ASK Agent") -> 'AgentASK':
+    @classmethod
+    def create_from_config(cls, config: Config, name: str = "ASK Agent") -> 'AgentASK':
         """Create a PydanticAI Agent from a Config instance."""
         llm = config.llm
         model_settings = ModelSettings(
@@ -32,7 +35,7 @@ class AgentASK(Agent):
             max_tokens=llm.max_tokens,
             timeout=llm.timeout,
         )
-        return AgentASK(
+        return cls(
             name=name,
             model=create_model(llm),
             system_prompt=config.agent.instructions,
@@ -41,8 +44,8 @@ class AgentASK(Agent):
             output_type=config.agent.output_type,
         )
 
-    @staticmethod
-    def create_from_file(paths: list[str], name: str = "ASK Agent") -> 'AgentASK':
+    @classmethod
+    def create_from_file(cls, paths: list[str], name: str = "ASK Agent") -> 'AgentASK':
         """Create a PydanticAI Agent from a config file path."""
         config = load_config(paths)
-        return AgentASK.create(config, name)
+        return cls.create_from_config(config, name)

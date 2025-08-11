@@ -26,7 +26,7 @@ def mcp_main() -> None:
     # Use default config if none provided
     config = load_config(args.config or [".ask.yaml"])
     
-    _agent = AgentASK.create(config)
+    _agent = AgentASK.create_from_config(config)
     server.run()
 
 if __name__ == "__main__":

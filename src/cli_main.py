@@ -35,7 +35,7 @@ def cli_main():
         parser.print_help(file=sys.stderr)
         sys.exit(1)
 
-    agent = AgentASK.create(config)
+    agent = AgentASK.create_from_config(config)
     result = asyncio.run(agent.run(prompt_str))
     print(result)
 
