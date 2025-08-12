@@ -77,16 +77,14 @@ agent:
       6. Acknowledge nuance - avoid absolute statements; recognize complexity and gray areas
       7. Stay focused - address the specific statement/proposal rather than going off-topic
 
-# llm:
-#   model: openrouter:moonshotai/kimi-k2
-#   api_key: file:~/.config/ask/openrouter
-
 mcp:
   fetch:
     command: ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
     
   search:
     command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
+    env:
+      SEARX_HOST: "http://bacook.local:8080"  
 
   sequential_thinking:
     command: ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]

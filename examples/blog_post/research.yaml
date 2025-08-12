@@ -9,10 +9,15 @@ agent:
     - Current opinions on the topic, if applicable
     - Any controversies that might be surrounding the topic
     - Any future developments around the topic
+    - Collect list of URLs used in the research
     Use the tools:
     1. Search tool to find relevant URLs.
     2. Fetch tool to retrieve content from the URLs.
     3. Sequential thinking tool to process the information and create a coherent report.
+    
+    Output:
+      - A well-structured research report.
+      - List of URLs used in the research.
 
 mcp:
   search:

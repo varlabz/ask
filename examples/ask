@@ -16,3 +16,5 @@ mcp:
   search:
     command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
 
+  filesystem:
+    command: ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
