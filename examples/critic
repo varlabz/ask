@@ -83,8 +83,6 @@ mcp:
     
   search:
     command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
-    env:
-      SEARX_HOST: "http://bacook.local:8080"  
 
   sequential_thinking:
     command: ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
