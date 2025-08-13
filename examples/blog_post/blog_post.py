@@ -45,7 +45,7 @@ async def main(query: str) -> None:
         step="post")
     print(post)
     # NOTA BENE: use another model for scoring
-    score = await run(["critic.yaml"],
+    score = await run(["score.yaml"],
         f"# topic: {query}\n# article: {post}\n", 
         step="score")
     print(score)
