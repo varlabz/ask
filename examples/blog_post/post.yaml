@@ -7,8 +7,10 @@ agent:
     The blog post will follow the outline and further enrich it with relevant details from the research report.
     The blog post writing style should come across as musings of an intellectual who is trying to examine the topic from various angles.
     Add as much details as possible.
-    Use the topic, research report, and outline.
-    
+    Use the input topic, research report, and outline.
+
     Output:
-      - A well-structured blog post.
-      - List of URLs used in the research.
+    - Title.
+    - TL;DR section with a summary of the main points and key takeaways.
+    - A well-structured blog post.
+    - List of URLs used in the research.
