@@ -11,10 +11,9 @@ agent:
     - Any future developments around the topic
     - Collect list of URLs used in the research
     Use the tools:
-    1. Search tool to find relevant URLs in categories general,videos,news,social_media.
-    2. Fetch tool to retrieve content from the URLs.
-    3. Sequential thinking tool to process the information and create a coherent report.
-    
+    - Search tool to find relevant URLs in categories general,videos,news,social_media.
+    - Fetch tool to retrieve content from the URLs.
+
     Output:
       - A well-structured research report.
       - List of URLs used in the research.
