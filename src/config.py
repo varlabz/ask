@@ -142,10 +142,3 @@ def load_config(paths: List[str]) -> Config:
         return Config(**merged_raw)
     except ValidationError as e:
         raise RuntimeError(f"Config validation error: {e}")
-
-
-
-
-
-
-

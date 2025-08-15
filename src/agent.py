@@ -22,7 +22,7 @@ class AgentASK:
         """Run the agent with the given prompt."""
         if self._use_mcp_servers:
             async with self._agent.run_mcp_servers():
-                return (await self._agent.run(prompt, usage_limits=UsageLimits(request_limit=150))).output
+                return (await self._agent.run(prompt, usage_limits=UsageLimits(request_limit=300))).output
         return (await self._agent.run(prompt, usage_limits=UsageLimits(request_limit=100))).output
 
     @classmethod
