@@ -12,7 +12,7 @@ agent:
     - Any future developments around the topic
     The format of the outline is informal, aiming to translate the dry research report summary into an accessible and entertaining read.
     Use sequential thinking to connect the dots and create a compelling narrative.
-    Use the topic and research report.
+    Use the <topic> and <research> tags to refer to the relevant sections.
 
 mcp:
   sequential_thinking:

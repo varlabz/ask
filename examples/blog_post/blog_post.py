@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Blog Post multi-agent pipeline orchestrator."""
 import asyncio
+import json
 import os
 import sys
 import logging
@@ -9,46 +10,41 @@ from agent import AgentASK
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_LLM = "~/.config/ask/llm.yaml"
 LLM = "llm.yaml"
 
 def _here(*parts: str) -> str:
     """Path helper relative to this file."""
     return os.path.join(os.path.dirname(__file__), *parts)
 
-async def run(config_paths: list[str], prompt: str, step: str) -> str:
-    """Run a single pipeline step and optionally log prompt/response.
-
-    Args:
-        config_paths: Sequence of config file names relative to this dir.
-        prompt: Input prompt for the agent.
-        step: Step label used for logging.
-    Returns:
-        The agent response text.
-    """
+async def run(config_paths: list[str], prompt: str, step: str):
+    """Run a single pipeline step and optionally log prompt/response."""
     print(f"### {step}", file=sys.stderr)
-    agent = AgentASK.create_from_file([DEFAULT_LLM] + [_here(p) for p in config_paths], name=step)
+    agent = AgentASK.create_from_file([_here(p) for p in config_paths], name=step)
     response = await agent.run(prompt)
     logger.info(f"Step: {step}\nPrompt:\n{prompt}\nResponse:\n{response}")
     return response
 
 async def main(query: str) -> None:
-    """Execute all steps then print final post."""
     research = await run(["research.yaml", LLM], 
         query, 
         step="research")
     outline = await run(["outline.yaml", LLM],
-        f"# topic: {query}\n# research: {research}\n",
+        f"<topic>{query}</topic>\n"
+        f"<research>{research}\n</research>\n",
         step="outline")
     post = await run(["post.yaml", LLM],
-        f"# topic: {query}\n# research: {research}\n# outline: {outline}\n",
+        f"<topic>{query}</topic>\n"
+        f"<research>{research}\n</research>\n"
+        f"<outline>{outline}\n</outline>\n",
         step="post")
     print(post)
     # NOTA BENE: use another model for scoring
     score = await run(["score.yaml"],
-        f"# topic: {query}\n# article: {post}\n", 
+        f"<topic>{query}</topic>\n"
+        f"<article>{post}\n</article>\n", 
         step="score")
-    print(score)
+    print("-" * 80)
+    print(json.dumps(score, indent=2), file=sys.stderr)
 
 if __name__ == "__main__":
     import argparse
