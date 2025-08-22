@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ask"
-version = "0.7.0"
+version = "0.8.0"
 description = "ASK CLI/MCP"
 authors = [
     { name = "varlabz", email = "varlabz@umdoze.com" }
@@ -13,7 +13,8 @@ dependencies = [
     "pydantic-ai",
     "mcp[cli]",
     "pyyaml",
-    "openai<=1.99.1",  # Pin to avoid Union instantiation bug with pydantic-ai 0.6.x
+    "openai<=1.99.1", # Pin to avoid Union instantiation bug with pydantic-ai 0.6.x
+    "pydantic-ai-slim[ag-ui]>=0.4.3",
 ]
 requires-python = ">=3.13"
 
@@ -24,7 +25,7 @@ dev = [
 ]
 
 [project.scripts]
-cli = "cli_main:cli_main"
+ask = "cli_main:cli_main"
 ask-mcp = "mcp_main:mcp_main"
 
 [tool.setuptools]

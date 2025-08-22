@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.13"
 
 [[package]]
@@ -108,11 +108,13 @@ wheels = [
 
 [[package]]
 name = "ask"
-version = "0.2.1"
+version = "0.8.0"
 source = { editable = "." }
 dependencies = [
     { name = "mcp", extra = ["cli"] },
+    { name = "openai" },
     { name = "pydantic-ai" },
+    { name = "pydantic-ai-slim" },
     { name = "pyyaml" },
 ]
 
@@ -125,7 +127,9 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "mcp", extras = ["cli"] },
+    { name = "openai", specifier = "<=1.99.1" },
     { name = "pydantic-ai" },
+    { name = "pydantic-ai-slim", extras = ["ag-ui"], specifier = ">=0.4.3" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "pytest-asyncio", marker = "extra == 'dev'" },
     { name = "pyyaml" },
