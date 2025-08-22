@@ -123,6 +123,9 @@ def load_config(paths: List[str]) -> Config:
     """
     merged_raw: dict = {}
     for p in paths:
+        if p is None:   # skip empty paths
+            continue
+
         try:
             with open(os.path.expanduser(p), "r") as f:
                 raw = yaml.safe_load(f)
