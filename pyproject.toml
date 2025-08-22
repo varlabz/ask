@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ask"
-version = "0.8.0"
+version = "0.9.0"
 description = "ASK CLI/MCP"
 authors = [
     { name = "varlabz", email = "varlabz@umdoze.com" }
@@ -25,7 +25,7 @@ dev = [
 ]
 
 [project.scripts]
-ask = "cli_main:cli_main"
+ask-cli = "cli_main:cli_main"
 ask-mcp = "mcp_main:mcp_main"
 
 [tool.setuptools]
