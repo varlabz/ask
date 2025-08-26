@@ -1,13 +1,12 @@
 import asyncio
-from typing import Optional
+from typing import Final, Optional
 from agent import AgentASK
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
 
-
 async def chat(agent: AgentASK, initial_prompt: Optional[str] = None):
     """Interactive chat with the agent."""
-    session = PromptSession(history=InMemoryHistory())
+    session: Final = PromptSession(history=InMemoryHistory())
 
     async def get_input(prompt: str) -> str:
         return await session.prompt_async(prompt)
@@ -18,7 +17,7 @@ async def chat(agent: AgentASK, initial_prompt: Optional[str] = None):
 
     while True:
         try:
-            user_input = await get_input(">> ")
+            user_input = (await get_input(">> ")).strip()
             if user_input.lower() in ["/exit", "/quit"]:
                 break
 
