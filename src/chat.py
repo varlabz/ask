@@ -18,6 +18,8 @@ async def chat(agent: AgentASK, initial_prompt: Optional[str] = None):
     while True:
         try:
             user_input = (await get_input(">> ")).strip()
+            if not user_input:
+                continue
             if user_input.lower() in ["/exit", "/quit"]:
                 break
 
