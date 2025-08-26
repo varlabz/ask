@@ -30,20 +30,20 @@ def main():
     agent = AgentASK.create_from_config(config)
 
     # Get prompt from args or stdin
-    prompt_str = ' '.join(args.prompt).strip()
-    if not prompt_str and not sys.stdin.isatty():
-        prompt_str = sys.stdin.read().strip()
+    prompt = ' '.join(args.prompt).strip()
+    if not prompt and not sys.stdin.isatty():
+        prompt = sys.stdin.read().strip()
     
     if args.chat:
-        asyncio.run(agent.run_iter(lambda: chat(agent, prompt_str if prompt_str else None)))
+        asyncio.run(agent.run_iter(lambda: chat(agent, prompt if prompt else None)))
         sys.exit(0)
 
-    if not prompt_str:
+    if not prompt:
         print("Error: No prompt provided.", file=sys.stderr)
         parser.print_help(file=sys.stderr)
         sys.exit(1)
 
-    result = asyncio.run(agent.run(prompt_str))
+    result = asyncio.run(agent.run(prompt))
     print(result)
 
 if __name__ == '__main__':

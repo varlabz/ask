@@ -1,0 +1,11 @@
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask cli -c ~/.config/ask/llm.yaml -c 
+
+agent:
+  instructions: |
+    You are a helpful AI browser assistant with access to various tools and services.
+    Provide accurate, helpful, and concise responses. 
+    Use playwright tool, explain what you're doing and why. 
+
+mcp:
+  playwright:
+    command: ["npx", "-y", "@playwright/mcp@latest", "--cdp-endpoint", "http://localhost:9222"]

@@ -17,13 +17,13 @@ async def chat(agent: AgentASK, initial_prompt: Optional[str] = None):
 
     while True:
         try:
-            user_input = (await get_input(">> ")).strip()
-            if not user_input:
+            prompt = (await get_input(">> ")).strip()
+            if not prompt:
                 continue
-            if user_input.lower() in ["/exit", "/quit"]:
+            if prompt.lower() in ["/exit", "/quit"]:
                 break
 
-            response = await agent.iter(user_input)()
+            response = await agent.iter(prompt)()
             print(response)
         except (KeyboardInterrupt, EOFError):
             break
