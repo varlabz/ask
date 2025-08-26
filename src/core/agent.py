@@ -19,7 +19,7 @@ class AgentASK:
         self._use_mcp_servers = use_mcp_servers
         self._history = []
 
-    async def run(self, iter):
+    async def run_iter(self, iter):
         """Run the agent with the given prompt."""
         if self._use_mcp_servers:
             async with self._agent.run_mcp_servers():
@@ -33,9 +33,10 @@ class AgentASK:
             return ret.output
         return _iter
 
-    async def run_prompt(self, prompt: str):
+    # wrapper for single shot run
+    async def run(self, prompt: str):
         """Run the agent with the given prompt."""
-        return await self.run(self.iter(prompt))
+        return await self.run_iter(self.iter(prompt))
 
     @classmethod
     def create_from_config(cls, config: Config, name: str = "ASK_Agent") -> 'AgentASK':
