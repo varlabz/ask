@@ -3,9 +3,9 @@ mcp_main.py CLI entry point for MCP client
 """
 import argparse
 
-from config import load_config
+from core.config import load_config
 from mcp.server.fastmcp import FastMCP
-from agent import AgentASK
+from core.agent import AgentASK
 
 server = FastMCP('ASK Server')
 _agent = None

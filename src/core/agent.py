@@ -5,9 +5,9 @@ from pydantic_ai.usage import UsageLimits
 from pydantic_ai import Agent
 from pydantic_ai.settings import ModelSettings
 
-from config import Config, load_config
-from mcp_client import create_mcp_servers
-from model import create_model
+from core.config import Config, load_config
+from core.mcp_client import create_mcp_servers
+from core.model import create_model
 
 class AgentASK:
     _agent: Agent
@@ -32,7 +32,11 @@ class AgentASK:
             self._history = ret.all_messages()
             return ret.output
         return _iter
-    
+
+    async def run_prompt(self, prompt: str):
+        """Run the agent with the given prompt."""
+        return await self.run(self.iter(prompt))
+
     @classmethod
     def create_from_config(cls, config: Config, name: str = "ASK_Agent") -> 'AgentASK':
         """Create a PydanticAI Agent from a Config instance."""

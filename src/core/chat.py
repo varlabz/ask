@@ -1,6 +1,6 @@
 import asyncio
 from typing import Final, Optional
-from agent import AgentASK
+from core.agent import AgentASK
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
 

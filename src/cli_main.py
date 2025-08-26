@@ -8,9 +8,9 @@ import argparse
 import asyncio
 import sys
 
-from agent import AgentASK
-from config import load_config
-from chat import chat
+from core.agent import AgentASK
+from core.config import load_config
+from core.chat import chat
 
 
 def cli_main():
@@ -43,7 +43,7 @@ def cli_main():
         parser.print_help(file=sys.stderr)
         sys.exit(1)
 
-    result = asyncio.run(agent.run(agent.iter(prompt_str)))
+    result = asyncio.run(agent.run_prompt(prompt_str))
     print(result)
 
 if __name__ == '__main__':
