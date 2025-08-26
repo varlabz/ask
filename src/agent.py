@@ -11,19 +11,28 @@ from model import create_model
 
 class AgentASK:
     _agent: Agent
+    _history: list
     _use_mcp_servers: bool 
 
     def __init__(self, agent: Agent, use_mcp_servers: bool):
         self._agent = agent
         self._use_mcp_servers = use_mcp_servers
+        self._history = []
 
-    async def run(self, prompt: str):
+    async def run(self, iter):
         """Run the agent with the given prompt."""
         if self._use_mcp_servers:
             async with self._agent.run_mcp_servers():
-                return (await self._agent.run(prompt, usage_limits=UsageLimits(request_limit=300))).output
-        return (await self._agent.run(prompt, usage_limits=UsageLimits(request_limit=100))).output
+                return await iter()
+        return await iter()
 
+    def iter(self, prompt: str):
+        async def _iter():
+            ret = await self._agent.run(prompt, usage_limits=UsageLimits(request_limit=100), message_history=self._history)
+            self._history = ret.all_messages()
+            return ret.output
+        return _iter
+    
     @classmethod
     def create_from_config(cls, config: Config, name: str = "ASK_Agent") -> 'AgentASK':
         """Create a PydanticAI Agent from a Config instance."""
