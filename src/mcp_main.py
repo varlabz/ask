@@ -8,7 +8,13 @@ from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.session import ServerSession
 from core.agent import AgentASK
 
-server = FastMCP("ASK Server", log_level="DEBUG")
+server = FastMCP(
+            "ASK Server", 
+            stateless_http=True, 
+            streamable_http_path="/",
+            json_response=True,
+            log_level="ERROR",
+        )
 _agent: AgentASK
 
 @server.tool()
@@ -48,17 +54,25 @@ def main() -> None:
         default=None,
         help="Port to use for SSE or streamable-http transport (overrides default)",
     )
+    parser.add_argument(
+        "--log-level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="ERROR",
+        help="Log level for the MCP server (default: ERROR)",
+    )
     args = parser.parse_args()
 
     # Use default local config if none provided
     config = load_config(args.config or [".ask.yaml"])
     _agent = AgentASK.create_from_config(config)
 
+    # Apply log level from CLI argument
+    server.settings.log_level = args.log_level
     transport = args.transport
-    if transport in {"streamable-http", "sse"} and args.port is not None:
-        # Override default port for SSE or streamable-http transport
-        server.settings.port = args.port
-        
+    if transport in {"streamable-http", "sse"}:
+        if args.port is not None:
+            server.settings.port = args.port
+
     server.run(transport=transport)
 
 if __name__ == "__main__":
