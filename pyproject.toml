@@ -30,8 +30,8 @@ dev = [
 ]
 
 [project.scripts]
-ask-cli = "cli_main:cli_main"
-ask-mcp = "mcp_main:mcp_main"
+ask-cli = "cli_main:main"
+ask-mcp = "mcp_main:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
