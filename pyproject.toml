@@ -35,5 +35,5 @@ ask-mcp = "mcp_main:mcp_main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["agent", "cli_main", "config", "mcp_client", "mcp_main", "model", "api"]
+py-modules = ["agent", "cli_main", "config", "mcp_client", "mcp_main", "model", "chat"]
 script-files = ["examples/ask"]
