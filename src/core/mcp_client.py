@@ -29,7 +29,7 @@ def create_mcp_servers(mcp_config: Optional[Dict[str, MCPServerConfig]]) -> List
                 raise ValueError(f"HTTP transport requires 'url' for server '{name}'")
             servers.append(
                 MCPServerStreamableHTTP(
-                    cfg.url, 
+                    url=cfg.url, 
                     tool_prefix=cfg.tool_prefix
                     )
                 )
