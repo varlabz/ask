@@ -82,7 +82,7 @@ class LLMConfig(BaseModel):
 class MCPServerConfig(BaseModel):
     """Configuration for an MCP server tool/service."""
     enabled: bool = True
-    transport: Optional[Literal["sse", "http", "stdio"]] = "stdio"
+    transport: Literal["stdio", "sse", "streamable-http", "http"] = "stdio"
     command: Optional[List[str]] = None  # for stdio transport
     url: Optional[str] = None            # for sse and http transports
     tool_prefix: Optional[str] = None
@@ -102,11 +102,20 @@ class MCPServerConfig(BaseModel):
                 raise ValueError("env keys and values must be strings")
         return v
 
+class ServerConfig(BaseModel):  # for running ask as server
+    name: str = "ASK Server"
+    instructions: Optional[str] = None
+    transport: Literal["stdio", "sse", "streamable-http"] = "stdio"
+    debug: bool = False
+    port: int = 8000
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "ERROR"
+
 class Config(BaseModel):
     """Top-level configuration for the agent, LLM, and MCP tools/services."""
     agent: AgentConfig
     llm: LLMConfig
     mcp: Optional[dict[str, MCPServerConfig]] = None
+    server: Optional[ServerConfig] = None
 
 def load_config(paths: List[str]) -> Config:
     """Load and merge configuration from multiple YAML files.

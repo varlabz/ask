@@ -24,7 +24,7 @@ def create_mcp_servers(mcp_config: Optional[Dict[str, MCPServerConfig]]) -> List
                     tool_prefix=cfg.tool_prefix
                 )
             )
-        elif transport == "http":
+        elif transport == "http" or transport == "streamable-http":
             if not cfg.url:
                 raise ValueError(f"HTTP transport requires 'url' for server '{name}'")
             servers.append(
