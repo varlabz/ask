@@ -59,6 +59,7 @@ class LLMConfig(BaseModel):
     temperature: Optional[float] = None
     max_tokens: Optional[int] = None
     timeout: Optional[float] = None
+    max_history: int = 0        # 0 - no history, >0 - keep summary in ~N of words. more means more context
 
     @field_validator("api_key", mode="before")
     def resolve_api_key(cls, v):

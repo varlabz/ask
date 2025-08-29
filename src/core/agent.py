@@ -1,13 +1,14 @@
 """
 agent.py
 """
-from pydantic_ai.usage import UsageLimits
 from pydantic_ai import Agent
+from pydantic_ai.usage import UsageLimits
 from pydantic_ai.settings import ModelSettings
 
 from core.config import Config, load_config
 from core.mcp_client import create_mcp_servers
 from core.model import create_model
+from core.agent_history import make_llm_repack_processor
 
 class AgentASK:
     _agent: Agent
@@ -55,6 +56,7 @@ class AgentASK:
                 mcp_servers=create_mcp_servers(config.mcp),
                 model_settings=model_settings,
                 output_type=config.agent.output_type,
+                history_processors=[make_llm_repack_processor(create_model(llm), max_history=config.llm.max_history)],
             ),
             use_mcp_servers=config.mcp is not None,
         )
