@@ -36,7 +36,7 @@ async def chat(agent: AgentASK, initial_prompt: Optional[str] = None):
 
     while True:
         try:
-            prompt = (await get_input(f"[{counter}]: ")).strip()
+            prompt = (await get_input(f"{counter}:] ")).strip()
             if not prompt:
                 continue
             if prompt.lower() in ["/exit", "/quit"]:
@@ -47,4 +47,4 @@ async def chat(agent: AgentASK, initial_prompt: Optional[str] = None):
             counter += 1
         except (KeyboardInterrupt, EOFError):
             break
-    print("bye")
+    print("...")
