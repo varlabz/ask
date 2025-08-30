@@ -77,7 +77,7 @@ def make_llm_repack_processor(
 
     async def repack(messages: List[ModelMessage]) -> List[ModelMessage]:
         print(f"### {len(messages)} messages...", file=sys.stderr)
-        dump_messages(messages, "tmp/message_dump.txt")
+        # dump_messages(messages, "tmp/message_dump.txt")
         if max_history <= 0:
             return messages
         
@@ -103,7 +103,7 @@ def make_llm_repack_processor(
             parts=[TextPart(content=f"Conversation summary:\n{summary_text}")]
         )
         ret = head + [summary_message] + tail
-        dump_messages(ret, "tmp/message_dump_new.txt")
+        # dump_messages(ret, "tmp/message_dump_new.txt")
         return ret
 
     return repack
