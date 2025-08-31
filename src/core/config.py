@@ -18,7 +18,7 @@ class ProviderEnum(str, Enum):
 
 class AgentConfig(BaseModel):
     instructions: str
-    output_type: Optional[Any] = str
+    output_type: Any = str
 
     @field_validator("output_type", mode="before")
     def convert_output_type(cls, v):

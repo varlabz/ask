@@ -25,7 +25,7 @@ import sys
 from typing import Any, Awaitable, Callable, List
 
 from pydantic_ai import Agent, RunContext
-from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter, ModelRequest, UserPromptPart, ModelResponse, TextPart
+from pydantic_ai.messages import ModelMessage, SystemPromptPart, ModelMessagesTypeAdapter, ModelRequest, UserPromptPart, ModelResponse, TextPart
 from pydantic_ai.usage import UsageLimits
 from pydantic_ai.models import Model
 from pydantic_ai.settings import ModelSettings

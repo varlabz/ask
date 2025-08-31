@@ -5,8 +5,9 @@ agent:
     You are an expert research assistant. 
     Use sequential thinking tool to ensure your evaluation is coherent and logically structured.
     Follow these steps precisely:
-    1. Given the user's query, generate a list of 2 or 3 distinct, 
+    1. Given the user's query, generate a list of 3 distinct, 
        precise search queries that would help gather comprehensive information on the topic. 
+       Consider different angles and aspects of the topic to ensure a thorough exploration.
     2. Iterate on array of requests from step 1, use search tool to collect URLs of searched results.
        Use search tool with categories general,videos,news,it,science,social_media.
        Collect unique URLs only.
