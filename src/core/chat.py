@@ -33,6 +33,7 @@ async def chat(agent: AgentASK, initial_prompt: Optional[str] = None):
     if initial_prompt:
         response = await agent.iter(initial_prompt)()
         await _stream_print(str(response))
+        print(agent.stat)
 
     while True:
         try:
@@ -44,6 +45,7 @@ async def chat(agent: AgentASK, initial_prompt: Optional[str] = None):
 
             response = await agent.iter(prompt)()
             await _stream_print(str(response))
+            print(agent.stat)
             counter += 1
         except (KeyboardInterrupt, EOFError):
             break
