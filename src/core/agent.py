@@ -21,16 +21,15 @@ class AgentStats:
     _duration = 0
     _total_requests = 0
 
-    def _update_stats(self, usage: Usage, duration: float, message_count: int):
+    def _update_stats(self, usage: Usage, duration: float, ):
         self._usage = usage
         self._duration = duration
         self._total_requests += usage.requests
-        self._message_count = message_count
 
     def __str__(self):
         return (
             f"total: {self._usage.total_tokens}, tps: {(self._usage.total_tokens or 0)/self._duration:.2f}, "
-            f"requests: {self._total_requests}, messages: {self._message_count}, details: {self._usage.details}"
+            f"requests: {self._total_requests}, details: {self._usage.details}"
         )
 
 class AgentASK:
@@ -60,7 +59,7 @@ class AgentASK:
             ret = await self._agent.run(prompt, usage_limits=UsageLimits(request_limit=100), message_history=self._history)
             end_time = time.time()
             self._history = self._repack(ret.all_messages())
-            self._stat._update_stats(ret.usage(), duration=(end_time - start_time), message_count=len(self._history))
+            self._stat._update_stats(ret.usage(), duration=(end_time - start_time), )
             return ret.output
         
         return _iter
