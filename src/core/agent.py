@@ -2,6 +2,7 @@
 agent.py
 """
 from collections.abc import Callable
+import time
 from typing import Awaitable, List
 from attr import dataclass
 from pydantic_ai import Agent
@@ -12,24 +13,32 @@ from pydantic_ai.messages import ModelMessage
 from core.config import Config, load_config
 from core.mcp_client import create_mcp_servers
 from core.model import create_model
-from core.agent_history import make_llm_repack_processor
+from core.agent_history import make_llm_repack_processor, repack_tools_messages
 
 @dataclass
 class AgentStats:
     _usage = Usage()
-    
-    def _update_stats(self, usage: Usage):
-        self._usage = usage 
-        
+    _duration = 0
+    _total_requests = 0
+
+    def _update_stats(self, usage: Usage, duration: float, message_count: int):
+        self._usage = usage
+        self._duration = duration
+        self._total_requests += usage.requests
+        self._message_count = message_count
+
     def __str__(self):
-        return f"Total: {self._usage.total_tokens}, Requests: {self._usage.requests}, Details: {self._usage.details}"
+        return (
+            f"total: {self._usage.total_tokens}, tps: {(self._usage.total_tokens or 0)/self._duration:.2f}, "
+            f"requests: {self._total_requests}, messages: {self._message_count}, details: {self._usage.details}"
+        )
 
 class AgentASK:
     _agent: Agent
     _history: list
     _use_mcp_servers: bool
     _stat = AgentStats()
-    _repack: Callable[[List[ModelMessage]], Awaitable[List[ModelMessage]]]
+    _repack: Callable[[List[ModelMessage]], List[ModelMessage]]
 
     def __init__(self, agent: Agent, use_mcp_servers: bool, repack):
         self._agent = agent
@@ -45,12 +54,15 @@ class AgentASK:
         return await iter()
 
     def iter(self, prompt: str):
+        """Create an async iterator for the agent with the given prompt."""
         async def _iter():
-            history = await self._repack(self._history)
-            ret = await self._agent.run(prompt, usage_limits=UsageLimits(request_limit=100), message_history=history)
-            self._history = ret.all_messages()
-            self._stat._update_stats(ret.usage())
+            start_time = time.time()
+            ret = await self._agent.run(prompt, usage_limits=UsageLimits(request_limit=100), message_history=self._history)
+            end_time = time.time()
+            self._history = self._repack(ret.all_messages())
+            self._stat._update_stats(ret.usage(), duration=(end_time - start_time), message_count=len(self._history))
             return ret.output
+        
         return _iter
 
     # wrapper for single shot run
@@ -80,9 +92,10 @@ class AgentASK:
                 mcp_servers=create_mcp_servers(config.mcp),
                 model_settings=model_settings,
                 output_type=config.agent.output_type,
+                # history_processors=[make_llm_repack_processor(create_model(llm), max_history=config.llm.max_history, keep_last=2)],
             ),
             use_mcp_servers=config.mcp is not None,
-            repack=make_llm_repack_processor(create_model(llm), max_history=config.llm.max_history),
+            repack=repack_tools_messages,
         )
 
     @classmethod
