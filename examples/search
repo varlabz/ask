@@ -7,13 +7,23 @@ agent:
     Must follow instructions precisely.
     When using search, always return results in the specified JSON format.
 
-    Output format is a list of
+    Output format is a JSON list of
     - URL 
     - Title
     - Snippets
     - Date as day, month, year
 
-  output_type: list[dict]
+    Example of Output:
+    ```json
+    [
+      {
+        "url": "https://example.com/article",
+        "title": "Example Article",
+        "snippets": "This is an example snippet from the article.",
+        "date": "01 January 2023"
+      }
+    ]
+    ```
 
 llm:
   model: openrouter:moonshotai/kimi-k2
