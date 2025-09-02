@@ -1,0 +1,23 @@
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask cli -c ~/.config/ask/llm.yaml -c 
+
+agent:
+  instructions: |
+    Read a resume and a job description.
+    Tailor the resume to emphasize the skills and experiences that align with the job.
+    Use markitdown tool to read pdf files.
+    Use the provided tools to read and modify files as needed.
+    Use the browser tool to navigate for additional information if necessary.
+    Save the updated resume with a new name "updated_resume.md".
+    Provide a brief summary of the changes made and why they were necessary.
+    Calculate score from 0-100 based on the alignment of the original resume with the job description.
+    Calculate score from 0-100 based on the alignment of the updated resume with the job description.
+
+mcp:
+  filesystem:
+    command: ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+
+  markitdown:
+    command: ["uvx", "markitdown-mcp"]
+
+  playwright:
+    command: ["npx", "-y", "@playwright/mcp@latest", "--cdp-endpoint", "http://localhost:9222"]
