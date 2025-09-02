@@ -21,7 +21,8 @@ def create_mcp_servers(mcp_config: Optional[Dict[str, MCPServerConfig]]) -> List
             servers.append(
                 MCPServerSSE(
                     url=cfg.url, 
-                    tool_prefix=cfg.tool_prefix
+                    tool_prefix=cfg.tool_prefix,
+                    timeout=15,
                 )
             )
         elif transport == "http" or transport == "streamable-http":
@@ -30,9 +31,10 @@ def create_mcp_servers(mcp_config: Optional[Dict[str, MCPServerConfig]]) -> List
             servers.append(
                 MCPServerStreamableHTTP(
                     url=cfg.url, 
-                    tool_prefix=cfg.tool_prefix
-                    )
+                    tool_prefix=cfg.tool_prefix,
+                    timeout=15,
                 )
+            )
         elif transport == "stdio":
             if not command:
                 raise ValueError(f"Stdio transport requires 'command' for server '{name}'")
@@ -42,7 +44,8 @@ def create_mcp_servers(mcp_config: Optional[Dict[str, MCPServerConfig]]) -> List
                     args=command[1:],
                     tool_prefix=cfg.tool_prefix,
                     cwd=cfg.cwd,
-                    env=cfg.env
+                    env=cfg.env,
+                    timeout=15,
                 )
             )
         else:
