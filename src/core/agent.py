@@ -91,6 +91,7 @@ class AgentASK:
                 mcp_servers=create_mcp_servers(config.mcp),
                 model_settings=model_settings,
                 output_type=config.agent.output_type,
+                retries=3,
                 # history_processors=[make_llm_repack_processor(create_model(llm), max_history=config.llm.max_history, keep_last=2)],
             ),
             use_mcp_servers=config.mcp is not None,
