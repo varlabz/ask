@@ -19,7 +19,7 @@ ASK is a versatile AI agent that works both as a CLI tool with MCP server integr
 Use ASK directly without installation:
 
 ```bash
-uvx --from git+https://github.com/varlabz/ask cli "What is Python?"
+uvx --from git+https://github.com/varlabz/ask ask-cli "What is Python?"
 ```
 
 With with a simple config:
@@ -34,7 +34,7 @@ llm:
   temperature: 0.1" > .ask.yaml
 
 # Run with uvx
-uvx --from git+https://github.com/varlabz/ask cli -c .ask.yaml "Explain machine learning"
+uvx --from git+https://github.com/varlabz/ask ask-cli -c .ask.yaml "Explain machine learning"
 ```
 
 ## Configuration
@@ -47,10 +47,10 @@ Create a `agent.yaml` file:
 agent:
   instructions: "You are a helpful AI assistant with access to web search and file operations."
 
-llm:
-  model: "ollama:qwen2.5:14b"
-  base_url: "http://localhost:11434/v1"
-  temperature: 0.1
+llm:      # for openai compatible models
+  model: openai:deepseek-chat
+  api_key: file:~/.config/ask/deepseek
+  base_url: https://api.deepseek.com/v1/
 
 mcp:
   fetch:
@@ -74,11 +74,11 @@ llm:
   api_key: "env/OPENAI_API_KEY"
   # Alternative providers:
   # model: "openrouter:anthropic/claude-3.5-sonnet"
-  # api_key: "env:OPENROUTER_API_KEY"
+  # api_key: "env:OPENROUTER_API_KEY" take key from environment variable OPENROUTER_API_KEY
   # or
   # api_key: "file:path to openrouter key file"
   # or
-  # api_key: "api key"
+  # api_key: "api key as is"
 
 mcp:
   filesystem:
@@ -104,7 +104,7 @@ mcp:
 
 ASK can extend other LLMs by running as an MCP server, providing access to your configured AI agent.
 
-### Claude Desktop Configuration
+### Claude Desktop Configuration (for example)
 
 Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
@@ -118,7 +118,7 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
         "git+https://github.com/varlabz/ask",
         "ask-mcp",
         "-c",
-        "/path/to/your/.ask.yaml"
+        "/path/to/your/agent.yaml"
       ]
     }
   }
@@ -139,7 +139,7 @@ Add to VS Code settings (`mcp.json`):
         "git+https://github.com/varlabz/ask",
         "ask-mcp",
         "-c",
-        "${workspaceFolder}/.ask.yaml"
+        "${workspaceFolder}/agent.yaml"
       ]
     }
   }
@@ -183,6 +183,6 @@ Reference them in config:
 ```yaml
 llm:
   model: "openai:gpt-4o"
-  api_key: "env/OPENAI_API_KEY"
+  api_key: "env:OPENAI_API_KEY"
 ```
 
