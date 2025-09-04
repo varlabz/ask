@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 # Import the actual models and functions from the refactored api_main
-from api_main import ChatMessage, UserMessage, AssistantMessage, get_agent, make_lifespan
+from api_main import ChatMessage, UserMessage, AssistantMessage,  make_lifespan
 
 # Import the functions we need to test directly
 from pydantic_ai.messages import (
