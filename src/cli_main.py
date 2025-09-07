@@ -29,6 +29,11 @@ def main():
 
     agent = AgentASK.create_from_config(config)
 
+    # can't use chat and not istty the same time
+    if args.chat and not sys.stdin.isatty():
+        print("Error: Interactive chat mode requires a terminal.", file=sys.stderr)
+        sys.exit(1)
+
     # Get prompt from args or stdin
     prompt = ' '.join(args.prompt).strip()
     if not prompt and not sys.stdin.isatty():

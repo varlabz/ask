@@ -58,8 +58,9 @@ async def process_request(prompt: str, config: AgentConfig) -> Optional[str]:
 Use Google-style docstrings for all functions, classes, and modules:
 
 ```python
-def model_factory(model_cfg: ModelConfig) -> Union[str, OpenAIModel]:
-    """Factory function to create model instances based on configuration.
+def model_factory(model_cfg: ModelConfig) -> str | OpenAIModel:
+    """
+    Factory function to create model instances based on configuration.
     
     Args:
         model_cfg: Configuration object containing model settings
@@ -71,8 +72,8 @@ def model_factory(model_cfg: ModelConfig) -> Union[str, OpenAIModel]:
         ValueError: If provider is not supported
         
     Example:
-        >>> config = ModelConfig(model="openai/gpt-4")
-        >>> model = model_factory(config)
+        config = ModelConfig(model="openai:gpt-4")
+        model = model_factory(config)
     """
     # Implementation here
     pass
@@ -104,8 +105,7 @@ class ModelConfig(BaseModel):
     temperature: float
     max_tokens: int
     
-    @field_validator("model")
-    @classmethod
+    @field_validator("model", mode="before")
     def validate_model(cls, v: str) -> str:
         if not v.strip():
             raise ValueError("Model name cannot be empty")
