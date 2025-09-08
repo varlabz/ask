@@ -8,11 +8,11 @@ No UI endpoints are provided.
 
 from __future__ import annotations as _annotations
 
-import json
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+import os
+import signal
 from typing import Annotated
-
 import fastapi
 from fastapi import Depends, Form
 from fastapi.responses import StreamingResponse
@@ -34,7 +34,6 @@ class UserMessage(ChatMessage):
 class AssistantMessage(ChatMessage):
 	"""Assistant message model."""
 	role: str = "assistant"
-
 
 # Define a router to register endpoints without requiring a global app at import time
 router = fastapi.APIRouter()
@@ -72,6 +71,13 @@ async def post_chat(
 	
 	return StreamingResponse(stream_messages(), media_type="text/plain")
 
+@router.post("/shutdown/")
+async def shutdown_server():
+    print("Shutdown endpoint called")
+    # Send SIGTERM to current process
+    os.kill(os.getpid(), signal.SIGTERM)
+    return {"message": "Server shutting down..."}
+
 def make_lifespan(agent: AgentASK):
 	"""Create a FastAPI lifespan context that uses an externally provided agent."""
 	@asynccontextmanager
@@ -89,12 +95,6 @@ if __name__ == "__main__":
 	import uvicorn
 	from core.config import load_config
 
-	def create_app(agent: AgentASK) -> fastapi.FastAPI:
-		"""Create a FastAPI app wired to the given agent via lifespan, with routes included."""
-		app = fastapi.FastAPI(lifespan=make_lifespan(agent))
-		app.include_router(router)
-		return app
-
 	parser = argparse.ArgumentParser(description="Run ASK FastAPI server.")
 	parser.add_argument(
 		"-c",
@@ -107,5 +107,6 @@ if __name__ == "__main__":
 
 	config = load_config(args.config or [".ask.yaml"])
 	agent = AgentASK.create_from_config(config)
-	app = create_app(agent)
+	app = fastapi.FastAPI(lifespan=make_lifespan(agent))
+	app.include_router(router)
 	uvicorn.run(app, host="127.0.0.1", port=8000)
