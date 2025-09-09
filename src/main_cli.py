@@ -42,7 +42,6 @@ def main():
     
     if args.web:
         import core.web
-        print(f"Starting web UI on port {args.web_port}")
         core.web.run_web(agent, args.web_port)
     elif args.chat:
         asyncio.run(agent.run_iter(lambda: chat(agent, prompt if prompt else None)))

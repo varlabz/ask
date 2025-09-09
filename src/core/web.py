@@ -5,14 +5,14 @@ from contextlib import asynccontextmanager
 import sys
 from typing import Annotated, Literal, AsyncIterator
 from datetime import datetime, timezone
-from typing import List, Tuple
+from typing import List
 import httpx
 from pydantic import BaseModel
 import fastapi
 from fastapi.responses import StreamingResponse
 from nicegui import ui, app
 
-from src.core.agent import AgentASK
+from core.agent import AgentASK
 
 class ChatMessage(BaseModel):
     """Base model for chat messages."""
