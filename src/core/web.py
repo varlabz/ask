@@ -124,7 +124,7 @@ async def main():
     with ui.column().classes('w-full max-w-2xl mx-auto items-stretch'):
         chat_messages()
 
-def run(agent: AgentASK, port: int) -> None:
+def run_web(agent: AgentASK, port: int) -> None:
     main_app_lifespan = app.router.lifespan_context
     @asynccontextmanager
     async def lifespan_wrapper(app):
@@ -140,7 +140,7 @@ def run(agent: AgentASK, port: int) -> None:
     # Update API base URL to selected port so the UI talks to the correct server
     global API_BASE_URL
     API_BASE_URL = f"http://localhost:{port}"
-    ui.run(host="localhost", port=port, title='ASK Chat', dark=None, favicon='🤖')
+    ui.run(host="localhost", port=port, title='ASK Chat', dark=None, favicon='🤖', native=True)
 
 if __name__ in {'__main__', '__mp_main__'}:
     import argparse
@@ -162,4 +162,4 @@ if __name__ in {'__main__', '__mp_main__'}:
     )
     args = parser.parse_args()
     agent = AgentASK.create_from_file(args.config or [".ask.yaml"])
-    run(agent, args.port)
+    run_web(agent, args.port)
