@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ask"
-version = "0.11.3"
+version = "0.12.0"
 description = "ASK CLI/MCP"
 authors = [
     { name = "varlabz", email = "varlabz@umdoze.com" }
@@ -17,9 +17,9 @@ dependencies = [
     "griffe>=1.7.3",
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.30.0",
-    "typing-extensions>=4.12.2",
     "prompt-toolkit>=3.0.0",
-    "streamlit>=1.49.1",
+    "nicegui>=2.24.0",
+    "httpx>=0.28.1",
 ]
 requires-python = ">=3.13"
 
@@ -30,8 +30,8 @@ dev = [
 ]
 
 [project.scripts]
-ask-cli = "cli_main:main"
-ask-mcp = "mcp_main:main"
+ask-cli = "main_cli:main"
+ask-mcp = "main_mcp:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

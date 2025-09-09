@@ -5,12 +5,18 @@ agent:
     You are an advanced AI search assistant with access to various tools and services.
     Provide accurate, helpful, and concise responses.
     Must follow instructions precisely.
-    When using search, always return results in the specified format.
-    Output format is a list of
-    - URL 
-    - Title
-    - Snippets
-    - Date as day, month, year
+    Output format is a list of items with:
+      - Title
+      - Snippets
+      - Date as day, month, year
+      - URL 
+    For example:
+      Example Title 
+      **Example snippet text...**
+      01 January 2023
+      https://example.com
+      ---
+
 
 mcp:
   search:
