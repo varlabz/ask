@@ -135,7 +135,7 @@ async def main():
         initial_prompt = None
         await send(text)
 
-def run_web(agent: AgentASK, port: int, prompt: str | None) -> None:
+def run_web(agent: AgentASK, port: int, prompt: str | None, reload: bool = True) -> None:
     main_app_lifespan = app.router.lifespan_context
     @asynccontextmanager
     async def lifespan_wrapper(app):
@@ -153,7 +153,7 @@ def run_web(agent: AgentASK, port: int, prompt: str | None) -> None:
     API_BASE_URL = f"http://localhost:{port}"
     global initial_prompt
     initial_prompt = prompt
-    ui.run(host="localhost", port=port, title='ASK Chat', dark=None, favicon='🤖', native=True,  reload=False)
+    ui.run(host="localhost", port=port, title='ASK Chat', dark=None, favicon='🤖', native=True, reload=reload)
 
 if __name__ in {'__main__', '__mp_main__'}:
     import argparse
@@ -175,4 +175,4 @@ if __name__ in {'__main__', '__mp_main__'}:
     )
     args = parser.parse_args()
     agent = AgentASK.create_from_file(args.config or [".ask.yaml"])
-    run_web(agent, args.port)
+    run_web(agent, args.port, None)
