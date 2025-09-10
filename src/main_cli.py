@@ -10,7 +10,6 @@ import sys
 
 from core.agent import AgentASK
 from core.config import load_config
-from core.chat import chat
 
 def main():
     """Main function for the CLI."""
@@ -41,12 +40,13 @@ def main():
         prompt = sys.stdin.read().strip()
     
     if args.chat:
-        import core.web
-        core.web.run_web(agent, args.chat_port, prompt if prompt else None, reload=False)
+        import core.chat
+        core.chat.run_web(agent, args.chat_port, prompt if prompt else None, reload=False)
         return
     
     if args.tchat:
-        asyncio.run(agent.run_iter(lambda: chat(agent, prompt if prompt else None)))
+        import core.tchat 
+        asyncio.run(agent.run_iter(lambda: core.tchat.chat(agent, prompt if prompt else None)))
         return
         
     if not prompt:
