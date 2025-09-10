@@ -3,15 +3,16 @@ import os
 import json
 import pytest
 from datetime import datetime, timezone
-from typing import Any, Sequence
+from typing import Any, Sequence, Literal
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
 from fastapi import FastAPI, Form, Response
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 # Import the actual models and functions from the refactored api_main
-from api_main import ChatMessage, UserMessage, AssistantMessage,  make_lifespan
+from core.rest_api import ChatMessage, make_lifespan
 
 # Import the functions we need to test directly
 from pydantic_ai.messages import (
@@ -55,11 +56,13 @@ class TestNDJSONFormatting:
     def test_format_chat_messages_as_ndjson(self):
         """Test formatting chat messages as NDJSON."""
         chat_messages = [
-            UserMessage(
+            ChatMessage(
+                role="user",
                 timestamp="2024-01-01T12:00:00Z",
                 content="Hello"
             ),
-            AssistantMessage(
+            ChatMessage(
+                role="assistant",
                 timestamp="2024-01-01T12:00:01Z",
                 content="Hi there!"
             )
@@ -147,7 +150,8 @@ class TestPositiveScenarios:
 
         async def mock_post_chat(prompt: str = Form(...)):
             async def stream_messages():
-                user_msg = UserMessage(
+                user_msg = ChatMessage(
+                    role="user",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=prompt,
                 )
@@ -155,7 +159,8 @@ class TestPositiveScenarios:
 
                 result = await mock_agent.run(prompt)
 
-                assistant_msg = AssistantMessage(
+                assistant_msg = ChatMessage(
+                    role="assistant",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=result.output,
                 )
@@ -211,7 +216,8 @@ class TestPositiveScenarios:
 
         async def mock_post_chat(prompt: str = Form(...)):
             async def stream_messages():
-                user_msg = UserMessage(
+                user_msg = ChatMessage(
+                    role="user",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=prompt,
                 )
@@ -219,7 +225,8 @@ class TestPositiveScenarios:
 
                 result = await mock_agent.run(prompt)
 
-                assistant_msg = AssistantMessage(
+                assistant_msg = ChatMessage(
+                    role="assistant",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=result.output,
                 )
@@ -296,7 +303,8 @@ class TestPositiveScenarios:
 
         async def mock_post_chat(prompt: str = Form(...)):
             async def stream_messages():
-                user_msg = UserMessage(
+                user_msg = ChatMessage(
+                    role="user",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=prompt,
                 )
@@ -304,7 +312,8 @@ class TestPositiveScenarios:
 
                 result = await mock_agent.run(prompt)
 
-                assistant_msg = AssistantMessage(
+                assistant_msg = ChatMessage(
+                    role="assistant",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=result.output,
                 )
@@ -381,7 +390,8 @@ class TestNegativeScenarios:
 
         async def mock_post_chat(prompt: str = Form(...)):
             async def stream_messages():
-                user_msg = UserMessage(
+                user_msg = ChatMessage(
+                    role="user",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=prompt,
                 )
@@ -389,7 +399,8 @@ class TestNegativeScenarios:
 
                 result = await mock_agent.run(prompt)
 
-                assistant_msg = AssistantMessage(
+                assistant_msg = ChatMessage(
+                    role="assistant",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=result.output,
                 )
@@ -440,7 +451,8 @@ class TestNegativeScenarios:
 
         async def mock_post_chat(prompt: str = Form(...)):
             async def stream_messages():
-                user_msg = UserMessage(
+                user_msg = ChatMessage(
+                    role="user",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=prompt,
                 )
@@ -448,7 +460,8 @@ class TestNegativeScenarios:
 
                 result = await mock_agent.run(prompt)
 
-                assistant_msg = AssistantMessage(
+                assistant_msg = ChatMessage(
+                    role="assistant",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=result.output,
                 )
@@ -491,7 +504,8 @@ class TestNegativeScenarios:
 
         async def mock_post_chat(prompt: str = Form(...)):
             async def stream_messages():
-                user_msg = UserMessage(
+                user_msg = ChatMessage(
+                    role="user",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=prompt,
                 )
@@ -500,7 +514,8 @@ class TestNegativeScenarios:
                 try:
                     result = await mock_agent.run(prompt)
 
-                    assistant_msg = AssistantMessage(
+                    assistant_msg = ChatMessage(
+                        role="assistant",
                         timestamp=datetime.now(tz=timezone.utc).isoformat(),
                         content=result.output,
                     )
@@ -509,7 +524,7 @@ class TestNegativeScenarios:
                     mock_agent._history = mock_agent._repack(result.all_messages())
                 except Exception as e:
                     error_msg = ChatMessage(
-                        role="system",
+                        role="assistant",  # Use assistant role for error messages
                         timestamp=datetime.now(tz=timezone.utc).isoformat(),
                         content=f"Error: {str(e)}",
                     )
@@ -531,7 +546,7 @@ class TestNegativeScenarios:
 
         assert user_msg["role"] == "user"
         assert user_msg["content"] == "Test prompt"
-        assert error_msg["role"] == "system"
+        assert error_msg["role"] == "assistant"
         assert "Model service unavailable" in error_msg["content"]
 
     def test_post_chat_extremely_long_prompt(self):
@@ -561,7 +576,8 @@ class TestNegativeScenarios:
 
         async def mock_post_chat(prompt: str = Form(...)):
             async def stream_messages():
-                user_msg = UserMessage(
+                user_msg = ChatMessage(
+                    role="user",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=prompt,
                 )
@@ -569,7 +585,8 @@ class TestNegativeScenarios:
 
                 result = await mock_agent.run(prompt)
 
-                assistant_msg = AssistantMessage(
+                assistant_msg = ChatMessage(
+                    role="assistant",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=result.output,
                 )
@@ -630,7 +647,8 @@ class TestNegativeScenarios:
 
         async def mock_post_chat(prompt: str = Form(...)):
             async def stream_messages():
-                user_msg = UserMessage(
+                user_msg = ChatMessage(
+                    role="user",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=prompt,
                 )
@@ -638,7 +656,8 @@ class TestNegativeScenarios:
 
                 result = await mock_agent.run(prompt)
 
-                assistant_msg = AssistantMessage(
+                assistant_msg = ChatMessage(
+                    role="assistant",
                     timestamp=datetime.now(tz=timezone.utc).isoformat(),
                     content=result.output,
                 )

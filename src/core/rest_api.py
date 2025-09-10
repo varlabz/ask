@@ -3,22 +3,19 @@
 
 This implements a backend with REST API and web UI:
 - POST /chat: streams NDJSON messages (user then model chunks) and persists them
-- GET /: serves the NiceGUI web interface for chat
 """
 
 from __future__ import annotations as _annotations
 
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 import fastapi
 from fastapi import Depends, Form
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from core.agent import AgentASK
-from nicegui import ui
-from nicegui import app as nicegui_app
 
 class ChatMessage(BaseModel):
     """Base model for chat messages."""
@@ -27,7 +24,7 @@ class ChatMessage(BaseModel):
     content: str
 
 # Define a router to register endpoints without requiring a global app at import time
-router = fastapi.APIRouter()
+router: Final[fastapi.APIRouter] = fastapi.APIRouter()
 
 def get_agent(request: fastapi.Request) -> AgentASK: return request.app.state.agent
 
@@ -75,7 +72,6 @@ def make_lifespan(agent: AgentASK):
 if __name__ == "__main__":
 	import argparse
 	import uvicorn
-	from core.config import load_config
 
 	parser = argparse.ArgumentParser(description="Run ASK FastAPI server.")
 	parser.add_argument(
@@ -94,10 +90,8 @@ if __name__ == "__main__":
 	)
 	args = parser.parse_args()
 
-	config = load_config(args.config or [".ask.yaml"])
-	agent = AgentASK.create_from_config(config)
+	agent = AgentASK.create_from_file(args.config or [".ask.yaml"])
 	app = fastapi.FastAPI(lifespan=make_lifespan(agent))
 	app.include_router(router)
 
 	uvicorn.run(app, host="localhost", port=args.port)
-

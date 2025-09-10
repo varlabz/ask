@@ -47,8 +47,9 @@ def chat_messages() -> None:
                 name='You' if msg.role == 'user' else 'ASK', 
                 sent=(msg.role == 'user'),
                 stamp=msg.stat,
-            ): 
-                ui.markdown(msg.content)
+            ):  ui.markdown(msg.content, 
+                    extras=['fenced-code-blocks', 'tables', 'code-friendly', 'strike', 'task_list', 'mermaid']
+                )
     else:
         with ui.row().classes('justify-center'):
             ui.label('No messages yet')
@@ -100,7 +101,10 @@ def run_web(_agent: AgentASK, port: int, prompt: str | None, reload: bool = True
             async with main_app_lifespan(app) as state:
                 yield state 
     app.router.lifespan_context = lifespan_wrapper
-    
+
+    app.native.window_args['text_select'] = True
+    app.native.window_args['zoomable'] = True
+
     global initial_prompt
     initial_prompt = prompt
     
