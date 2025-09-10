@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations as _annotations
 
+import asyncio
 from contextlib import asynccontextmanager
 import sys
 from typing import Annotated, Literal, AsyncIterator
@@ -153,7 +154,10 @@ def run_web(agent: AgentASK, port: int, prompt: str | None, reload: bool = True)
     API_BASE_URL = f"http://localhost:{port}"
     global initial_prompt
     initial_prompt = prompt
-    ui.run(host="localhost", port=port, title='ASK Chat', dark=None, favicon='🤖', native=True, reload=reload)
+    try:
+        ui.run(host="localhost", port=port, title='ASK Chat', dark=None, favicon='🤖', native=True, reload=reload)
+    except (KeyboardInterrupt, asyncio.CancelledError, SystemExit):
+        print("Shutting down...")
 
 if __name__ in {'__main__', '__mp_main__'}:
     import argparse
