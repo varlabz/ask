@@ -34,8 +34,9 @@ dev = [
 ask-cli = "ask.main_cli:main"
 ask-mcp = "ask.main_mcp:main"
 
-[tool.setuptools]
-packages = ["ask"]
+[tool.setuptools.packages.find]
+where = ["."]
+
 
 [tool.pytest.ini_options]
 minversion = "8.0"
