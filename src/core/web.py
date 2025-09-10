@@ -3,14 +3,10 @@ from __future__ import annotations as _annotations
 
 import asyncio
 from contextlib import asynccontextmanager
-import sys
-from typing import Annotated, Literal, AsyncIterator
+from typing import Literal, AsyncIterator
 from datetime import datetime, timezone
 from typing import List
-import httpx
 from pydantic import BaseModel
-import fastapi
-from fastapi.responses import StreamingResponse
 from nicegui import ui, app
 
 from core.agent import AgentASK
@@ -24,41 +20,24 @@ class ChatMessage(BaseModel):
 
 messages: List[ChatMessage] = []
 initial_prompt: str | None = None
+agent: AgentASK  # Will be set in lifespan
 
-API_BASE_URL = "http://localhost:8000"  # API server URL (overridden by --port at runtime)
-
-def get_agent(request: fastapi.Request) -> AgentASK: return request.app.state.agent
-
-@app.post("/chat/")
-async def post_chat(
-    prompt: Annotated[str, fastapi.Form(...)],
-	agent: AgentASK = fastapi.Depends(get_agent),
-) -> StreamingResponse:
-    """
-    Stream chat response and persist conversation.
-    Returns an NDJSON stream of ChatMessage objects.
-    """
-    async def stream_messages():
-        try:
-            user_msg = ChatMessage(
-                role='user',
-                timestamp=datetime.now(tz=timezone.utc).isoformat(),
-                content=prompt,
-            )
-            yield user_msg.model_dump_json().encode("utf-8") + b"\n"
-            result = await agent.iter(prompt)()
-            stat = str(agent.stat)
-            assistant_msg = ChatMessage(
-                role='assistant',
-                timestamp=datetime.now(tz=timezone.utc).isoformat(),
-                content=str(result),
-                stat=stat
-            )
-            yield assistant_msg.model_dump_json().encode("utf-8") + b"\n"
-        except BaseException as e:
-            print("Error:", e, file=sys.stderr)
-
-    return StreamingResponse(stream_messages(), media_type="text/plain")
+async def _send(prompt: str) -> AsyncIterator[ChatMessage]:
+    user_msg = ChatMessage(
+        role='user',
+        timestamp=datetime.now(tz=timezone.utc).isoformat(),
+        content=prompt,
+    )
+    yield user_msg
+    result = await agent.iter(prompt)()
+    stat = str(agent.stat)
+    assistant_msg = ChatMessage(
+        role='assistant',
+        timestamp=datetime.now(tz=timezone.utc).isoformat(),
+        content=str(result),
+        stat=stat
+    )
+    yield assistant_msg
 
 @ui.refreshable
 def chat_messages() -> None:
@@ -74,36 +53,6 @@ def chat_messages() -> None:
         with ui.row().classes('justify-center'):
             ui.label('No messages yet')
     ui.run_javascript('window.scrollTo(0, document.body.scrollHeight)')
-
-async def _send(prompt: str) -> AsyncIterator[ChatMessage]:
-    """
-    Stream ChatMessage objects from the API as they arrive.
-
-    Yields:
-        ChatMessage: Parsed chat messages from the NDJSON stream.
-    """
-    if not prompt:
-        return
-
-    try:
-        async with httpx.AsyncClient(
-            timeout=httpx.Timeout(connect=5.0, read=300.0, write=10.0, pool=5.0)
-        ) as client:
-            async with client.stream('POST', f'{API_BASE_URL}/chat/', data={'prompt': prompt}) as response:
-                response.raise_for_status()
-                try:
-                    async for line in response.aiter_lines():
-                        if not line:
-                            continue
-                        try:
-                            yield ChatMessage.model_validate_json(line)
-                        except Exception:
-                            ui.notify(f'Error parsing message: {line}', type='negative')
-                            continue
-                except httpx.ReadTimeout:
-                    ui.notify('Timed out waiting for the next message chunk.', type='warning')
-    except Exception as e:
-        ui.notify(f'Error communicating with API: {e}', type='negative')
 
 @ui.page('/')
 async def main():
@@ -136,11 +85,13 @@ async def main():
         initial_prompt = None
         await send(text)
 
-def run_web(agent: AgentASK, port: int, prompt: str | None, reload: bool = True) -> None:
+def run_web(_agent: AgentASK, port: int, prompt: str | None, reload: bool = True) -> None:
+    global agent
+    agent = _agent
+    
     main_app_lifespan = app.router.lifespan_context
     @asynccontextmanager
     async def lifespan_wrapper(app):
-        app.state.agent = agent
         if agent._use_mcp_servers:
             async with agent._agent.run_mcp_servers():
                 async with main_app_lifespan(app) as state:
@@ -149,11 +100,10 @@ def run_web(agent: AgentASK, port: int, prompt: str | None, reload: bool = True)
             async with main_app_lifespan(app) as state:
                 yield state 
     app.router.lifespan_context = lifespan_wrapper
-    # Update API base URL to selected port so the UI talks to the correct server
-    global API_BASE_URL
-    API_BASE_URL = f"http://localhost:{port}"
+    
     global initial_prompt
     initial_prompt = prompt
+    
     try:
         ui.run(host="localhost", port=port, title='ASK Chat', dark=None, favicon='🤖', native=True, reload=reload)
     except (KeyboardInterrupt, asyncio.CancelledError, SystemExit):
