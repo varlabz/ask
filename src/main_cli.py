@@ -42,7 +42,7 @@ def main():
     
     if args.web:
         import core.web
-        core.web.run_web(agent, args.web_port)
+        core.web.run_web(agent, args.web_port, prompt if prompt else None)
     elif args.chat:
         asyncio.run(agent.run_iter(lambda: chat(agent, prompt if prompt else None)))
         sys.exit(0)

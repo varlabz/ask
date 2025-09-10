@@ -71,7 +71,7 @@ agent:
 
 llm:
   model: "openai:gpt-4o"
-  api_key: "env/OPENAI_API_KEY"
+  api_key: "env:OPENAI_API_KEY"
   # Alternative providers:
   # model: "openrouter:anthropic/claude-3.5-sonnet"
   # api_key: "env:OPENROUTER_API_KEY" take key from environment variable OPENROUTER_API_KEY
