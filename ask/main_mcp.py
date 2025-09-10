@@ -7,8 +7,8 @@ from typing import Final
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.session import ServerSession
 
-from .core.agent import AgentASK
-from .core.config import Config, load_config, ServerConfig
+from ask.core.agent import AgentASK
+from ask.core.config import Config, load_config, ServerConfig
 
 """Main function for MCP CLI entry point."""
 parser = argparse.ArgumentParser(description="Run MCP server.")
