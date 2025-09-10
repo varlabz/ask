@@ -8,8 +8,8 @@ import argparse
 import asyncio
 import sys
 
-from .core.agent import AgentASK
-from .core.config import load_config
+from ask.core.agent import AgentASK
+from ask.core.config import load_config
 
 def main():
     """Main function for the CLI."""
@@ -40,13 +40,13 @@ def main():
         prompt = sys.stdin.read().strip()
     
     if args.chat:
-        import core.chat
-        core.chat.run_web(agent, args.chat_port, prompt if prompt else None, reload=False)
+        from ask.core import chat
+        chat.run_web(agent, args.chat_port, prompt if prompt else None, reload=False)
         return
     
     if args.tchat:
-        import core.tchat
-        asyncio.run(agent.run_iter(lambda: core.tchat.chat(agent, prompt if prompt else None)))
+        from ask.core import tchat
+        asyncio.run(agent.run_iter(lambda: tchat.chat(agent, prompt if prompt else None)))
         return
         
     if not prompt:
