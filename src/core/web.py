@@ -22,6 +22,7 @@ class ChatMessage(BaseModel):
     stat: str | None = None  # Optional statistics for assistant messages
 
 messages: List[ChatMessage] = []
+initial_prompt: str | None = None
 
 API_BASE_URL = "http://localhost:8000"  # API server URL (overridden by --port at runtime)
 
@@ -74,7 +75,8 @@ def chat_messages() -> None:
     ui.run_javascript('window.scrollTo(0, document.body.scrollHeight)')
 
 async def _send(prompt: str) -> AsyncIterator[ChatMessage]:
-    """Stream ChatMessage objects from the API as they arrive.
+    """
+    Stream ChatMessage objects from the API as they arrive.
 
     Yields:
         ChatMessage: Parsed chat messages from the NDJSON stream.
@@ -105,8 +107,11 @@ async def _send(prompt: str) -> AsyncIterator[ChatMessage]:
 @ui.page('/')
 async def main():
     async def send(text) -> None:
-        value = text.value
-        text.value = ''
+        if isinstance(text, str):
+            value = text
+        else:
+            value = text.value
+            text.value = ''
         spinner.style('visibility: visible')
         async for msg in _send(value):
             messages.append(msg)
@@ -124,7 +129,13 @@ async def main():
     with ui.column().classes('w-full max-w-2xl mx-auto items-stretch'):
         chat_messages()
 
-def run_web(agent: AgentASK, port: int) -> None:
+    global initial_prompt        
+    if initial_prompt:
+        text = initial_prompt
+        initial_prompt = None
+        await send(text)
+
+def run_web(agent: AgentASK, port: int, prompt: str | None) -> None:
     main_app_lifespan = app.router.lifespan_context
     @asynccontextmanager
     async def lifespan_wrapper(app):
@@ -140,7 +151,9 @@ def run_web(agent: AgentASK, port: int) -> None:
     # Update API base URL to selected port so the UI talks to the correct server
     global API_BASE_URL
     API_BASE_URL = f"http://localhost:{port}"
-    ui.run(host="localhost", port=port, title='ASK Chat', dark=None, favicon='🤖', native=True)
+    global initial_prompt
+    initial_prompt = prompt
+    ui.run(host="localhost", port=port, title='ASK Chat', dark=None, favicon='🤖', native=True,  reload=False)
 
 if __name__ in {'__main__', '__mp_main__'}:
     import argparse
