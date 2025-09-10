@@ -44,7 +44,7 @@ def chat_messages() -> None:
     if messages:
         for msg in messages:
             with ui.chat_message(
-                name='You' if msg.role == 'user' else 'ASK', 
+                name='You' if msg.role == 'user' else '🤖 ASK', 
                 sent=(msg.role == 'user'),
                 stamp=msg.stat,
             ):  ui.markdown(msg.content, 
