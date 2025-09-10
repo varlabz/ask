@@ -1,8 +1,9 @@
 import asyncio
 from typing import Final, Optional
-from core.agent import AgentASK
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
+
+from .agent import AgentASK
 
 # TODO maybe to use stream from LLM?
 async def _stream_print(text: str, sleep: float = 0.001, yield_every: int = 32) -> None:

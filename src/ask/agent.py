@@ -10,10 +10,10 @@ from pydantic_ai.usage import UsageLimits, Usage
 from pydantic_ai.settings import ModelSettings
 from pydantic_ai.messages import ModelMessage
 
-from core.config import Config, load_config
-from core.mcp_client import create_mcp_servers
-from core.model import create_model
-from core.agent_history import make_llm_repack_processor, repack_tools_messages
+from .config import Config, load_config
+from .mcp_client import create_mcp_servers
+from .model import create_model
+from .agent_history import make_llm_repack_processor, repack_tools_messages
 
 @dataclass
 class AgentStats:

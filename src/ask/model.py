@@ -1,5 +1,5 @@
 from pydantic_ai.models import Model
-from core.config import LLMConfig, ProviderEnum
+from .config import LLMConfig, ProviderEnum
 
 def create_model(llm_config: LLMConfig) -> Model:
     """

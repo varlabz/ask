@@ -9,7 +9,7 @@ from typing import List
 from pydantic import BaseModel
 from nicegui import ui, app
 
-from core.agent import AgentASK
+from .agent import AgentASK
 
 class ChatMessage(BaseModel):
     """Base model for chat messages."""

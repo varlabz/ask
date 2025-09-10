@@ -15,7 +15,7 @@ from fastapi import Depends, Form
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from core.agent import AgentASK
+from .agent import AgentASK
 
 class ChatMessage(BaseModel):
     """Base model for chat messages."""

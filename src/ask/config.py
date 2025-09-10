@@ -6,7 +6,6 @@ from typing import Any, Literal, Optional, List, Dict
 from enum import Enum
 from pydantic import BaseModel, ValidationError, field_validator
 
-
 class ProviderEnum(str, Enum):
     """Enumeration of supported LLM providers."""
     OLLAMA = "ollama"

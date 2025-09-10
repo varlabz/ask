@@ -3,8 +3,8 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 import pytest
-from core.config import LLMConfig, ProviderEnum
-from core.model import create_model
+from ask.config import LLMConfig, ProviderEnum
+from ask.model import create_model
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider
 

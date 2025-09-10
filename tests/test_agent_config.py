@@ -2,7 +2,7 @@ import pytest
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
-from core.config import AgentConfig
+from ask.config import AgentConfig
 from pydantic import ValidationError
 
 class TestAgentConfig:

@@ -4,10 +4,10 @@ mcp_main.py CLI entry point for MCP server
 import argparse
 from typing import Final
 
-from core.config import Config, load_config, ServerConfig
+from ask.config import Config, load_config, ServerConfig
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.session import ServerSession
-from core.agent import AgentASK
+from ask.agent import AgentASK
 
 """Main function for MCP CLI entry point."""
 parser = argparse.ArgumentParser(description="Run MCP server.")
