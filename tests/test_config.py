@@ -1,10 +1,10 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 import pytest
 from pydantic import ValidationError
-from ask.config import load_config, Config
+
+from core.config import load_config, Config
 
 def test_load_config_success(tmp_path, monkeypatch):
     # Prepare a config file with env var for api_key

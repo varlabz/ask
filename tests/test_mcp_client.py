@@ -1,11 +1,11 @@
 import os
 import sys
 import pytest
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 from pydantic_ai.mcp import MCPServerSSE, MCPServerStreamableHTTP, MCPServerStdio
-from ask.mcp_client import create_mcp_servers
-from ask.config import MCPServerConfig
+
+from core.mcp_client import create_mcp_servers
+from core.config import MCPServerConfig
 
 class TestCreateMCPServers:
     def test_sse_positive(self):

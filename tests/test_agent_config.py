@@ -1,9 +1,9 @@
 import pytest
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
-from ask.config import AgentConfig
 from pydantic import ValidationError
+
+from core.config import AgentConfig
 
 class TestAgentConfig:
     def test_builtin_type_str(self):

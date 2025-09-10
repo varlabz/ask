@@ -9,10 +9,8 @@ from fastapi.testclient import TestClient
 from fastapi import FastAPI, Form, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-# Import the actual models and functions from the refactored api_main
-from ask.rest_api import ChatMessage, make_lifespan
+from core.rest_api import ChatMessage, make_lifespan
 
 # Import the functions we need to test directly
 from pydantic_ai.messages import (
