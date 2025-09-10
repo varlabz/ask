@@ -18,8 +18,8 @@ def main():
     parser.add_argument('-c', '--config', type=str, action='append', help='Path to config yaml (can be used multiple times)')
     parser.add_argument('-s', '--system-prompt', type=str, help='Override system prompt/instructions')
     parser.add_argument('--chat', action='store_true', help='Enter interactive chat mode')
-    parser.add_argument("--web", action="store_true", help="Start web UI")
-    parser.add_argument("--web-port", type=int, default=8004, help="port")
+    parser.add_argument("--ui", action="store_true", help="Start UI")
+    parser.add_argument("--ui-port", type=int, default=8004, help="Port for UI")
     parser.add_argument('prompt', nargs='*', help='Prompt for the agent')
     args = parser.parse_args()
 
@@ -40,19 +40,22 @@ def main():
     if not prompt and not sys.stdin.isatty():
         prompt = sys.stdin.read().strip()
     
-    if args.web:
+    if args.ui:
         import core.web
-        core.web.run_web(agent, args.web_port, prompt if prompt else None, reload=False)
-    elif args.chat:
+        core.web.run_web(agent, args.ui_port, prompt if prompt else None, reload=False)
+        return
+    
+    if args.chat:
         asyncio.run(agent.run_iter(lambda: chat(agent, prompt if prompt else None)))
         sys.exit(0)
-    elif not prompt:
+        
+    if not prompt:
         print("Error: No prompt provided.", file=sys.stderr)
         parser.print_help(file=sys.stderr)
         sys.exit(1)
-    else:
-        result = asyncio.run(agent.run(prompt))
-        print(result)
+    
+    result = asyncio.run(agent.run(prompt))
+    print(result)
 
 if __name__ in {'__main__', '__mp_main__'}:
     main()
