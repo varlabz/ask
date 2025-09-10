@@ -4,7 +4,7 @@ import os
 import pytest
 from pydantic import ValidationError
 
-from core.config import load_config, Config
+from ask.core.config import load_config, Config
 
 def test_load_config_success(tmp_path, monkeypatch):
     # Prepare a config file with env var for api_key

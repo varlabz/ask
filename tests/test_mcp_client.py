@@ -4,8 +4,8 @@ import pytest
 
 from pydantic_ai.mcp import MCPServerSSE, MCPServerStreamableHTTP, MCPServerStdio
 
-from core.mcp_client import create_mcp_servers
-from core.config import MCPServerConfig
+from ask.core.mcp_client import create_mcp_servers
+from ask.core.config import MCPServerConfig
 
 class TestCreateMCPServers:
     def test_sse_positive(self):

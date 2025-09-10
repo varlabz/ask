@@ -10,7 +10,7 @@ from fastapi import FastAPI, Form, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from core.rest_api import ChatMessage, make_lifespan
+from ask.core.rest_api import ChatMessage, make_lifespan
 
 # Import the functions we need to test directly
 from pydantic_ai.messages import (

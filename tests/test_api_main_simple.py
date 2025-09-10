@@ -6,16 +6,6 @@ from datetime import datetime, timezone
 from typing import Any, Sequence
 from unittest.mock import MagicMock
 
-# Import the functions we need to test directly
-from pydantic_ai.messages import (
-    ModelMessage,
-    ModelRequest,
-    ModelResponse,
-    TextPart,
-    UserPromptPart,
-)
-
-
 class TestNDJSONFormatting:
     """Test NDJSON formatting for chat messages."""
 

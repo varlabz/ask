@@ -3,7 +3,7 @@ import tempfile
 import yaml
 import pytest
 
-from core.config import load_config, Config, AgentConfig, LLMConfig, MCPServerConfig
+from ask.core.config import load_config, Config, AgentConfig, LLMConfig, MCPServerConfig
 
 def write_yaml_file(data: dict) -> str:
     fd, path = tempfile.mkstemp(suffix=".yaml")

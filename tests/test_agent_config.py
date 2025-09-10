@@ -3,7 +3,7 @@ import sys
 import os
 from pydantic import ValidationError
 
-from core.config import AgentConfig
+from ask.core.config import AgentConfig
 
 class TestAgentConfig:
     def test_builtin_type_str(self):

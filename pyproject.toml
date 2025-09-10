@@ -37,7 +37,6 @@ ask-mcp = "ask.main_mcp:main"
 [tool.setuptools.packages.find]
 where = ["."]
 
-
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
@@ -45,4 +44,3 @@ addopts = "-q"
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-pythonpath = ["ask"]
