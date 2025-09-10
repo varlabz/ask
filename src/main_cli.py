@@ -17,9 +17,9 @@ def main():
     parser = argparse.ArgumentParser(description="Run agent.")
     parser.add_argument('-c', '--config', type=str, action='append', help='Path to config yaml (can be used multiple times)')
     parser.add_argument('-s', '--system-prompt', type=str, help='Override system prompt/instructions')
-    parser.add_argument('--chat', action='store_true', help='Enter interactive chat mode')
-    parser.add_argument("--ui", action="store_true", help="Start UI")
-    parser.add_argument("--ui-port", type=int, default=8004, help="Port for UI")
+    parser.add_argument('--tchat', action='store_true', help='Start terminal interactive chat mode')
+    parser.add_argument("--chat", action="store_true", help="Start chat")
+    parser.add_argument("--chat-port", type=int, default=8004, help="Chat port")
     parser.add_argument('prompt', nargs='*', help='Prompt for the agent')
     args = parser.parse_args()
 
@@ -31,7 +31,7 @@ def main():
     agent = AgentASK.create_from_config(config)
 
     # can't use chat and not istty the same time
-    if args.chat and not sys.stdin.isatty():
+    if args.tchat and not sys.stdin.isatty():
         print("Error: Interactive chat mode requires a terminal.", file=sys.stderr)
         sys.exit(1)
 
@@ -40,14 +40,14 @@ def main():
     if not prompt and not sys.stdin.isatty():
         prompt = sys.stdin.read().strip()
     
-    if args.ui:
+    if args.chat:
         import core.web
-        core.web.run_web(agent, args.ui_port, prompt if prompt else None, reload=False)
+        core.web.run_web(agent, args.chat_port, prompt if prompt else None, reload=False)
         return
     
-    if args.chat:
+    if args.tchat:
         asyncio.run(agent.run_iter(lambda: chat(agent, prompt if prompt else None)))
-        sys.exit(0)
+        return
         
     if not prompt:
         print("Error: No prompt provided.", file=sys.stderr)
