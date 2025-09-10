@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ask"
-version = "0.12.0"
+version = "0.13.0"
 description = "ASK CLI/MCP"
 authors = [
     { name = "varlabz", email = "varlabz@umdoze.com" }
@@ -36,3 +36,4 @@ ask-mcp = "main_mcp:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+py-modules = ["ask"]
