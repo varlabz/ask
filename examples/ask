@@ -7,9 +7,6 @@ agent:
     what you're doing and why. Be proactive in suggesting useful tools when appropriate.
 
 mcp:
-  fetch:
-    command: ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
-    
   youtube:
     command: ["npx", "-y", "https://github.com/varlabz/youtube-mcp", "--mcp"]
       
