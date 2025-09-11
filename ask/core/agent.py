@@ -10,7 +10,7 @@ from pydantic_ai.usage import UsageLimits, Usage
 from pydantic_ai.settings import ModelSettings
 from pydantic_ai.messages import ModelMessage
 
-from .config import Config, load_config
+from .config import Config, load_config, load_config_dict
 from .mcp_client import create_mcp_servers
 from .model import create_model
 from .agent_history import make_llm_repack_processor, repack_tools_messages
@@ -102,4 +102,10 @@ class AgentASK:
     def create_from_file(cls, paths: list[str], name: str = "ASK_Agent") -> 'AgentASK':
         """Create a PydanticAI Agent from a config file paths."""
         config = load_config(paths)
+        return cls.create_from_config(config, name)
+
+    @classmethod
+    def create_from_dict(cls, config_dict: dict, name: str = "ASK_Agent") -> 'AgentASK':
+        """Create a PydanticAI Agent from a config dictionary."""
+        config = load_config_dict(config_dict)
         return cls.create_from_config(config, name)
