@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask cli -c ~/.config/ask/llm.yaml -c 
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-cli -c ~/.config/ask/llm.yaml -c 
 
 agent:
   instructions: |
@@ -35,8 +35,8 @@ agent:
     Now please analyze the following text and give it your pizza rating:
 
 mcp:
-  fetch:
-    command: ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
+  markitdown:
+    command: ["uvx", "markitdown-mcp"]
     
   youtube:
     command: ["npx", "-y", "https://github.com/varlabz/youtube-mcp", "--mcp"]
