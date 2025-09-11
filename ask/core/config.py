@@ -4,7 +4,7 @@ import builtins
 import typing
 from typing import Any, Literal, Optional, List, Dict
 from enum import Enum
-from pydantic import BaseModel, ValidationError, field_validator
+from pydantic import BaseModel, ValidationError, field_validator, ConfigDict
 
 class ProviderEnum(str, Enum):
     """Enumeration of supported LLM providers."""
@@ -18,6 +18,8 @@ class ProviderEnum(str, Enum):
 class AgentConfig(BaseModel):
     instructions: str
     output_type: Any = str
+    # Forbid unknown fields
+    model_config = ConfigDict(extra="forbid")
 
     @field_validator("output_type", mode="before")
     def convert_output_type(cls, v):
@@ -59,6 +61,8 @@ class LLMConfig(BaseModel):
     max_tokens: Optional[int] = None
     timeout: Optional[float] = None
     max_history: int = 0        # 0 - no history, >0 - keep summary in ~N of words. more means more context
+    # Forbid unknown fields
+    model_config = ConfigDict(extra="forbid")
 
     @field_validator("api_key", mode="before")
     def resolve_api_key(cls, v):
@@ -88,6 +92,8 @@ class MCPServerConfig(BaseModel):
     tool_prefix: Optional[str] = None
     cwd: Optional[str] = None
     env: Optional[Dict[str, str]] = None
+    # Forbid unknown fields
+    model_config = ConfigDict(extra="forbid")
 
     @field_validator("env", mode="before")
     @classmethod
@@ -109,6 +115,8 @@ class ServerConfig(BaseModel):  # for running ask as server
     debug: bool = False
     port: int = 8000
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "ERROR"
+    # Forbid unknown fields
+    model_config = ConfigDict(extra="forbid")
 
 class Config(BaseModel):
     """Top-level configuration for the agent, LLM, and MCP tools/services."""
@@ -116,6 +124,8 @@ class Config(BaseModel):
     llm: LLMConfig
     mcp: Optional[dict[str, MCPServerConfig]] = None
     server: Optional[ServerConfig] = None
+    # Forbid unknown fields
+    model_config = ConfigDict(extra="forbid")
 
 def load_config(paths: List[str]) -> Config:
     """Load and merge configuration from multiple YAML files.
@@ -149,8 +159,24 @@ def load_config(paths: List[str]) -> Config:
             raise
         except Exception as e:
             raise RuntimeError(f"Error loading config file '{p}': {e}")
-
     try:
         return Config(**merged_raw)
+    except ValidationError as e:
+        raise RuntimeError(f"Config validation error: {e}")
+
+def load_config_dict(config_dict: dict) -> Config:
+    """Load configuration from a dictionary.
+
+    Args:
+        config_dict: Dictionary containing configuration data.
+
+    Returns:
+        Config: Merged configuration object.
+
+    Raises:
+        RuntimeError: If the config is invalid.
+    """
+    try:
+        return Config(**config_dict)
     except ValidationError as e:
         raise RuntimeError(f"Config validation error: {e}")

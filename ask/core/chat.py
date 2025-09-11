@@ -59,10 +59,12 @@ def chat_messages() -> None:
 async def main():
     async def send(text) -> None:
         if isinstance(text, str):
-            value = text
+            value = text.strip()
         else:
-            value = text.value
+            value = text.value.strip()
             text.value = ''
+        if not value:
+            return
         spinner.style('visibility: visible')
         async for msg in _send(value):
             messages.append(msg)
