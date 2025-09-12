@@ -15,8 +15,8 @@ from ask.core.tools import ContextASK
 
 llm = {
     "temperature": 0.0,
-    "base_url": "http://bacook.local:12345/v1/",
-    "model": "lmstudio:openai-gpt-oss-20b-abliterated-uncensored-neo-imatrix",
+    "base_url": "http://localhost:12345/v1/",
+    "model": "lmstudio:openai-gpt-oss-20b",
 }
 
 class Research(ContextASK):
