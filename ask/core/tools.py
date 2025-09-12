@@ -57,6 +57,10 @@ class ContextASK(BaseModel):
     # output parameter values
     def to_output(self) -> str:
         return _model_instance_to_xml(self)
+
+    # make str() because it is more natural to use str() to get the output for prompt formatting
+    def __str__(self) -> str:
+        return self.to_output()
     
 if __name__ == "__main__":
     class Param(ContextASK):

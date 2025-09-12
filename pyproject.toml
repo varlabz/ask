@@ -33,6 +33,7 @@ dev = [
 [project.scripts]
 ask-cli = "ask.main_cli:main"
 ask-mcp = "ask.main_mcp:main"
+ask-run = "ask.main_run:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

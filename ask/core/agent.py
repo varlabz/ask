@@ -3,7 +3,7 @@ agent.py
 """
 from collections.abc import Callable
 import time
-from typing import Awaitable, List
+from typing import Awaitable, List, Generic, TypeVar, Any
 from attr import dataclass
 from pydantic_ai import Agent
 from pydantic_ai.usage import UsageLimits, Usage
@@ -14,6 +14,9 @@ from .config import Config, load_config, load_config_dict
 from .mcp_client import create_mcp_servers
 from .model import create_model
 from .agent_history import make_llm_repack_processor, repack_tools_messages
+
+InputT = TypeVar('InputT', default=str)
+OutputT = TypeVar('OutputT', default=str)
 
 @dataclass
 class AgentStats:
@@ -32,7 +35,7 @@ class AgentStats:
             f"requests: {self._total_requests}, details: {self._usage.details}"
         )
 
-class AgentASK:
+class AgentASK(Generic[InputT, OutputT]):
     _agent: Agent
     _history: list
     _use_mcp_servers: bool
@@ -52,11 +55,12 @@ class AgentASK:
                 return await iter()
         return await iter()
 
-    def iter(self, prompt: str):
+    def iter(self, prompt: InputT):
         """Create an async iterator for the agent with the given prompt."""
         async def _iter():
             start_time = time.time()
-            ret = await self._agent.run(prompt, usage_limits=UsageLimits(request_limit=100), message_history=self._history)
+            # Cast to str for current pydantic_ai Agent API expecting a string prompt
+            ret = await self._agent.run(str(prompt), usage_limits=UsageLimits(request_limit=100), message_history=self._history)
             end_time = time.time()
             self._history = self._repack(ret.all_messages())
             self._stat._update_stats(ret.usage(), duration=(end_time - start_time), )
@@ -65,7 +69,7 @@ class AgentASK:
         return _iter
 
     # wrapper for single shot run
-    async def run(self, prompt: str):
+    async def run(self, prompt: InputT) -> OutputT:
         """Run the agent with the given prompt."""
         return await self.run_iter(self.iter(prompt))
 
@@ -75,7 +79,7 @@ class AgentASK:
         return self._stat
 
     @classmethod
-    def create_from_config(cls, config: Config, name: str = "ASK_Agent") -> 'AgentASK':
+    def create_from_config(cls, config: Config, name: str = "ASK_Agent") -> 'AgentASK[InputT, OutputT]':
         """Create a PydanticAI Agent from a Config instance."""
         llm = config.llm
         model_settings = ModelSettings(
@@ -99,13 +103,13 @@ class AgentASK:
         )
 
     @classmethod
-    def create_from_file(cls, paths: list[str], name: str = "ASK_Agent") -> 'AgentASK':
+    def create_from_file(cls, paths: list[str], name: str = "ASK_Agent") -> 'AgentASK[InputT, OutputT]':
         """Create a PydanticAI Agent from a config file paths."""
         config = load_config(paths)
         return cls.create_from_config(config, name)
 
     @classmethod
-    def create_from_dict(cls, config_dict: dict, name: str = "ASK_Agent") -> 'AgentASK':
+    def create_from_dict(cls, config_dict: dict, name: str = "ASK_Agent") -> 'AgentASK[InputT, OutputT]':
         """Create a PydanticAI Agent from a config dictionary."""
         config = load_config_dict(config_dict)
         return cls.create_from_config(config, name)
