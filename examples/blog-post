@@ -40,7 +40,7 @@ research_agent = AgentASK[Research, ResearchResult].create_from_dict({
         
         Use the tools:
         - Search tool to find relevant URLs in categories general,videos,news,social_media with number of results 30.
-        - Fetch tool to retrieve content from the URLs.
+        - Fetch tool to retrieve content from the URLs with max length 100000.
         
         Input:
         {Research.to_input()}
@@ -51,8 +51,8 @@ research_agent = AgentASK[Research, ResearchResult].create_from_dict({
     "search": {
         "command": ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "mcp-server"],
     },
-    "markitdown": {
-        "command": ["uvx", "markitdown-mcp"]
+    "fetch": {
+        "command": ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
     },
     "sequential_thinking": {
         "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
