@@ -1,4 +1,0 @@
-llm:
-  model: openrouter:openrouter/horizon-beta
-  api_key: file:~/.config/ask/openrouter
-  temperature: 0.7
