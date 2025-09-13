@@ -4,6 +4,7 @@ import hashlib
 import json
 from enum import Enum
 from pathlib import Path
+import sys
 from typing import Any, Dict, Generic, List, Optional, cast
 from xml.sax.saxutils import escape
 
@@ -138,11 +139,12 @@ class ExecutorASK:
         
         return hashlib.sha256(serialized_input.encode('utf-8')).hexdigest()
 
-    async def step(self, agent: AgentASK[InputT, OutputT], input_data: InputT) -> OutputT:
+    async def step(self, agent: AgentASK[InputT, OutputT], input: InputT) -> OutputT:
         """
         Execute a step, using the cache if possible.
         """
-        key = self._get_input_key(input_data)
+        print(f">>> step: {agent._agent.name}", file=sys.stderr)
+        key = self._get_input_key(input)
         cached_output = self.store.get(key)
         
         if cached_output is not None:
@@ -152,7 +154,7 @@ class ExecutorASK:
                 return cast(OutputT, output_type.model_validate(cached_output))
             return cast(OutputT, cached_output)
 
-        output = await agent.run(input_data)
+        output = await agent.run(input)
         
         # If the output is a Pydantic model, store its dictionary representation
         if isinstance(output, BaseModel):
