@@ -123,18 +123,6 @@ class Config(BaseModel):
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 
-def _deep_merge(a: dict, b: dict) -> dict:
-    if b is None:
-        return a
-    """Shallow-copy a then merge b recursively for dict values."""
-    result = a.copy()
-    for k, v in b.items():
-        if k in result and isinstance(result[k], dict) and isinstance(v, dict):
-            result[k] = _deep_merge(result[k], v)
-        else:
-            result[k] = v
-    return result
-
 def load_config(paths: List[str]) -> Config:
     """Deep-merge multiple YAML config files into a `Config`. Later files override."""
     merged_raw: dict = {}
@@ -147,7 +135,8 @@ def load_config(paths: List[str]) -> Config:
                 raw = yaml.safe_load(f)
                 if not isinstance(raw, dict):
                     raise ValueError(f"Config file '{p}' must contain a dictionary at the root.")
-                merged_raw = _deep_merge(merged_raw, raw)
+                # merge top level keys only
+                merged_raw = {**merged_raw, **raw}
         except FileNotFoundError:
             raise RuntimeError(f"Configuration file '{p}' not found.")
         except yaml.YAMLError as e:
