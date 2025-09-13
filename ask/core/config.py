@@ -4,7 +4,7 @@ import builtins
 import typing
 from typing import Any, Literal, Optional, List, Dict
 from enum import Enum
-from pydantic import BaseModel, ValidationError, field_validator, ConfigDict
+from pydantic import BaseModel, ValidationError, field_validator, ConfigDict, field_serializer
 
 class ProviderEnum(str, Enum):
     """Enumeration of supported LLM providers."""
@@ -16,24 +16,16 @@ class ProviderEnum(str, Enum):
     ANTHROPIC = "anthropic"
 
 class AgentConfig(BaseModel):
+    name: str = "ASK Agent"
     instructions: str
     output_type: Any = str
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 
     @field_validator("output_type", mode="before")
-    def convert_output_type(cls, v):
-        """Convert string type descriptions to Python types.
-        
-        Args:
-            v: Type description as string or actual type
-            
-        Returns:
-            Python type object
-            
-        Raises:
-            ValueError: If type string is not a valid Python type
-        """
+    @classmethod
+    def convert_output_type(cls, v: Any) -> type:
+        """Convert string type descriptions to Python types."""
         if v is None:
             return str
         if isinstance(v, type) or hasattr(v, '__origin__'):
@@ -41,17 +33,21 @@ class AgentConfig(BaseModel):
         if not isinstance(v, str):
             return v
 
-        # Create a safe namespace for parsing type strings
         safe_namespace = {
             **{name: getattr(typing, name) for name in typing.__all__},
             **{name: getattr(builtins, name) for name in dir(builtins)}
         }
-
         try:
-            # Use eval in a restricted environment to parse the type string
             return eval(v, {"__builtins__": {}}, safe_namespace)
         except (NameError, SyntaxError) as e:
             raise ValueError(f"Unknown or invalid type string: {v}") from e
+
+    @field_serializer('output_type')
+    def serialize_output_type(self, value: type) -> str:
+        """Serialize the output_type to a string for JSON compatibility."""
+        if hasattr(value, '__name__'):
+            return value.__name__
+        return str(value)
 
 class LLMConfig(BaseModel):
     model: str
@@ -127,19 +123,20 @@ class Config(BaseModel):
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 
+def _deep_merge(a: dict, b: dict) -> dict:
+    if b is None:
+        return a
+    """Shallow-copy a then merge b recursively for dict values."""
+    result = a.copy()
+    for k, v in b.items():
+        if k in result and isinstance(result[k], dict) and isinstance(v, dict):
+            result[k] = _deep_merge(result[k], v)
+        else:
+            result[k] = v
+    return result
+
 def load_config(paths: List[str]) -> Config:
-    """Load and merge configuration from multiple YAML files.
-
-    Args:
-        paths: List of file paths to YAML config files.
-
-    Returns:
-        Config: Merged configuration object.
-
-    Raises:
-        RuntimeError: If any config file is missing or invalid.
-        ValueError: If YAML syntax is invalid.
-    """
+    """Deep-merge multiple YAML config files into a `Config`. Later files override."""
     merged_raw: dict = {}
     for p in paths:
         if p is None:   # skip empty paths
@@ -150,7 +147,7 @@ def load_config(paths: List[str]) -> Config:
                 raw = yaml.safe_load(f)
                 if not isinstance(raw, dict):
                     raise ValueError(f"Config file '{p}' must contain a dictionary at the root.")
-                merged_raw = {**merged_raw, **raw}
+                merged_raw = _deep_merge(merged_raw, raw)
         except FileNotFoundError:
             raise RuntimeError(f"Configuration file '{p}' not found.")
         except yaml.YAMLError as e:
@@ -180,3 +177,12 @@ def load_config_dict(config_dict: dict) -> Config:
         return Config(**config_dict)
     except ValidationError as e:
         raise RuntimeError(f"Config validation error: {e}")
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 2:
+        print("Usage: python config.py <config_file1> [<config_file2> ...]")
+        sys.exit(1)
+
+    config = load_config(sys.argv[1:])
+    print(config.model_dump_json(indent=2))

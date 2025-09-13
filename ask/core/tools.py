@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict, Generic, List, Optional
+import json
+import hashlib
+from pathlib import Path
 from xml.sax.saxutils import escape
 from pydantic import BaseModel, Field
+
+from ask.core.agent import AgentASK, InputT, OutputT
 
 def _pydantic_model_to_xml(model: type[BaseModel]) -> str:
     def _value(tag: str, field: Any) -> str:
@@ -61,6 +66,25 @@ class ContextASK(BaseModel):
     # make str() because it is more natural to use str() to get the output for prompt formatting
     def __str__(self) -> str:
         return self.to_output()
+    
+class ExecutorStateStore:
+    """Persistent storage for executor step inputs/outputs.
+
+    Stores JSON lines with fields: key, input, output.
+    """
+
+    def __init__(self, path: str | Path = ".ask_executor_state.jsonl"):
+        self.path = Path(path).expanduser().resolve()
+
+class Executor(Generic[InputT, OutputT]):
+    """Executes agent steps with a pluggable state store."""
+
+    def __init__(self, store: Optional[ExecutorStateStore] = None):
+        self.store = store or ExecutorStateStore()
+
+    async def step(self, agent: AgentASK[InputT, OutputT], input_data: InputT) -> OutputT:
+        pass
+    
     
 if __name__ == "__main__":
     class Param(ContextASK):

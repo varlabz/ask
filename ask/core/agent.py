@@ -79,7 +79,7 @@ class AgentASK(Generic[InputT, OutputT]):
         return self._stat
 
     @classmethod
-    def create_from_config(cls, config: Config, name: str = "ASK_Agent") -> 'AgentASK[InputT, OutputT]':
+    def create_from_config(cls, config: Config) -> 'AgentASK[InputT, OutputT]':
         """Create a PydanticAI Agent from a Config instance."""
         llm = config.llm
         model_settings = ModelSettings(
@@ -89,7 +89,7 @@ class AgentASK(Generic[InputT, OutputT]):
         )
         return cls(
             agent=Agent(
-                name=name,
+                name=config.agent.name,
                 model=create_model(llm),
                 system_prompt=config.agent.instructions,
                 mcp_servers=create_mcp_servers(config.mcp),
@@ -103,13 +103,13 @@ class AgentASK(Generic[InputT, OutputT]):
         )
 
     @classmethod
-    def create_from_file(cls, paths: list[str], name: str = "ASK_Agent") -> 'AgentASK[InputT, OutputT]':
+    def create_from_file(cls, paths: list[str],) -> 'AgentASK[InputT, OutputT]':
         """Create a PydanticAI Agent from a config file paths."""
         config = load_config(paths)
-        return cls.create_from_config(config, name)
+        return cls.create_from_config(config,)
 
     @classmethod
-    def create_from_dict(cls, config_dict: dict, name: str = "ASK_Agent") -> 'AgentASK[InputT, OutputT]':
+    def create_from_dict(cls, config_dict: dict, ) -> 'AgentASK[InputT, OutputT]':
         """Create a PydanticAI Agent from a config dictionary."""
         config = load_config_dict(config_dict)
-        return cls.create_from_config(config, name)
+        return cls.create_from_config(config, )
