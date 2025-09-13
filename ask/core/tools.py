@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from enum import Enum
-from typing import Any, Dict, Generic, List, Optional
-import json
 import hashlib
+import json
+from enum import Enum
 from pathlib import Path
+from typing import Any, Dict, Generic, List, Optional, cast
 from xml.sax.saxutils import escape
+
+import yaml
 from pydantic import BaseModel, Field
 
 from ask.core.agent import AgentASK, InputT, OutputT
@@ -67,25 +69,106 @@ class ContextASK(BaseModel):
     def __str__(self) -> str:
         return self.to_output()
     
-class ExecutorStateStore:
-    """Persistent storage for executor step inputs/outputs.
+import yaml
 
-    Stores JSON lines with fields: key, input, output.
+class ExecutorStateStore:
+    """
+    Persistent storage for executor step inputs/outputs.
     """
 
-    def __init__(self, path: str | Path = ".ask_executor_state.jsonl"):
+    def __init__(self, path: str | Path = ".ask_executor_state.yaml"):
         self.path = Path(path).expanduser().resolve()
+        self._data = self._load()
 
-class Executor(Generic[InputT, OutputT]):
-    """Executes agent steps with a pluggable state store."""
+    def _load(self) -> Dict[str, Any]:
+        if not self.path.exists():
+            return {}
+        with open(self.path, "r") as f:
+            try:
+                data = yaml.safe_load(f)
+                return data if isinstance(data, dict) else {}
+            except yaml.YAMLError:
+                # Handle empty or invalid YAML file
+                return {}
 
-    def __init__(self, store: Optional[ExecutorStateStore] = None):
+    def _save(self):
+        with open(self.path, "w") as f:
+            yaml.dump(self._data, f, default_flow_style=False)
+
+    def get(self, key: str) -> Optional[Any]:
+        """
+        Get value by key. Returns None if key does not exist.
+        """
+        return self._data.get(key)
+
+    def set(self, key: str, value: Any):
+        """
+        Store key and value.
+        """
+        self._data[key] = value
+        self._save()
+
+    def clean(self):
+        """
+        Clear the storage by deleting the state file and clearing the in-memory data.
+        """
+        self._data.clear()
+        if self.path.exists():
+            self.path.unlink()
+
+class ExecutorASK:
+    """
+    Executes agent steps with a pluggable state store, caching results.
+    """
+
+    def __init__(self, store: ExecutorStateStore | None = None):
         self.store = store or ExecutorStateStore()
 
+    def _get_input_key(self, input_data: Any) -> str:
+        """Create a consistent hash key from the input data."""
+        if isinstance(input_data, BaseModel):
+            serialized_input = json.dumps(input_data.model_dump(), sort_keys=True)
+        elif isinstance(input_data, str):
+            serialized_input = input_data
+        else:
+            try:
+                serialized_input = json.dumps(input_data, sort_keys=True)
+            except TypeError:
+                serialized_input = str(input_data)
+        
+        return hashlib.sha256(serialized_input.encode('utf-8')).hexdigest()
+
     async def step(self, agent: AgentASK[InputT, OutputT], input_data: InputT) -> OutputT:
-        pass
-    
-    
+        """
+        Execute a step, using the cache if possible.
+        """
+        key = self._get_input_key(input_data)
+        cached_output = self.store.get(key)
+        
+        if cached_output is not None:
+            # If the output type is a Pydantic model, we need to reconstruct it
+            output_type = agent._agent.output_type
+            if isinstance(output_type, type) and issubclass(output_type, BaseModel):
+                return cast(OutputT, output_type.model_validate(cached_output))
+            return cast(OutputT, cached_output)
+
+        output = await agent.run(input_data)
+        
+        # If the output is a Pydantic model, store its dictionary representation
+        if isinstance(output, BaseModel):
+            self.store.set(key, output.model_dump())
+        else:
+            self.store.set(key, output)
+            
+        return output
+
+    def clean(self):
+        """
+        Clean the executor's state store.
+        """
+        self.store.clean()
+
+
 if __name__ == "__main__":
     class Param(ContextASK):
         title: str = Field(..., description="Title of the item")
