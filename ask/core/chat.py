@@ -79,7 +79,7 @@ async def main():
                 .props('rounded outlined input-class=mx-3').classes('flex-grow')
 
     await ui.context.client.connected()  # chat_messages(...) uses run_javascript which is only possible after connecting
-    with ui.column().classes('w-full max-w-2xl mx-auto items-stretch'):
+    with ui.column().classes('w-full max-w-none px-6 items-stretch'):
         chat_messages()
 
     global initial_prompt        
