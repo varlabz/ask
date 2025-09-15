@@ -79,7 +79,7 @@ async def main():
         with ui.row().classes('w-full no-wrap items-center'):
             spinner = ui.spinner(type='grid').props('color="amber"').style('visibility: hidden')
             prompt = ui.input(placeholder='prompt').on('keydown.enter', lambda: send(prompt)) \
-                .props('rounded outlined autogrow').classes('flex-grow')
+                .props('rounded outlined').classes('flex-grow')
 
     await ui.context.client.connected()  # chat_messages(...) uses run_javascript which is only possible after connecting
     with ui.column().classes('w-full max-w-none px-6 items-stretch'):
