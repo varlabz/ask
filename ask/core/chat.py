@@ -3,11 +3,13 @@ from __future__ import annotations as _annotations
 
 import asyncio
 from contextlib import asynccontextmanager
+import sys
 from typing import Literal, AsyncIterator
 from datetime import datetime, timezone
 from typing import List
 from pydantic import BaseModel
 from nicegui import ui, app
+from nicegui import events
 
 from .agent import AgentASK
 
@@ -43,13 +45,15 @@ async def _send(prompt: str) -> AsyncIterator[ChatMessage]:
 def chat_messages() -> None:
     if messages:
         for msg in messages:
+            is_user = (msg.role == 'user')
             with ui.chat_message(
-                name='You' if msg.role == 'user' else '🤖 ASK', 
-                sent=(msg.role == 'user'),
+                name='You' if is_user else '🤖 ASK',
+                sent=is_user,
                 stamp=msg.stat,
-            ):  ui.markdown(msg.content, 
+            ).props('bg-color=grey-10 text-color=grey-1' if is_user else 'bg-color=blue-grey-10 text-color=blue-grey-1'):
+                ui.markdown(msg.content,
                     extras=['fenced-code-blocks', 'tables', 'code-friendly', 'strike', 'task_list', 'mermaid']
-                )
+                ).classes('w-full max-w-none px-6 items-stretch')
     else:
         with ui.row().classes('justify-center'):
             ui.label('No messages yet')
@@ -71,12 +75,11 @@ async def main():
             chat_messages.refresh()
         spinner.style('visibility: hidden')
 
-    ui.add_css(r'a:link, a:visited {color: inherit !important; text-decoration: none; font-weight: 500}')
-    with ui.footer().classes('bg-black'), ui.column().classes('w-full max-w-3xl mx-auto my-6'):
+    with ui.footer().props('class="dark:bg-stone-900"'), ui.column().classes('w-full max-w-3xl mx-auto my-6'):
         with ui.row().classes('w-full no-wrap items-center'):
-            spinner = ui.spinner(type='grid').style('visibility: hidden')
+            spinner = ui.spinner(type='grid').props('color="amber"').style('visibility: hidden')
             prompt = ui.input(placeholder='prompt').on('keydown.enter', lambda: send(prompt)) \
-                .props('rounded outlined input-class=mx-3').classes('flex-grow')
+                .props('rounded outlined autogrow').classes('flex-grow')
 
     await ui.context.client.connected()  # chat_messages(...) uses run_javascript which is only possible after connecting
     with ui.column().classes('w-full max-w-none px-6 items-stretch'):
