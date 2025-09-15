@@ -114,7 +114,7 @@ def run_web(_agent: AgentASK, port: int, prompt: str | None, reload: bool = True
     initial_prompt = prompt
     
     try:
-        ui.run(host="localhost", port=port, title='ASK Chat', dark=None, favicon='🤖', native=True, reload=reload)
+        ui.run(host="localhost", port=port, title='ASK Chat', dark=None, favicon='🤖', native=False, reload=reload)
     except (KeyboardInterrupt, asyncio.CancelledError, SystemExit):
         print("Shutting down...")
 
