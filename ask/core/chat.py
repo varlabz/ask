@@ -14,7 +14,7 @@ from nicegui import events
 
 from .agent import AgentASK
 
-def find_next_available_port(start: int = 8000, end: int = 9000, host: str = "localhost") -> int | None:
+def find_next_available_port(start: int = 8000, end: int = 9999, host: str = "localhost") -> int | None:
     """Find the next available TCP port in the inclusive range.
 
     Args:
