@@ -4,6 +4,7 @@ from __future__ import annotations as _annotations
 import asyncio
 from contextlib import asynccontextmanager
 import sys
+import socket
 from typing import Literal, AsyncIterator
 from datetime import datetime, timezone
 from typing import List
@@ -12,6 +13,27 @@ from nicegui import ui, app
 from nicegui import events
 
 from .agent import AgentASK
+
+def find_next_available_port(start: int = 8000, end: int = 9000, host: str = "localhost") -> int | None:
+    """Find the next available TCP port in the inclusive range.
+
+    Args:
+        start: Starting port number (inclusive).
+        end: Ending port number (inclusive).
+        host: Host/IP to bind to while checking.
+
+    Returns:
+        The first available port, or None if none are free.
+    """
+    for p in range(start, end + 1):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                s.bind((host, p))
+            except OSError:
+                continue
+            return p
+    return None
 
 class ChatMessage(BaseModel):
     """Base model for chat messages."""
@@ -130,12 +152,17 @@ if __name__ in {'__main__', '__mp_main__'}:
         help="Path to config yaml (can be used multiple times)",
     )
     parser.add_argument(
-        "-p",
-        "--port",
-        type=int,
-        default=8004,
-        help="Port to run the app on (default: 8004)",
+        "-p", "--port", type=int, help="Explicit port to run the app on (disables auto selection)"
     )
     args = parser.parse_args()
     agent = AgentASK.create_from_file(args.config or [".ask.yaml"])
-    run_web(agent, args.port, None)
+    if args.port:
+        selected_port = args.port
+    else:
+        found = find_next_available_port(8000, 9999)
+        if found is None:
+            print("No free port available in range 8000-9999", file=sys.stderr)
+            sys.exit(1)
+        selected_port = found
+        # print(f"Auto-selected port: {selected_port}")
+    run_web(agent, selected_port, None)

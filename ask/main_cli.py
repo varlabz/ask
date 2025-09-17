@@ -10,15 +10,16 @@ import sys
 
 from ask.core.agent import AgentASK
 from ask.core.config import load_config
+from ask.core import chat as chat_module
 
 def main():
     """Main function for the CLI."""
     parser = argparse.ArgumentParser(description="Run agent.")
     parser.add_argument('-c', '--config', type=str, action='append', help='Path to config yaml (can be used multiple times)')
     parser.add_argument('-s', '--system-prompt', type=str, help='Override system prompt/instructions')
-    parser.add_argument('--tchat', action='store_true', help='Start terminal interactive chat mode')
+    parser.add_argument('-T', '--tchat', action='store_true', help='Start terminal interactive chat mode')
     parser.add_argument("--chat", action="store_true", help="Start chat")
-    parser.add_argument("--chat-port", type=int, default=8004, help="Chat port")
+    parser.add_argument("--chat-port", type=int, help="Explicit chat port (disables auto selection)")
     parser.add_argument('prompt', nargs='*', help='Prompt for the agent')
     args = parser.parse_args()
 
@@ -41,7 +42,17 @@ def main():
     
     if args.chat:
         from ask.core import chat
-        chat.run_web(agent, args.chat_port, prompt if prompt else None, reload=False)
+        if args.chat_port:
+            selected_port = args.chat_port
+        else:
+            found = chat.find_next_available_port(8000, 9999)
+            if found is None:
+                print("No free port available in range 8000-9999", file=sys.stderr)
+                sys.exit(1)
+            selected_port = found
+            # print(f"Auto-selected port: {selected_port}")
+
+        chat.run_web(agent, selected_port, prompt if prompt else None, reload=False)
         return
     
     if args.tchat:
