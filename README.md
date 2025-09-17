@@ -16,22 +16,14 @@ ASK is a versatile AI agent that works both as a CLI tool with MCP server integr
 
 ## Quick Usage with uvx
 
-Use ASK directly without installation:
-
-```bash
-uvx --from git+https://github.com/varlabz/ask ask-cli "What is Python?"
-```
-
-With with a simple config:
-
+Use ASK directly without installation with with a simple config:
 ```bash
 # Create minimal config
 echo "agent:
   instructions: 'You are a helpful AI assistant.'
 llm:
-  model: 'ollama:qwen2.5:14b'
-  base_url: 'http://localhost:11434/v1'
-  temperature: 0.1" > .ask.yaml
+  model: 'openai:gpt-5-nano'
+  api_key: '<your-api-key>'" > .ask.yaml
 
 # Run with uvx
 uvx --from git+https://github.com/varlabz/ask ask-cli -c .ask.yaml "Explain machine learning"
@@ -153,7 +145,7 @@ Add to VS Code settings (`mcp.json`):
 ```bash
 git clone https://github.com/varlabz/ask.git
 cd ask
-uv sync --dev
+uv sync --extra dev
 ```
 
 ### Run Tests
@@ -168,21 +160,4 @@ pytest
 pip install -e .
 ```
 
-## Environment Variables
-
-Set API keys as environment variables (not recommended):
-
-```bash
-export OPENAI_API_KEY="your-openai-key"
-export OPENROUTER_API_KEY="your-openrouter-key"
-export SEARX_HOST="http://localhost:8080"
-```
-
-Reference them in config:
-
-```yaml
-llm:
-  model: "openai:gpt-4o"
-  api_key: "env:OPENAI_API_KEY"
-```
 
