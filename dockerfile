@@ -19,6 +19,7 @@ ENV UV_CACHE_DIR=/tmp/.uv-cache
 ENV npm_config_cache=/tmp/.npm-cache
 
 WORKDIR /app
+COPY ./examples /app
 
 ENTRYPOINT []
 CMD ["bash"]
@@ -27,4 +28,4 @@ LABEL description="Docker image for ASK CLI/MCP - A command-line interface and M
 LABEL version="0.1.0"
 LABEL repository="https://github.com/varlabz/ask"
 LABEL usage.example="docker run --rm -it ask uvx --from git+https://github.com/varlabz/ask ask-cli --help"
-LABEL usage.with_config="docker run --rm -it -v $HOME/.config/ask:/root/.config/ask:ro -v $HOME/apps:/app -v $HOME/apps/tmp:/tmp --network=host ask <args>"
+LABEL usage.with_config="docker run --rm -it -v \$HOME/.config/ask:/root/.config/ask:ro -v ./:/app -v <docker-volume>:/tmp --network=host ask <args>"
