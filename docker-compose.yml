@@ -1,0 +1,32 @@
+x-common-app-config: &common-app-config
+  image: varlabz/ask:latest
+  network_mode: host
+  volumes:
+    - ${HOME}/.config/ask:/root/.config/ask:ro
+    - ask-tmp:/tmp
+  tty: true
+  stdin_open: true
+
+services:
+  # example to run with chat browser UI
+  ask-chat:
+    <<: *common-app-config
+    command: ["ask", "--chat", "--no-native",]
+
+  # example to run with terminal chat UI
+  ask-tchat:
+    <<: *common-app-config
+    command: ["ask", "--tchat",]
+
+  # example for user's own app to run from local filesystem
+  my-app:
+    <<: *common-app-config
+    volumes:
+      - ${HOME}/.config/ask:/root/.config/ask:ro
+      - ask-tmp:/tmp
+      - $PWD/:/app
+    command: [your command and args here]
+
+volumes:
+  ask-tmp:
+
