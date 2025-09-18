@@ -19,6 +19,7 @@ def main():
     parser.add_argument('-s', '--system-prompt', type=str, help='Override system prompt/instructions')
     parser.add_argument('-T', '--tchat', action='store_true', help='Start terminal interactive chat mode')
     parser.add_argument("--chat", action="store_true", help="Start chat")
+    parser.add_argument("--no-native", action="store_true", help="Start chat without native features")
     parser.add_argument("--chat-port", type=int, help="Explicit chat port (disables auto selection)")
     parser.add_argument('prompt', nargs='*', help='Prompt for the agent')
     args = parser.parse_args()
@@ -52,7 +53,7 @@ def main():
             selected_port = found
             # print(f"Auto-selected port: {selected_port}")
 
-        chat.run_web(agent, selected_port, prompt if prompt else None, reload=False)
+        chat.run_web(agent, selected_port, prompt if prompt else None, native=not args.no_native, reload=False)
         return
     
     if args.tchat:

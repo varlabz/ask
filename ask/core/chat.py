@@ -116,7 +116,7 @@ async def main():
         initial_prompt = None
         await send(text)
 
-def run_web(_agent: AgentASK, port: int, prompt: str | None, reload: bool = True) -> None:
+def run_web(_agent: AgentASK, port: int, prompt: str | None, native: bool = True, reload: bool = True) -> None:
     global agent
     agent = _agent
     
@@ -137,21 +137,22 @@ def run_web(_agent: AgentASK, port: int, prompt: str | None, reload: bool = True
     app.native.window_args['zoomable'] = True
 
     # it's a bit hacky to set this here, but it works for native mode to make text selectable
-    global initial_select
-    initial_select = '''
-        const allElements = document.querySelectorAll('*');
-        allElements.forEach(element => {
-            if (element.style.userSelect !== 'none') {
-                element.style.webkitUserSelect = 'text';
-            }
-        });
-    '''
+    if native:
+        global initial_select
+        initial_select = '''
+            const allElements = document.querySelectorAll('*');
+            allElements.forEach(element => {
+                if (element.style.userSelect !== 'none') {
+                    element.style.webkitUserSelect = 'text';
+                }
+            });
+        '''
 
     global initial_prompt
     initial_prompt = prompt
     
     try:
-        ui.run(host="localhost", port=port, title='ASK Chat', dark=None, favicon='🤖', native=True, reload=reload)
+        ui.run(host="localhost", port=port, title='ASK Chat', dark=None, favicon='🤖', native=native, reload=reload)
     except (KeyboardInterrupt, asyncio.CancelledError, SystemExit):
         print("Shutting down...")
 
