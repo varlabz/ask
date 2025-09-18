@@ -5,7 +5,7 @@ import asyncio
 from contextlib import asynccontextmanager
 import sys
 import socket
-from typing import Literal, AsyncIterator
+from typing import Any, Literal, AsyncIterator
 from datetime import datetime, timezone
 from typing import List
 from pydantic import BaseModel
@@ -104,6 +104,20 @@ async def main():
                 .props('rounded outlined').classes('flex-grow')
 
     await ui.context.client.connected()  # chat_messages(...) uses run_javascript which is only possible after connecting
+    ui.run_javascript('''
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach(element => {
+            // Only apply if the element doesn't already have a specific user-select style
+            // or if you want to override existing styles.
+            if (element.style.userSelect !== 'none') {
+            element.style.userSelect = 'text';
+            // For cross-browser compatibility, include vendor prefixes
+            element.style.webkitUserSelect = 'text';
+            element.style.mozUserSelect = 'text';
+            element.style.msUserSelect = 'text';
+            }
+        });
+    ''')
     with ui.column().classes('w-full max-w-none px-6 items-stretch'):
         chat_messages()
 
@@ -119,18 +133,27 @@ def run_web(_agent: AgentASK, port: int, prompt: str | None, reload: bool = True
     
     main_app_lifespan = app.router.lifespan_context
     @asynccontextmanager
-    async def lifespan_wrapper(app):
+    async def lifespan_wrapper(app) -> AsyncIterator[Any]:
         if agent._use_mcp_servers:
             async with agent._agent.run_mcp_servers():
                 async with main_app_lifespan(app) as state:
                     yield state
         else:
             async with main_app_lifespan(app) as state:
-                yield state 
+                yield state
+                
     app.router.lifespan_context = lifespan_wrapper
 
     app.native.window_args['text_select'] = True
     app.native.window_args['zoomable'] = True
+    # def on_start():
+    #     def trigger():
+    #         try:
+    #             ui.run_javascript('alert("Nice one brother")')
+    #         except Exception as e:
+    #             print(f"Failed to run startup JS: {e}")
+    #     ui.timer(5, trigger, once=True)
+    # app.native.start_args['func'] = on_start
 
     global initial_prompt
     initial_prompt = prompt
