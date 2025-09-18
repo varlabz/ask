@@ -104,20 +104,20 @@ async def main():
                 .props('rounded outlined').classes('flex-grow')
 
     await ui.context.client.connected()  # chat_messages(...) uses run_javascript which is only possible after connecting
-    ui.run_javascript('''
-        const allElements = document.querySelectorAll('*');
-        allElements.forEach(element => {
-            // Only apply if the element doesn't already have a specific user-select style
-            // or if you want to override existing styles.
-            if (element.style.userSelect !== 'none') {
-            element.style.userSelect = 'text';
-            // For cross-browser compatibility, include vendor prefixes
-            element.style.webkitUserSelect = 'text';
-            element.style.mozUserSelect = 'text';
-            element.style.msUserSelect = 'text';
-            }
-        });
-    ''')
+    # ui.run_javascript('''
+    #     const allElements = document.querySelectorAll('*');
+    #     allElements.forEach(element => {
+    #         // Only apply if the element doesn't already have a specific user-select style
+    #         // or if you want to override existing styles.
+    #         if (element.style.userSelect !== 'none') {
+    #         element.style.userSelect = 'text';
+    #         // For cross-browser compatibility, include vendor prefixes
+    #         element.style.webkitUserSelect = 'text';
+    #         element.style.mozUserSelect = 'text';
+    #         element.style.msUserSelect = 'text';
+    #         }
+    #     });
+    # ''')
     with ui.column().classes('w-full max-w-none px-6 items-stretch'):
         chat_messages()
 
@@ -146,14 +146,6 @@ def run_web(_agent: AgentASK, port: int, prompt: str | None, reload: bool = True
 
     app.native.window_args['text_select'] = True
     app.native.window_args['zoomable'] = True
-    # def on_start():
-    #     def trigger():
-    #         try:
-    #             ui.run_javascript('alert("Nice one brother")')
-    #         except Exception as e:
-    #             print(f"Failed to run startup JS: {e}")
-    #     ui.timer(5, trigger, once=True)
-    # app.native.start_args['func'] = on_start
 
     global initial_prompt
     initial_prompt = prompt
