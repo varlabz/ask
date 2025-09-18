@@ -141,14 +141,8 @@ def run_web(_agent: AgentASK, port: int, prompt: str | None, reload: bool = True
     initial_select = '''
         const allElements = document.querySelectorAll('*');
         allElements.forEach(element => {
-            // Only apply if the element doesn't already have a specific user-select style
-            // or if you want to override existing styles.
             if (element.style.userSelect !== 'none') {
-            element.style.userSelect = 'text';
-            // For cross-browser compatibility, include vendor prefixes
-            element.style.webkitUserSelect = 'text';
-            element.style.mozUserSelect = 'text';
-            element.style.msUserSelect = 'text';
+                element.style.userSelect = 'text';
             }
         });
     '''
