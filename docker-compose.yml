@@ -8,12 +8,14 @@ x-common-app-config: &common-app-config
   stdin_open: true
 
 services:
-  # example to run with chat browser UI
+  # example to run with chat browser UI. can use with any file from examples folder
+  # usage: docker compose run ask-chat
   ask-chat:
     <<: *common-app-config
     command: ["ask", "--chat", "--no-native",]
 
   # example to run with terminal chat UI
+  # usage: docker compose run ask-tchat
   ask-tchat:
     <<: *common-app-config
     command: ["ask", "--tchat",]
