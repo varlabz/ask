@@ -26,5 +26,5 @@ CMD ["bash"]
 LABEL description="Docker image for ASK CLI/MCP - A command-line interface and MCP server"
 LABEL version="0.1.0"
 LABEL repository="https://github.com/varlabz/ask"
-LABEL usage.example="docker run --rm -it ask-cli uvx --from git+https://github.com/varlabz/ask ask-cli --help"
-LABEL usage.with_config="docker run --rm -it -v $HOME/.config/ask:/root/.config/ask:ro -v $HOME/apps:/app -v $HOME/apps/tmp:/tmp --network=host ask-cli <args>"
+LABEL usage.example="docker run --rm -it ask uvx --from git+https://github.com/varlabz/ask ask-cli --help"
+LABEL usage.with_config="docker run --rm -it -v $HOME/.config/ask:/root/.config/ask:ro -v $HOME/apps:/app -v $HOME/apps/tmp:/tmp --network=host ask <args>"
