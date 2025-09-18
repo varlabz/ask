@@ -142,7 +142,7 @@ def run_web(_agent: AgentASK, port: int, prompt: str | None, reload: bool = True
         const allElements = document.querySelectorAll('*');
         allElements.forEach(element => {
             if (element.style.userSelect !== 'none') {
-                element.style.userSelect = 'text';
+                element.style.webkitUserSelect = 'text';
             }
         });
     '''
