@@ -44,6 +44,7 @@ class ChatMessage(BaseModel):
 
 messages: List[ChatMessage] = []
 initial_prompt: str | None = None
+initial_select: str = ""
 agent: AgentASK  # Will be set in lifespan
 
 async def _send(prompt: str) -> AsyncIterator[ChatMessage]:
@@ -104,20 +105,8 @@ async def main():
                 .props('rounded outlined').classes('flex-grow')
 
     await ui.context.client.connected()  # chat_messages(...) uses run_javascript which is only possible after connecting
-    # ui.run_javascript('''
-    #     const allElements = document.querySelectorAll('*');
-    #     allElements.forEach(element => {
-    #         // Only apply if the element doesn't already have a specific user-select style
-    #         // or if you want to override existing styles.
-    #         if (element.style.userSelect !== 'none') {
-    #         element.style.userSelect = 'text';
-    #         // For cross-browser compatibility, include vendor prefixes
-    #         element.style.webkitUserSelect = 'text';
-    #         element.style.mozUserSelect = 'text';
-    #         element.style.msUserSelect = 'text';
-    #         }
-    #     });
-    # ''')
+    global initial_select
+    ui.run_javascript(initial_select)
     with ui.column().classes('w-full max-w-none px-6 items-stretch'):
         chat_messages()
 
@@ -146,6 +135,23 @@ def run_web(_agent: AgentASK, port: int, prompt: str | None, reload: bool = True
 
     app.native.window_args['text_select'] = True
     app.native.window_args['zoomable'] = True
+
+    # it's a bit hacky to set this here, but it works for native mode to make text selectable
+    global initial_select
+    initial_select = '''
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach(element => {
+            // Only apply if the element doesn't already have a specific user-select style
+            // or if you want to override existing styles.
+            if (element.style.userSelect !== 'none') {
+            element.style.userSelect = 'text';
+            // For cross-browser compatibility, include vendor prefixes
+            element.style.webkitUserSelect = 'text';
+            element.style.mozUserSelect = 'text';
+            element.style.msUserSelect = 'text';
+            }
+        });
+    '''
 
     global initial_prompt
     initial_prompt = prompt
