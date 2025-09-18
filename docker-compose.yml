@@ -1,21 +1,22 @@
+name: ask
+
 x-common-app-config: &common-app-config
   image: varlabz/ask:latest
   network_mode: host
   volumes:
     - ${HOME}/.config/ask:/root/.config/ask:ro
     - ask-tmp:/tmp
-  tty: true
   stdin_open: true
 
 services:
   # example to run with chat browser UI. can use with any file from examples folder
-  # usage: docker compose run ask-chat
+  # usage: docker compose run --rm ask-chat
   ask-chat:
     <<: *common-app-config
     command: ["ask", "--chat", "--no-native",]
 
   # example to run with terminal chat UI
-  # usage: docker compose run ask-tchat
+  # usage: docker compose run -i --rm ask-tchat
   ask-tchat:
     <<: *common-app-config
     command: ["ask", "--tchat",]
