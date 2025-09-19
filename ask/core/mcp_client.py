@@ -22,7 +22,7 @@ def create_mcp_servers(mcp_config: Optional[Dict[str, MCPServerConfig]]) -> List
                 MCPServerSSE(
                     url=cfg.url, 
                     tool_prefix=cfg.tool_prefix,
-                    timeout=30,
+                    timeout=60,
                 )
             )
         elif transport == "http" or transport == "streamable-http":
@@ -32,7 +32,7 @@ def create_mcp_servers(mcp_config: Optional[Dict[str, MCPServerConfig]]) -> List
                 MCPServerStreamableHTTP(
                     url=cfg.url, 
                     tool_prefix=cfg.tool_prefix,
-                    timeout=30,
+                    timeout=60,
                 )
             )
         elif transport == "stdio":
@@ -45,7 +45,7 @@ def create_mcp_servers(mcp_config: Optional[Dict[str, MCPServerConfig]]) -> List
                     tool_prefix=cfg.tool_prefix,
                     cwd=cfg.cwd,
                     env=cfg.env,
-                    timeout=30,
+                    timeout=60,
                 )
             )
         else:
