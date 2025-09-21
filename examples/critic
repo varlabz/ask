@@ -83,7 +83,7 @@ mcp:
     command: ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
     
   search:
-    command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "searxng-mcp"]
+    command: ["uvx", "--from", "git+https://github.com/varlabz/duckduckgo-mcp", "duckduckgo-mcp"]
 
   sequential_thinking:
     command: ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]

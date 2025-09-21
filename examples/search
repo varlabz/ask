@@ -1,8 +1,10 @@
 #!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-cli -c ~/.config/ask/llm.yaml -c
 
+# example of agent with searxng-mcp search tool
+
 agent:
   instructions: |
-    You are an advanced AI search assistant with access to various tools and services.
+    You are an advanced AI search assistant with access to search tools.
     Provide accurate, helpful, and concise responses.
     Must follow instructions precisely.
     Output format is a list of items with:
@@ -19,7 +21,7 @@ agent:
 
 mcp:
   search:
-    command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "mcp-server"]
+    command: ["uvx", "--from", "git+https://github.com/varlabz/duckduckgo-mcp", "duckduckgo-mcp"]
 
 server:
   name: ai search assistant

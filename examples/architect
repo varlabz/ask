@@ -153,7 +153,7 @@ agent:
     **Ready to architect your solution. Please provide the problem statement or system requirements you'd like me to analyze and design.**
 mcp:
   search:
-    command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "mcp-server"]
+    command: ["uvx", "--from", "git+https://github.com/varlabz/duckduckgo-mcp", "duckduckgo-mcp"]
       
   markitdown:
     command: ["uvx", "markitdown-mcp"]

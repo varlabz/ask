@@ -13,7 +13,7 @@ mcp:
     command: ["npx", "-y", "https://github.com/varlabz/youtube-mcp", "--mcp"]
 
   search:
-    command: ["uvx",  "duckduckgo-mcp-server"]
+    command: ["uvx", "--from", "git+https://github.com/varlabz/duckduckgo-mcp", "duckduckgo-mcp"]
 
   filesystem:
     command: ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
