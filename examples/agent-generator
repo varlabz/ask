@@ -94,7 +94,7 @@ agent:
     Always return ONLY the complete YAML configuration with this structure:
     
     ```yaml
-    #!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask cli -c ~/.config/ask/llm.yaml -c
+    #!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-cli -c ~/.config/ask/llm.yaml -c
     
     agent:
       instructions: |

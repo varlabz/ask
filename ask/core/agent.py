@@ -3,14 +3,14 @@ agent.py
 """
 from collections.abc import Callable
 import time
-from typing import Awaitable, List, Generic, TypeVar, Any
+from typing import Awaitable, Final, List, Generic, TypeVar, Any
 from attr import dataclass
 from pydantic_ai import Agent
 from pydantic_ai.usage import UsageLimits, Usage
 from pydantic_ai.settings import ModelSettings
 from pydantic_ai.messages import ModelMessage
 
-from .config import Config, load_config, load_config_dict
+from .config import Config, LLMConfig, load_config, load_config_dict
 from .mcp_client import create_mcp_servers
 from .model import create_model
 from .agent_history import make_llm_repack_processor, repack_tools_messages
@@ -81,12 +81,15 @@ class AgentASK(Generic[InputT, OutputT]):
     @classmethod
     def create_from_config(cls, config: Config) -> 'AgentASK[InputT, OutputT]':
         """Create a PydanticAI Agent from a Config instance."""
-        llm = config.llm
-        model_settings = ModelSettings(
-            temperature=llm.temperature,
-            max_tokens=llm.max_tokens,
-            timeout=llm.timeout,
-        )
+        llm: Final[LLMConfig] = config.llm
+        model_settings = ModelSettings()
+        if llm.temperature is not None:
+            model_settings["temperature"] = llm.temperature
+        if llm.max_tokens is not None:
+            model_settings["max_tokens"] = llm.max_tokens
+        if llm.timeout is not None:
+            model_settings["timeout"] = llm.timeout
+            
         return cls(
             agent=Agent(
                 name=config.agent.name,
@@ -99,7 +102,7 @@ class AgentASK(Generic[InputT, OutputT]):
                 # history_processors=[make_llm_repack_processor(create_model(llm), max_history=config.llm.max_history, keep_last=2)],
             ),
             use_mcp_servers=config.mcp is not None,
-            repack=repack_tools_messages,
+            repack=repack_tools_messages if llm.cleanup_history else lambda x: x,
         )
 
     @classmethod
