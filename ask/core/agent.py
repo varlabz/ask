@@ -102,7 +102,7 @@ class AgentASK(Generic[InputT, OutputT]):
                 # history_processors=[make_llm_repack_processor(create_model(llm), max_history=config.llm.max_history, keep_last=2)],
             ),
             use_mcp_servers=config.mcp is not None,
-            repack=repack_tools_messages if llm.cleanup_history else lambda x: x,
+            repack=repack_tools_messages if llm.compress_history else lambda x: x,
         )
 
     @classmethod

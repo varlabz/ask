@@ -57,7 +57,7 @@ class LLMConfig(BaseModel):
     max_tokens: Optional[int] = None
     timeout: Optional[float] = None
     max_history: int = 0        # 0 - no history, >0 - keep summary in ~N of words. more means more context
-    cleanup_history: bool = True  # whether to clean up history messages to save tokens
+    compress_history: bool = True  # whether to clean up history messages to save tokens
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 
