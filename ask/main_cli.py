@@ -19,7 +19,7 @@ def main():
     parser = argparse.ArgumentParser(description="Run agent.")
     parser.add_argument('-c', '--config', type=str, action='append', help='Path to config yaml (can be used multiple times)')
     parser.add_argument('-s', '--system-prompt', type=str, help='Override system prompt/instructions')
-    parser.add_argument('--log', nargs='?', const='ask.log', default=None, help='Save agent tracing to a file. Defaults to ask.log if no filename is provided.')
+    parser.add_argument('--log', nargs='?', const='ask-log.jsonl', default=None, help='Save agent tracing to a file. Defaults to ask-log.jsonl if no filename is provided.')
     parser.add_argument('-T', '--tchat', action='store_true', help='Start terminal interactive chat mode')
     parser.add_argument("--chat", action="store_true", help="Start chat")
     parser.add_argument("--no-native", action="store_true", help="Start chat without native features")
