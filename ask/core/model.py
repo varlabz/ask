@@ -23,8 +23,7 @@ def create_model(llm_config: LLMConfig) -> Model:
         ProviderEnum.LMSTUDIO.value,
         ProviderEnum.OPENAI.value,
         ProviderEnum.OPENROUTER.value,
-    }:
-        return _create_openai_compatible_model(provider_name, model_name, llm_config)
+    }:  return _create_openai_compatible_model(provider_name, model_name, llm_config)
 
     raise ValueError(f"Unsupported provider: {provider_name}")
 

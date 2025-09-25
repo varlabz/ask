@@ -50,14 +50,14 @@ class AgentConfig(BaseModel):
         return str(value)
 
 class LLMConfig(BaseModel):
-    model: str
-    api_key: Optional[str] = None
-    base_url: Optional[str] = None
-    temperature: Optional[float] = None
-    max_tokens: Optional[int] = None
-    timeout: Optional[float] = None
-    max_history: int = 0        # 0 - no history, >0 - keep summary in ~N of words. more means more context
-    compress_history: bool = True  # whether to clean up history messages to save tokens
+    model: str                          # e.g., "openai:gpt-4", "google:gemini-pro"
+    api_key: Optional[str] = None       # can be "env:VAR_NAME" or "file:/path/to/file" or actual key
+    base_url: Optional[str] = None      # for custom endpoints, e.g. local LLM server
+    temperature: Optional[float] = None # 0.0 to 1.0
+    max_tokens: Optional[int] = None    # max tokens for response
+    timeout: Optional[float] = None     # in seconds
+    max_history: int = 0                # 0 - no history, >0 - keep summary in ~N of words. more means more context
+    compress_history: bool = True       # whether to clean up history messages to save tokens
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 
@@ -112,6 +112,7 @@ class ServerConfig(BaseModel):  # for running ask as server
     debug: bool = False
     port: int = 8000
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "ERROR"
+    tool_name: str = "ask"
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 

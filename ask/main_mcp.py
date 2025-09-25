@@ -44,9 +44,8 @@ def server_description() -> str:
     
     return f"{server_config.name} — no description configured."
 
-@server.tool()
+@server.tool(server_config.tool_name)
 async def ask(request: str, ctx: Context[ServerSession, None]) -> str:
-    """ASK request handler"""
     try:
         return await agent.run(request)
     except Exception as e:  # noqa: BLE001
