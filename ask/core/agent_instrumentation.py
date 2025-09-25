@@ -16,7 +16,6 @@ def setup_instrumentation(service_name="pydantic-ai-agent", stream: io.TextIOWra
         "service.name": service_name
     })
 
-    # Set up a TracerProvider
     provider = TracerProvider(resource=resource)
 
     # Add a ConsoleSpanExporter to print traces to the console or a file
