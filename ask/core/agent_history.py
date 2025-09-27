@@ -6,25 +6,30 @@ compress long conversations while preserving essential context.
 
 TODO: repacking depends on task type
 
-@see https://github.com/Wh1isper/pydantic-ai-history-processor.git 
+@see https://github.com/Wh1isper/pydantic-ai-history-processor.git
 
 """
 
 import pprint
 import sys
+from collections.abc import Awaitable, Callable
 from textwrap import dedent
-from typing import Any, Awaitable, Callable, List
-from unittest import result
 
 from pydantic import BaseModel, Field
-from pydantic_ai import Agent, RunContext, ToolOutput
-from pydantic_ai.messages import ModelMessage, SystemPromptPart, ModelMessagesTypeAdapter, ModelRequest, UserPromptPart, ModelResponse, TextPart, ToolCallPart, ToolReturnPart, RetryPromptPart
-from pydantic_ai.usage import UsageLimits
+from pydantic_ai import Agent, ToolOutput
+from pydantic_ai.messages import (
+    ModelMessage,
+    ModelResponse,
+    RetryPromptPart,
+    TextPart,
+    ToolCallPart,
+    ToolReturnPart,
+)
 from pydantic_ai.models import Model
 from pydantic_ai.settings import ModelSettings
 
 
-def dump_messages(messages: List[ModelMessage], file: str) -> List[ModelMessage]:
+def dump_messages(messages: list[ModelMessage], file: str) -> list[ModelMessage]:
     """Dump message details to a file."""
     with open(file, "w") as f:
         for m in messages:
@@ -32,17 +37,16 @@ def dump_messages(messages: List[ModelMessage], file: str) -> List[ModelMessage]
             pprint.pp(vars(m), stream=f, indent=2, width=20)
     return messages
 
+
 def make_llm_repack_processor(
     model: Model,
-    keep_last: int = 3, # use odd number. because last item in list is request and trim part should end with response
+    keep_last: int = 3,  # use odd number. because last item in list is request and trim part should end with response
     max_history: int = 500,
     max_context_size: int = 100_000,
-    system_prompt: str = 
-        "You compress conversations into concise, actionable summaries."
-        "Remove greetings and small talk. Preserve key facts, decisions, constraints, open questions, and TODOs."
-        "Summarize the prior conversation succinctly. Remove chit-chat and repetition."
-    ,
-) -> Callable[[List[ModelMessage]], Awaitable[List[ModelMessage]]]:
+    system_prompt: str = "You compress conversations into concise, actionable summaries."
+    "Remove greetings and small talk. Preserve key facts, decisions, constraints, open questions, and TODOs."
+    "Summarize the prior conversation succinctly. Remove chit-chat and repetition.",
+) -> Callable[[list[ModelMessage]], Awaitable[list[ModelMessage]]]:
     """
     Create an async history processor that summarizes older messages with an LLM.
 
@@ -62,6 +66,7 @@ def make_llm_repack_processor(
     Returns:
         An async callable compatible with pydantic-ai ``history_processors``.
     """
+
     class RepackResult(BaseModel):
         summary: str = Field(
             ...,
@@ -73,8 +78,7 @@ def make_llm_repack_processor(
                 The context to continue the conversation with. If applicable based on the current task, this should include:
                 - Primary Request and Intent: Capture all of the user's explicit requests and intents in detail
                 - Problem Solving: Document problems solved and any ongoing troubleshooting efforts.
-                """)
-            ,
+                """),
         )
 
     summarizer = Agent(
@@ -99,30 +103,35 @@ def make_llm_repack_processor(
     )
 
     def get_total_tokens(message_history: list[ModelMessage]) -> int:
-        return sum(msg.usage.total_tokens for msg in message_history if isinstance(msg, ModelResponse) and msg.usage.total_tokens)
+        return sum(
+            msg.usage.total_tokens
+            for msg in message_history
+            if isinstance(msg, ModelResponse) and msg.usage.total_tokens
+        )
 
-    async def repack(messages: List[ModelMessage]) -> List[ModelMessage]:
+    async def repack(messages: list[ModelMessage]) -> list[ModelMessage]:
         # print(f"### {len(messages)}/{get_total_tokens(messages)}", file=sys.stderr)
         # dump_messages(messages, "tmp/message_dump.txt")
         if max_history <= 0:
             return messages
-        
+
         if len(messages) <= (keep_last + 1):  # +1 for the head
             return messages
-        
+
         if get_total_tokens(messages) < max_context_size:
             return messages
 
         # Preserve head (usually includes the system prompt)
         head = messages[:1]
-         # Preserve the last few messages verbatim
+        # Preserve the last few messages verbatim
         tail = messages[-keep_last:] if keep_last > 0 else []
         # Middle part to summarize
         middle = messages[1 : len(messages) - len(tail)]
         # Ask summarizer to produce a concise, actionable brief
         # can do it if have tool call and tool call result in the context
         print(f">>> Summarizing {len(middle)} messages", file=sys.stderr)
-        summary_result = await summarizer.run(dedent("""
+        summary_result = await summarizer.run(
+            dedent("""
             The user has accepted the condensed conversation summary you generated. Use `condense` to generate a summary and context of the conversation so far.
             This summary covers important details of the historical conversation with the user which has been truncated.
             It's crucial that you respond by ONLY asking the user what you should work on next.
@@ -143,16 +152,15 @@ def make_llm_repack_processor(
             </condense>
             """)
         # Inject a single synthetic request with the summary
-        summary_message = ModelResponse(
-            parts=[TextPart(content=summary_result)]
-        )
+        summary_message = ModelResponse(parts=[TextPart(content=summary_result)])
         ret = head + [summary_message] + tail
         # dump_messages(ret, "tmp/message_dump_new.txt")
         return ret
 
     return repack
 
-def repack_tools_messages(messages: List[ModelMessage]) -> List[ModelMessage]:
+
+def repack_tools_messages(messages: list[ModelMessage]) -> list[ModelMessage]:
     """Remove tool calls and tool responses; keep surrounding conversation intact.
 
     Rules:
@@ -163,6 +171,7 @@ def repack_tools_messages(messages: List[ModelMessage]) -> List[ModelMessage]:
     - Keep all other messages unchanged.
     """
     tool_parts = (ToolCallPart, ToolReturnPart, RetryPromptPart)
+
     def is_tool_only_message(msg: ModelMessage) -> bool:
         parts = getattr(msg, "parts", None)
         if not parts:

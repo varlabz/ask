@@ -1,11 +1,9 @@
-import os
-import sys
 import pytest
+from pydantic_ai.mcp import MCPServerSSE, MCPServerStdio, MCPServerStreamableHTTP
 
-from pydantic_ai.mcp import MCPServerSSE, MCPServerStreamableHTTP, MCPServerStdio
-
-from ask.core.mcp_client import create_mcp_servers
 from ask.core.config import MCPServerConfig
+from ask.core.mcp_client import create_mcp_servers
+
 
 class TestCreateMCPServers:
     def test_sse_positive(self):
@@ -90,4 +88,3 @@ class TestCreateMCPServers:
         }
         with pytest.raises(ValueError, match="Stdio transport requires 'command'"):
             create_mcp_servers(config)
-

@@ -36,7 +36,7 @@ def main() -> None:
     script_args = args.script_args
     if script_args and script_args[0] == "--":
         script_args = script_args[1:]
-    
+
     original_argv = sys.argv
     sys.argv = [str(script_path.resolve())] + script_args
 
@@ -50,7 +50,6 @@ def main() -> None:
     finally:
         sys.argv = original_argv
 
+
 if __name__ == "__main__":
     main()
-
-

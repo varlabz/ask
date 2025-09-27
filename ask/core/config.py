@@ -1,13 +1,22 @@
-import os
-import yaml
 import builtins
+import os
 import typing
-from typing import Any, Literal, Optional, List, Dict, Type
 from enum import Enum
-from pydantic import BaseModel, ValidationError, field_validator, ConfigDict, field_serializer
+from typing import Any, Literal
+
+import yaml
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    ValidationError,
+    field_serializer,
+    field_validator,
+)
+
 
 class ProviderEnum(str, Enum):
     """Enumeration of supported LLM providers."""
+
     OLLAMA = "ollama"
     OPENAI = "openai"
     OPENROUTER = "openrouter"
@@ -15,11 +24,16 @@ class ProviderEnum(str, Enum):
     GOOGLE = "google"
     ANTHROPIC = "anthropic"
 
+
 class AgentConfig(BaseModel):
     name: str = "ASK Agent"
     instructions: str
-    output_type: Any = str  # can be a string like "str", "int", "List[str]", or a Python type
-    input_type: Any = str  # can be a string like "str", "int", "List[str]", or a Python type
+    output_type: Any = (
+        str  # can be a string like "str", "int", "List[str]", or a Python type
+    )
+    input_type: Any = (
+        str  # can be a string like "str", "int", "List[str]", or a Python type
+    )
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 
@@ -29,36 +43,41 @@ class AgentConfig(BaseModel):
         """Convert string type descriptions to Python types."""
         if v is None:
             return str
-        if isinstance(v, type) or hasattr(v, '__origin__'):
+        if isinstance(v, type) or hasattr(v, "__origin__"):
             return v
         if not isinstance(v, str):
             return v
 
         safe_namespace = {
             **{name: getattr(typing, name) for name in typing.__all__},
-            **{name: getattr(builtins, name) for name in dir(builtins)}
+            **{name: getattr(builtins, name) for name in dir(builtins)},
         }
         try:
             return eval(v, {"__builtins__": {}}, safe_namespace)
         except (NameError, SyntaxError) as e:
             raise ValueError(f"Unknown or invalid type string: {v}") from e
 
-    @field_serializer('output_type')
+    @field_serializer("output_type")
     def serialize_output_type(self, value: type) -> str:
         """Serialize the output_type to a string for JSON compatibility."""
-        if hasattr(value, '__name__'):
+        if hasattr(value, "__name__"):
             return value.__name__
         return str(value)
 
+
 class LLMConfig(BaseModel):
-    model: str                          # e.g., "openai:gpt-4", "google:gemini-pro"
-    api_key: Optional[str] = None       # can be "env:VAR_NAME" or "file:/path/to/file" or actual key
-    base_url: Optional[str] = None      # for custom endpoints, e.g. local LLM server
-    temperature: Optional[float] = None # 0.0 to 1.0
-    max_tokens: Optional[int] = None    # max tokens for response
-    timeout: Optional[float] = None     # in seconds
-    max_history: int = 0                # 0 - no history, >0 - keep summary in ~N of words. more means more context
-    compress_history: bool = True       # whether to clean up history messages to save tokens
+    model: str  # e.g., "openai:gpt-4", "google:gemini-pro"
+    api_key: str | None = (
+        None  # can be "env:VAR_NAME" or "file:/path/to/file" or actual key
+    )
+    base_url: str | None = None  # for custom endpoints, e.g. local LLM server
+    temperature: float | None = None  # 0.0 to 1.0
+    max_tokens: int | None = None  # max tokens for response
+    timeout: float | None = None  # in seconds
+    max_history: int = (
+        0  # 0 - no history, >0 - keep summary in ~N of words. more means more context
+    )
+    compress_history: bool = True  # whether to clean up history messages to save tokens
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 
@@ -75,21 +94,23 @@ class LLMConfig(BaseModel):
             # if file start with a tilde, expand it
             file_path = os.path.expanduser(file_path)
             try:
-                with open(file_path, 'r') as f:
+                with open(file_path) as f:
                     return f.read().strip()
-            except FileNotFoundError:
-                raise ValueError(f"File '{file_path}' not found for '{v}'")
+            except FileNotFoundError as e:
+                raise ValueError(f"File '{file_path}' not found for '{v}'") from e
         return v
+
 
 class MCPServerConfig(BaseModel):
     """Configuration for an MCP server tool/service."""
+
     enabled: bool = True
     transport: Literal["stdio", "sse", "streamable-http", "http"] = "stdio"
-    command: Optional[List[str]] = None  # for stdio transport
-    url: Optional[str] = None            # for sse and http transports
-    tool_prefix: Optional[str] = None
-    cwd: Optional[str] = None
-    env: Optional[Dict[str, str]] = None
+    command: list[str] | None = None  # for stdio transport
+    url: str | None = None  # for sse and http transports
+    tool_prefix: str | None = None
+    cwd: str | None = None
+    env: dict[str, str] | None = None
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 
@@ -106,9 +127,10 @@ class MCPServerConfig(BaseModel):
                 raise ValueError("env keys and values must be strings")
         return v
 
+
 class ServerConfig(BaseModel):  # for running ask as server
     name: str = "ASK Server"
-    instructions: Optional[str] = None
+    instructions: str | None = None
     transport: Literal["stdio", "sse", "streamable-http"] = "stdio"
     debug: bool = False
     port: int = 8000
@@ -117,41 +139,47 @@ class ServerConfig(BaseModel):  # for running ask as server
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 
+
 class Config(BaseModel):
     """Top-level configuration for the agent, LLM, and MCP tools/services."""
+
     agent: AgentConfig
     llm: LLMConfig
-    mcp: Optional[dict[str, MCPServerConfig]] = None
-    server: Optional[ServerConfig] = None
+    mcp: dict[str, MCPServerConfig] | None = None
+    server: ServerConfig | None = None
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 
-def load_config(paths: List[str]) -> Config:
+
+def load_config(paths: list[str]) -> Config:
     """Deep-merge multiple YAML config files into a `Config`. Later files override."""
     merged_raw: dict = {}
     for p in paths:
-        if p is None:   # skip empty paths
+        if p is None:  # skip empty paths
             continue
 
         try:
-            with open(os.path.expanduser(p), "r") as f:
+            with open(os.path.expanduser(p)) as f:
                 raw = yaml.safe_load(f)
                 if not isinstance(raw, dict):
-                    raise ValueError(f"Config file '{p}' must contain a dictionary at the root.")
+                    raise ValueError(
+                        f"Config file '{p}' must contain a dictionary at the root."
+                    )
                 # merge top level keys only
                 merged_raw = {**merged_raw, **raw}
-        except FileNotFoundError:
-            raise RuntimeError(f"Configuration file '{p}' not found.")
+        except FileNotFoundError as e:
+            raise RuntimeError(f"Configuration file '{p}' not found.") from e
         except yaml.YAMLError as e:
-            raise RuntimeError(f"YAML syntax error in '{p}': {e}")
+            raise RuntimeError(f"YAML syntax error in '{p}': {e}") from e
         except ValueError:
             raise
         except Exception as e:
-            raise RuntimeError(f"Error loading config file '{p}': {e}")
+            raise RuntimeError(f"Error loading config file '{p}': {e}") from e
     try:
         return Config(**merged_raw)
     except ValidationError as e:
-        raise RuntimeError(f"Config validation error: {e}")
+        raise RuntimeError(f"Config validation error: {e}") from e
+
 
 def load_config_dict(config_dict: dict) -> Config:
     """Load configuration from a dictionary.
@@ -168,10 +196,12 @@ def load_config_dict(config_dict: dict) -> Config:
     try:
         return Config(**config_dict)
     except ValidationError as e:
-        raise RuntimeError(f"Config validation error: {e}")
+        raise RuntimeError(f"Config validation error: {e}") from e
+
 
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) < 2:
         print("Usage: python config.py <config_file1> [<config_file2> ...]")
         sys.exit(1)

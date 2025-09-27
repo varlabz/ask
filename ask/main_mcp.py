@@ -1,6 +1,7 @@
 """
 mcp_main.py CLI entry point for MCP server
 """
+
 import argparse
 from typing import Final
 
@@ -8,7 +9,7 @@ from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.session import ServerSession
 
 from ask.core.agent import AgentASK
-from ask.core.config import Config, load_config, ServerConfig
+from ask.core.config import Config, ServerConfig, load_config
 
 """Main function for MCP CLI entry point."""
 parser = argparse.ArgumentParser(description="Run MCP server.")
@@ -25,24 +26,26 @@ config: Final[Config] = load_config(args.config or [".ask.yaml"])
 agent: Final[AgentASK] = AgentASK.create_from_config(config)
 server_config: Final[ServerConfig] = config.server or ServerConfig()
 server: Final[FastMCP] = FastMCP(
-        name=server_config.name,
-        instructions=server_config.instructions,
-        stateless_http=True,
-        streamable_http_path="/",
-        # json_response=True,
-        debug=server_config.debug,
-        log_level=server_config.log_level,
-        port=server_config.port,
-    )
+    name=server_config.name,
+    instructions=server_config.instructions,
+    stateless_http=True,
+    streamable_http_path="/",
+    # json_response=True,
+    debug=server_config.debug,
+    log_level=server_config.log_level,
+    port=server_config.port,
+)
+
 
 @server.resource("info://server/description")
 def server_description() -> str:
     """The server description/instructions."""
     desc = server_config.instructions
-    if desc and desc.strip(): 
+    if desc and desc.strip():
         return desc
-    
+
     return f"{server_config.name} — no description configured."
+
 
 @server.tool(server_config.tool_name)
 async def ask(request: str, ctx: Context[ServerSession, None]) -> str:
@@ -57,8 +60,10 @@ async def ask(request: str, ctx: Context[ServerSession, None]) -> str:
             pass
         return f"Error: {e}"
 
+
 def main() -> None:
     server.run(transport=server_config.transport)
+
 
 if __name__ == "__main__":
     main()

@@ -1,20 +1,25 @@
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from pydantic import BaseModel, ValidationError
+
 from ask.core.agent_cache import CacheASK, CacheStoreYaml
+
 
 @pytest.fixture
 def state_store(tmp_path: Path) -> CacheStoreYaml:
     """Fixture for CacheStateStore."""
     return CacheStoreYaml(path=tmp_path / "test_state.yaml")
 
+
 def test_cache_state_store_init(state_store: CacheStoreYaml, tmp_path: Path):
     """Test ExecutorStateStore initialization."""
     assert state_store.path == tmp_path / "test_state.yaml"
     assert state_store._data == {}
+
 
 def test_cache_state_store_set_get(state_store: CacheStoreYaml):
     """Test ExecutorStateStore set and get methods."""
@@ -23,6 +28,7 @@ def test_cache_state_store_set_get(state_store: CacheStoreYaml):
     state_store.set("key2", {"a": 1, "b": 2})
     assert state_store.get("key2") == {"a": 1, "b": 2}
     assert state_store.get("non_existent_key") is None
+
 
 def test_cache_state_store_persistence(tmp_path: Path):
     """Test that ExecutorStateStore persists data to a YAML file."""
@@ -37,6 +43,7 @@ def test_cache_state_store_persistence(tmp_path: Path):
     assert store2.get("key2") == [1, 2, 3]
     assert store2.get("non_existent_key") is None
 
+
 def test_cache_state_store_load_empty_file(tmp_path: Path):
     """Negative Test: Test loading from an empty YAML file."""
     file_path = tmp_path / "empty.yaml"
@@ -44,6 +51,7 @@ def test_cache_state_store_load_empty_file(tmp_path: Path):
     store = CacheStoreYaml(path=file_path)
     assert store._data == {}
     assert store.get("any_key") is None
+
 
 def test_cache_state_store_load_invalid_yaml(tmp_path: Path):
     """Negative Test: Test loading from a file with invalid YAML."""
@@ -53,6 +61,7 @@ def test_cache_state_store_load_invalid_yaml(tmp_path: Path):
     store = CacheStoreYaml(path=file_path)
     assert store._data == {}
     assert store.get("any_key") is None
+
 
 @pytest.mark.asyncio
 async def test_cache_step_with_different_inputs(state_store: CacheStoreYaml):
@@ -90,6 +99,7 @@ async def test_cache_step_with_different_inputs(state_store: CacheStoreYaml):
     assert output3 == "output1"
     assert mock_agent.run.call_count == 2
 
+
 @pytest.mark.asyncio
 async def test_cache_step_with_corrupted_cache(state_store: CacheStoreYaml):
     class InputModel(BaseModel):
@@ -107,6 +117,7 @@ async def test_cache_step_with_corrupted_cache(state_store: CacheStoreYaml):
         async with executor.step(input_data) as (cached, _):
             assert cached is not None
             OutputModel.model_validate(cached)  # type: ignore[arg-type]
+
 
 @pytest.mark.asyncio
 async def test_cache_step_with_string_io(state_store: CacheStoreYaml):
@@ -129,6 +140,7 @@ async def test_cache_step_with_string_io(state_store: CacheStoreYaml):
         output2 = cached
     assert output2 == "output_string"
     mock_agent.run.assert_not_called()
+
 
 @pytest.mark.asyncio
 async def test_cache_step_with_pydantic_io(state_store: CacheStoreYaml):

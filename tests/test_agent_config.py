@@ -1,9 +1,8 @@
 import pytest
-import sys
-import os
 from pydantic import ValidationError
 
 from ask.core.config import AgentConfig
+
 
 class TestAgentConfig:
     def test_builtin_type_str(self):
@@ -35,5 +34,7 @@ class TestAgentConfig:
         assert config.output_type is str
 
     def test_invalid_type_raises(self):
-        with pytest.raises(ValidationError, match="Unknown or invalid type string: invalid_type"):
+        with pytest.raises(
+            ValidationError, match="Unknown or invalid type string: invalid_type"
+        ):
             AgentConfig(instructions="test", output_type="invalid_type")

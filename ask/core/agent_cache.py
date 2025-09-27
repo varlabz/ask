@@ -1,10 +1,15 @@
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 import hashlib
 import json
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, AsyncIterator, Callable, Dict, Optional, Protocol, runtime_checkable
+from typing import (
+    Any,
+    Protocol,
+    runtime_checkable,
+)
 
 import yaml
 from pydantic import BaseModel
@@ -19,7 +24,7 @@ class CacheStore(Protocol):
     that support basic get/set and cleanup operations.
     """
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Return value for key or None if not found."""
         ...
 
@@ -42,10 +47,10 @@ class CacheStoreYaml(CacheStore):
         self.path = Path(path).expanduser().resolve()
         self._data = self._load()
 
-    def _load(self) -> Dict[str, Any]:
+    def _load(self) -> dict[str, Any]:
         if not self.path.exists():
             return {}
-        with open(self.path, "r") as f:
+        with open(self.path) as f:
             try:
                 data = yaml.safe_load(f)
                 return data if isinstance(data, dict) else {}
@@ -57,7 +62,7 @@ class CacheStoreYaml(CacheStore):
         with open(self.path, "w") as f:
             yaml.dump(self._data, f, default_flow_style=False)
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """
         Get value by key. Returns None if key does not exist.
         """
@@ -85,9 +90,9 @@ class CacheStoreMemory(CacheStore):
     """
 
     def __init__(self):
-        self._data: Dict[str, Any] = {}
+        self._data: dict[str, Any] = {}
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         return self._data.get(key)
 
     def set(self, key: str, value: Any) -> None:
@@ -116,21 +121,25 @@ class CacheASK:
                 serialized_input = json.dumps(input_data, sort_keys=True)
             except TypeError:
                 serialized_input = str(input_data)
-        
-        return hashlib.sha256(serialized_input.encode('utf-8')).hexdigest()
+
+        return hashlib.sha256(serialized_input.encode("utf-8")).hexdigest()
 
     @asynccontextmanager
-    async def step[OutputT](self, input: Any) -> AsyncIterator[tuple[OutputT | None, Callable[[OutputT], None]]]:
+    async def step[OutputT](
+        self, input: Any
+    ) -> AsyncIterator[tuple[OutputT | None, Callable[[OutputT], None]]]:
         """
         Async context manager for executing a step.
         """
         key = self._get_input_key(input)
         output = self.store.get(key)
+
         def set_output(x: OutputT):
             if isinstance(x, BaseModel):
                 self.store.set(key, x.model_dump())
             else:
                 self.store.set(key, x)
+
         try:
             yield (output, set_output)
         finally:

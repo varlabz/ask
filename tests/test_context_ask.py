@@ -1,7 +1,8 @@
-import pytest
 from enum import Enum
-from typing import Optional
+
+import pytest
 from pydantic import BaseModel, Field, ValidationError
+
 from ask.core.agent_context import ContextASK
 
 
@@ -10,6 +11,7 @@ class TestContextASK:
 
     def test_to_input_basic_fields(self):
         """Test to_input() with basic field types."""
+
         class TestModel(ContextASK):
             name: str = Field(description="The name field")
             age: int
@@ -22,6 +24,7 @@ class TestContextASK:
 
     def test_to_input_no_descriptions(self):
         """Test to_input() with fields that have no descriptions."""
+
         class TestModel(ContextASK):
             name: str
             count: int
@@ -32,6 +35,7 @@ class TestContextASK:
 
     def test_to_input_mixed_descriptions(self):
         """Test to_input() with some fields having descriptions and others not."""
+
         class TestModel(ContextASK):
             title: str = Field(description="The title")
             count: int
@@ -43,6 +47,7 @@ class TestContextASK:
 
     def test_to_input_empty_model(self):
         """Test to_input() with a model that has no fields."""
+
         class EmptyModel(ContextASK):
             pass
 
@@ -51,6 +56,7 @@ class TestContextASK:
 
     def test_to_output_basic_values(self):
         """Test to_output() with basic field values."""
+
         class TestModel(ContextASK):
             name: str = Field(description="The name field")
             age: int
@@ -64,9 +70,10 @@ class TestContextASK:
 
     def test_to_output_with_none_values(self):
         """Test to_output() with None values."""
+
         class TestModel(ContextASK):
             name: str
-            optional_field: Optional[str] = None
+            optional_field: str | None = None
 
         instance = TestModel(name="Test", optional_field=None)
         expected = "<name>Test</name>\n"
@@ -75,6 +82,7 @@ class TestContextASK:
 
     def test_to_output_with_list(self):
         """Test to_output() with list field."""
+
         class TestModel(ContextASK):
             tags: list[str]
 
@@ -85,6 +93,7 @@ class TestContextASK:
 
     def test_to_output_with_empty_list(self):
         """Test to_output() with empty list."""
+
         class TestModel(ContextASK):
             tags: list[str]
 
@@ -95,6 +104,7 @@ class TestContextASK:
 
     def test_to_output_with_dict(self):
         """Test to_output() with dictionary field."""
+
         class TestModel(ContextASK):
             metadata: dict[str, str]
 
@@ -106,6 +116,7 @@ class TestContextASK:
 
     def test_to_output_with_enum(self):
         """Test to_output() with enum field."""
+
         class Status(Enum):
             ACTIVE = "active"
             INACTIVE = "inactive"
@@ -120,6 +131,7 @@ class TestContextASK:
 
     def test_to_output_with_nested_model(self):
         """Test to_output() with nested BaseModel."""
+
         class Address(BaseModel):
             street: str
             city: str
@@ -130,12 +142,15 @@ class TestContextASK:
 
         address = Address(street="123 Main St", city="Anytown")
         person = Person(name="John Doe", address=address)
-        expected = "<name>John Doe</name>\n<street>123 Main St</street>\n<city>Anytown</city>"
+        expected = (
+            "<name>John Doe</name>\n<street>123 Main St</street>\n<city>Anytown</city>"
+        )
         result = person.to_output()
         assert result == expected
 
     def test_to_output_complex_nested(self):
         """Test to_output() with complex nested structures."""
+
         class Item(BaseModel):
             name: str
             quantity: int
@@ -149,9 +164,9 @@ class TestContextASK:
             order_id="ORD-001",
             items=[
                 Item(name="Widget A", quantity=5),
-                Item(name="Widget B", quantity=3)
+                Item(name="Widget B", quantity=3),
             ],
-            metadata={"priority": "high", "source": "web"}
+            metadata={"priority": "high", "source": "web"},
         )
 
         result = order.to_output()
@@ -166,16 +181,18 @@ class TestContextASK:
 
     def test_to_output_special_characters(self):
         """Test to_output() with special characters that need XML escaping."""
+
         class TestModel(ContextASK):
             content: str
 
-        instance = TestModel(content='Special chars: <>&"\'')
-        expected = '<content>Special chars: &lt;&gt;&amp;"\'</content>'
+        instance = TestModel(content="Special chars: <>&\"'")
+        expected = "<content>Special chars: &lt;&gt;&amp;\"'</content>"
         result = instance.to_output()
         assert result == expected
 
     def test_to_output_numeric_types(self):
         """Test to_output() with various numeric types."""
+
         class TestModel(ContextASK):
             integer_field: int
             float_field: float
@@ -187,6 +204,7 @@ class TestContextASK:
 
     def test_to_output_boolean_values(self):
         """Test to_output() with boolean values."""
+
         class TestModel(ContextASK):
             flag_true: bool
             flag_false: bool
@@ -198,6 +216,7 @@ class TestContextASK:
 
     def test_inheritance_works(self):
         """Test that ContextASK methods work with inheritance."""
+
         class BaseModel(ContextASK):
             base_field: str = Field(description="Base field")
 
@@ -217,6 +236,7 @@ class TestContextASK:
 
     def test_multiple_instances_independence(self):
         """Test that multiple instances produce independent output."""
+
         class TestModel(ContextASK):
             value: str
 
@@ -235,6 +255,7 @@ class TestContextASK:
 
     def test_to_output_missing_required_field_raises_error(self):
         """Test that missing required fields raise validation error."""
+
         class TestModel(ContextASK):
             required_field: str  # No default value
 
@@ -243,6 +264,7 @@ class TestContextASK:
 
     def test_to_output_invalid_type_raises_error(self):
         """Test that invalid field types raise validation error."""
+
         class TestModel(ContextASK):
             number_field: int
 
@@ -251,6 +273,7 @@ class TestContextASK:
 
     def test_to_input_unknown_field_type(self):
         """Test to_input() with unknown field type annotation."""
+
         class TestModel(ContextASK):
             custom_field: object  # Unknown type
 
@@ -259,8 +282,9 @@ class TestContextASK:
 
     def test_to_output_none_model_instance(self):
         """Test to_output() behavior with None values in complex fields."""
+
         class TestModel(ContextASK):
-            optional_model: Optional[BaseModel] = None
+            optional_model: BaseModel | None = None
 
         instance = TestModel(optional_model=None)
         result = instance.to_output()
@@ -268,6 +292,7 @@ class TestContextASK:
 
     def test_to_output_empty_strings(self):
         """Test to_output() with empty string values."""
+
         class TestModel(ContextASK):
             empty_str: str
             whitespace_str: str

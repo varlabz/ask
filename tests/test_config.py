@@ -1,6 +1,3 @@
-import os
-import sys
-
 import pytest
 
 from ask.core.config import Config, load_config
@@ -173,4 +170,3 @@ mcp:
     with pytest.raises(RuntimeError) as exc:
         load_config([str(config_path)])
     assert "env keys and values must be strings" in str(exc.value)
-

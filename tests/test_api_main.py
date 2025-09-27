@@ -1,27 +1,22 @@
-import sys
-import os
 import json
-import pytest
-from datetime import datetime, timezone
-from typing import Any, Sequence, Literal
-from unittest.mock import AsyncMock, MagicMock, patch
-from fastapi.testclient import TestClient
-from fastapi import FastAPI, Form, Response
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock
 
-from ask.core.rest_api import ChatMessage, make_lifespan
+import pytest
+from fastapi import FastAPI, Form
+from fastapi.responses import StreamingResponse
+from fastapi.testclient import TestClient
 
 # Import the functions we need to test directly
 from pydantic_ai.messages import (
-    ModelMessage,
     ModelRequest,
     ModelResponse,
     TextPart,
     UserPromptPart,
-    SystemPromptPart,
 )
-from pydantic_ai.usage import UsageLimits
+
+from ask.core.rest_api import ChatMessage, make_lifespan
+
 
 # Mock AgentASK class for testing
 class MockAgentASK:
@@ -43,6 +38,7 @@ async def mock_get_chat():
     """Mock GET /chat/ endpoint."""
     return {"message": "mock response"}
 
+
 async def mock_post_chat():
     """Mock POST /chat/ endpoint."""
     return {"message": "mock response"}
@@ -54,16 +50,10 @@ class TestNDJSONFormatting:
     def test_format_chat_messages_as_ndjson(self):
         """Test formatting chat messages as NDJSON."""
         chat_messages = [
+            ChatMessage(role="user", timestamp="2024-01-01T12:00:00Z", content="Hello"),
             ChatMessage(
-                role="user",
-                timestamp="2024-01-01T12:00:00Z",
-                content="Hello"
+                role="assistant", timestamp="2024-01-01T12:00:01Z", content="Hi there!"
             ),
-            ChatMessage(
-                role="assistant",
-                timestamp="2024-01-01T12:00:01Z",
-                content="Hi there!"
-            )
         ]
 
         # Simulate the NDJSON formatting from the API
@@ -72,7 +62,7 @@ class TestNDJSONFormatting:
         )
 
         # Parse back to verify
-        lines = payload.decode().strip().split('\n')
+        lines = payload.decode().strip().split("\n")
         assert len(lines) == 2
 
         msg1 = json.loads(lines[0])
@@ -102,11 +92,27 @@ class TestPositiveScenarios:
         mock_agent = MagicMock(spec=MockAgentASK)
         mock_history = [
             ModelRequest(parts=[UserPromptPart(content="Hello, how are you?")]),
-            ModelResponse(parts=[TextPart(content="I'm doing well, thank you for asking!")]),
-            ModelRequest(parts=[UserPromptPart(content="Can you help me with Python?")]),
-            ModelResponse(parts=[TextPart(content="Of course! I'd be happy to help you with Python. What would you like to know?")]),
+            ModelResponse(
+                parts=[TextPart(content="I'm doing well, thank you for asking!")]
+            ),
+            ModelRequest(
+                parts=[UserPromptPart(content="Can you help me with Python?")]
+            ),
+            ModelResponse(
+                parts=[
+                    TextPart(
+                        content="Of course! I'd be happy to help you with Python. What would you like to know?"
+                    )
+                ]
+            ),
             ModelRequest(parts=[UserPromptPart(content="Show me a simple function")]),
-            ModelResponse(parts=[TextPart(content="Here's a simple Python function:\n\n```python\ndef greet(name):\n    return f\"Hello, {name}!\"\n\nprint(greet(\"World\"))\n```")]),
+            ModelResponse(
+                parts=[
+                    TextPart(
+                        content='Here\'s a simple Python function:\n\n```python\ndef greet(name):\n    return f"Hello, {name}!"\n\nprint(greet("World"))\n```'
+                    )
+                ]
+            ),
         ]
         mock_agent._history = mock_history
         mock_agent._repack = MagicMock(return_value=mock_history)
@@ -115,8 +121,6 @@ class TestPositiveScenarios:
 
     def test_post_chat_with_multiline_prompt(self):
         """Test POST /ask/ with multiline prompt."""
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
 
         mock_agent = MagicMock(spec=MockAgentASK)
         mock_agent._history = []
@@ -150,7 +154,7 @@ class TestPositiveScenarios:
             async def stream_messages():
                 user_msg = ChatMessage(
                     role="user",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=prompt,
                 )
                 yield user_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -159,7 +163,7 @@ class TestPositiveScenarios:
 
                 assistant_msg = ChatMessage(
                     role="assistant",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=result.output,
                 )
                 yield assistant_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -189,8 +193,6 @@ class TestPositiveScenarios:
 
     def test_post_chat_with_special_characters(self):
         """Test POST /ask/ with special characters and unicode."""
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
 
         mock_agent = MagicMock(spec=MockAgentASK)
         mock_agent._history = []
@@ -216,7 +218,7 @@ class TestPositiveScenarios:
             async def stream_messages():
                 user_msg = ChatMessage(
                     role="user",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=prompt,
                 )
                 yield user_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -225,7 +227,7 @@ class TestPositiveScenarios:
 
                 assistant_msg = ChatMessage(
                     role="assistant",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=result.output,
                 )
                 yield assistant_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -251,8 +253,6 @@ class TestPositiveScenarios:
 
     def test_conversation_persistence_across_requests(self):
         """Test that conversation history persists across multiple requests."""
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
 
         mock_agent = MagicMock(spec=MockAgentASK)
         mock_agent._history = []
@@ -274,7 +274,7 @@ class TestPositiveScenarios:
         mock_result1.output = "Hello! Nice to meet you!"
         mock_result1.all_messages.return_value = [
             ModelRequest(parts=[UserPromptPart(content="Hi there!")]),
-            ModelResponse(parts=[TextPart(content="Hello! Nice to meet you!")])
+            ModelResponse(parts=[TextPart(content="Hello! Nice to meet you!")]),
         ]
 
         # Second interaction
@@ -284,11 +284,14 @@ class TestPositiveScenarios:
             ModelRequest(parts=[UserPromptPart(content="Hi there!")]),
             ModelResponse(parts=[TextPart(content="Hello! Nice to meet you!")]),
             ModelRequest(parts=[UserPromptPart(content="How are you?")]),
-            ModelResponse(parts=[TextPart(content="I'm doing well, thank you for asking!")])
+            ModelResponse(
+                parts=[TextPart(content="I'm doing well, thank you for asking!")]
+            ),
         ]
 
         # Mock agent run calls
         call_count = 0
+
         async def mock_run(prompt, **kwargs):
             nonlocal call_count
             call_count += 1
@@ -303,7 +306,7 @@ class TestPositiveScenarios:
             async def stream_messages():
                 user_msg = ChatMessage(
                     role="user",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=prompt,
                 )
                 yield user_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -312,7 +315,7 @@ class TestPositiveScenarios:
 
                 assistant_msg = ChatMessage(
                     role="assistant",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=result.output,
                 )
                 yield assistant_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -342,8 +345,6 @@ class TestNegativeScenarios:
 
     def test_post_chat_missing_prompt_field(self):
         """Test POST /ask/ with missing prompt field."""
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
 
         mock_agent = MagicMock(spec=MockAgentASK)
         test_app = FastAPI(lifespan=make_lifespan(mock_agent))
@@ -366,8 +367,6 @@ class TestNegativeScenarios:
 
     def test_post_chat_empty_prompt(self):
         """Test POST /ask/ with empty prompt string."""
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
 
         mock_agent = MagicMock(spec=MockAgentASK)
         mock_agent._history = []
@@ -378,7 +377,7 @@ class TestNegativeScenarios:
         mock_result.output = "I received an empty message. How can I help you?"
         mock_result.all_messages.return_value = [
             ModelRequest(parts=[UserPromptPart(content="")]),  # Empty prompt
-            ModelResponse(parts=[TextPart(content=mock_result.output)])
+            ModelResponse(parts=[TextPart(content=mock_result.output)]),
         ]
 
         mock_agent.run = AsyncMock(return_value=mock_result)
@@ -390,7 +389,7 @@ class TestNegativeScenarios:
             async def stream_messages():
                 user_msg = ChatMessage(
                     role="user",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=prompt,
                 )
                 yield user_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -399,7 +398,7 @@ class TestNegativeScenarios:
 
                 assistant_msg = ChatMessage(
                     role="assistant",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=result.output,
                 )
                 yield assistant_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -414,7 +413,7 @@ class TestNegativeScenarios:
         response = client.post("/ask/", data={"prompt": ""})
 
         assert response.status_code == 200
-        lines = response.content.decode().strip().split('\n')
+        lines = response.content.decode().strip().split("\n")
         assert len(lines) == 2
 
         user_msg = json.loads(lines[0])
@@ -425,8 +424,6 @@ class TestNegativeScenarios:
 
     def test_post_chat_whitespace_only_prompt(self):
         """Test POST /ask/ with whitespace-only prompt."""
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
 
         mock_agent = MagicMock(spec=MockAgentASK)
         mock_agent._history = []
@@ -439,7 +436,7 @@ class TestNegativeScenarios:
         mock_result.output = "I see you've sent a message with only whitespace. Is there something specific you'd like to talk about?"
         mock_result.all_messages.return_value = [
             ModelRequest(parts=[UserPromptPart(content=whitespace_prompt)]),
-            ModelResponse(parts=[TextPart(content=mock_result.output)])
+            ModelResponse(parts=[TextPart(content=mock_result.output)]),
         ]
 
         mock_agent.run = AsyncMock(return_value=mock_result)
@@ -451,7 +448,7 @@ class TestNegativeScenarios:
             async def stream_messages():
                 user_msg = ChatMessage(
                     role="user",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=prompt,
                 )
                 yield user_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -460,7 +457,7 @@ class TestNegativeScenarios:
 
                 assistant_msg = ChatMessage(
                     role="assistant",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=result.output,
                 )
                 yield assistant_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -475,7 +472,7 @@ class TestNegativeScenarios:
         response = client.post("/ask/", data={"prompt": whitespace_prompt})
 
         assert response.status_code == 200
-        lines = response.content.decode().strip().split('\n')
+        lines = response.content.decode().strip().split("\n")
         assert len(lines) == 2
 
         user_msg = json.loads(lines[0])
@@ -486,8 +483,6 @@ class TestNegativeScenarios:
 
     def test_post_chat_agent_runtime_error(self):
         """Test POST /ask/ when agent raises a runtime error."""
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
 
         mock_agent = MagicMock(spec=MockAgentASK)
         mock_agent._history = []
@@ -495,7 +490,9 @@ class TestNegativeScenarios:
         mock_agent._agent = MagicMock()  # Add the _agent attribute
 
         # Mock agent to raise an exception
-        mock_agent.run = AsyncMock(side_effect=RuntimeError("Model service unavailable"))
+        mock_agent.run = AsyncMock(
+            side_effect=RuntimeError("Model service unavailable")
+        )
 
         test_app = FastAPI(lifespan=make_lifespan(mock_agent))
         test_app.state.agent = mock_agent
@@ -504,7 +501,7 @@ class TestNegativeScenarios:
             async def stream_messages():
                 user_msg = ChatMessage(
                     role="user",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=prompt,
                 )
                 yield user_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -514,7 +511,7 @@ class TestNegativeScenarios:
 
                     assistant_msg = ChatMessage(
                         role="assistant",
-                        timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                        timestamp=datetime.now(tz=UTC).isoformat(),
                         content=result.output,
                     )
                     yield assistant_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -523,7 +520,7 @@ class TestNegativeScenarios:
                 except Exception as e:
                     error_msg = ChatMessage(
                         role="assistant",  # Use assistant role for error messages
-                        timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                        timestamp=datetime.now(tz=UTC).isoformat(),
                         content=f"Error: {str(e)}",
                     )
                     yield error_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -536,7 +533,7 @@ class TestNegativeScenarios:
         response = client.post("/ask/", data={"prompt": "Test prompt"})
 
         assert response.status_code == 200  # Streaming response still returns 200
-        lines = response.content.decode().strip().split('\n')
+        lines = response.content.decode().strip().split("\n")
         assert len(lines) == 2  # User message + error message
 
         user_msg = json.loads(lines[0])
@@ -549,8 +546,6 @@ class TestNegativeScenarios:
 
     def test_post_chat_extremely_long_prompt(self):
         """Test POST /ask/ with extremely long prompt."""
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
 
         mock_agent = MagicMock(spec=MockAgentASK)
         mock_agent._history = []
@@ -564,7 +559,7 @@ class TestNegativeScenarios:
         mock_result.output = "That's a very long message! Let me help you with that."
         mock_result.all_messages.return_value = [
             ModelRequest(parts=[UserPromptPart(content=long_prompt)]),
-            ModelResponse(parts=[TextPart(content=mock_result.output)])
+            ModelResponse(parts=[TextPart(content=mock_result.output)]),
         ]
 
         mock_agent.run = AsyncMock(return_value=mock_result)
@@ -576,7 +571,7 @@ class TestNegativeScenarios:
             async def stream_messages():
                 user_msg = ChatMessage(
                     role="user",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=prompt,
                 )
                 yield user_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -585,7 +580,7 @@ class TestNegativeScenarios:
 
                 assistant_msg = ChatMessage(
                     role="assistant",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=result.output,
                 )
                 yield assistant_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -600,7 +595,7 @@ class TestNegativeScenarios:
         response = client.post("/ask/", data={"prompt": long_prompt})
 
         assert response.status_code == 200
-        lines = response.content.decode().strip().split('\n')
+        lines = response.content.decode().strip().split("\n")
         assert len(lines) == 2
 
         user_msg = json.loads(lines[0])
@@ -612,8 +607,6 @@ class TestNegativeScenarios:
 
     def test_concurrent_requests_simulation(self):
         """Test behavior with simulated concurrent requests."""
-        from fastapi.testclient import TestClient
-        from fastapi import FastAPI
         import asyncio
 
         mock_agent = MagicMock(spec=MockAgentASK)
@@ -647,7 +640,7 @@ class TestNegativeScenarios:
             async def stream_messages():
                 user_msg = ChatMessage(
                     role="user",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=prompt,
                 )
                 yield user_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -656,7 +649,7 @@ class TestNegativeScenarios:
 
                 assistant_msg = ChatMessage(
                     role="assistant",
-                    timestamp=datetime.now(tz=timezone.utc).isoformat(),
+                    timestamp=datetime.now(tz=UTC).isoformat(),
                     content=result.output,
                 )
                 yield assistant_msg.model_dump_json().encode("utf-8") + b"\n"
@@ -671,7 +664,7 @@ class TestNegativeScenarios:
 
         responses = []
         for i in range(3):
-            response = client.post("/ask/", data={"prompt": f"Request {i+1}"})
+            response = client.post("/ask/", data={"prompt": f"Request {i + 1}"})
             responses.append(response)
 
         for i, response in enumerate(responses):
@@ -682,7 +675,7 @@ class TestNegativeScenarios:
             user_msg = json.loads(lines[0])
             assistant_msg = json.loads(lines[1])
 
-            assert user_msg["content"] == f"Request {i+1}"
-            assert assistant_msg["content"] == f"Response to: Request {i+1}"
+            assert user_msg["content"] == f"Request {i + 1}"
+            assert assistant_msg["content"] == f"Response to: Request {i + 1}"
 
         assert mock_agent.run.call_count == 3
