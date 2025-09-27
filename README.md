@@ -154,6 +154,24 @@ uv sync --extra dev
 pytest 
 ```
 
+### Code Quality
+
+This project uses [Ruff](https://github.com/astral-sh/ruff) for linting and formatting.
+
+```bash
+# Check for linting issues
+uv run ruff check .
+
+# Auto-fix linting issues
+uv run ruff check --fix .
+
+# Format code
+uv run ruff format .
+
+# Check formatting without changes
+uv run ruff format --check .
+```
+
 ### Local Installation
 
 ```bash
