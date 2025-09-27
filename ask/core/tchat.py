@@ -32,7 +32,7 @@ async def chat(agent: AgentASK, initial_prompt: str | None = None):
         return await session.prompt_async(prompt)
 
     if initial_prompt:
-        response = await agent.iter(initial_prompt)()
+        response = await agent._iter(initial_prompt)()
         await _stream_print(str(response))
         print(agent.stat)
 
@@ -44,7 +44,7 @@ async def chat(agent: AgentASK, initial_prompt: str | None = None):
             if prompt.lower() in ["/exit", "/quit"]:
                 break
 
-            response = await agent.iter(prompt)()
+            response = await agent._iter(prompt)()
             await _stream_print(str(response))
             print(agent.stat)
             counter += 1

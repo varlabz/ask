@@ -155,7 +155,7 @@ mcp:
   search:
     command: ["uvx", "--from", "git+https://github.com/varlabz/duckduckgo-mcp", "duckduckgo-mcp"]
       
-  markitdown:
+  converter:
     command: ["uvx", "markitdown-mcp"]
 
   filesystem:

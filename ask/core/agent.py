@@ -2,21 +2,24 @@
 agent.py
 """
 from collections.abc import Callable
+import sys
 import time
-from typing import Awaitable, Final, List, Generic, TypeVar, Any
-from attr import dataclass
+from typing import Awaitable, Final, List, Generic, Type, TypeVar, Any
+from dataclasses import dataclass, field
+from pydantic import BaseModel
 from pydantic_ai import Agent
 from pydantic_ai.usage import UsageLimits, Usage
 from pydantic_ai.settings import ModelSettings
 from pydantic_ai.messages import ModelMessage
+from pydantic_ai.tools import AgentDepsT
+from pydantic_ai.output import OutputDataT
+
+from ask.core.agent_cache import CacheASK
 
 from .config import Config, LLMConfig, load_config, load_config_dict
 from .mcp_client import create_mcp_servers
 from .model import create_model
 from .agent_history import make_llm_repack_processor, repack_tools_messages
-
-InputT = TypeVar('InputT', default=str)
-OutputT = TypeVar('OutputT', default=str)
 
 @dataclass
 class AgentStats:
@@ -35,48 +38,65 @@ class AgentStats:
             f"requests: {self._total_requests}, details: {self._usage.details}"
         )
 
-class AgentASK(Generic[InputT, OutputT]):
-    _agent: Agent
-    _history: list
+class AgentASK[InputT, OutputT]:
+    _agent: Agent[InputT, OutputT]
+    _history: list = []
     _use_mcp_servers: bool
-    _stat = AgentStats()
+    _cache: CacheASK | None = None
+    _stat: AgentStats = AgentStats()
     _repack: Callable[[List[ModelMessage]], List[ModelMessage]]
 
-    def __init__(self, agent: Agent, use_mcp_servers: bool, repack):
+    def __init__(self, agent: Agent[InputT, OutputT], use_mcp_servers: bool, repack: Callable[[List[ModelMessage]], List[ModelMessage]]):
         self._agent = agent
         self._use_mcp_servers = use_mcp_servers
-        self._history = []
         self._repack = repack
 
-    async def run_iter(self, iter):
+    async def run_iter(self, iter) -> OutputT:
         """Run the agent with the given prompt."""
         if self._use_mcp_servers:
             async with self._agent.run_mcp_servers():
                 return await iter()
         return await iter()
 
-    def iter(self, prompt: InputT):
+    def _iter(self, prompt: InputT) -> Callable[[], Awaitable[OutputT]]:
         """Create an async iterator for the agent with the given prompt."""
-        async def _iter():
-            start_time = time.time()
-            # Cast to str for current pydantic_ai Agent API expecting a string prompt
-            ret = await self._agent.run(str(prompt), usage_limits=UsageLimits(request_limit=100), message_history=self._history)
-            end_time = time.time()
-            self._history = self._repack(ret.all_messages())
-            self._stat._update_stats(ret.usage(), duration=(end_time - start_time), )
-            return ret.output
-        
-        return _iter
+        async def _agent_run() -> OutputT:
+            if self._cache is not None:
+                print(f">>> step: {self._agent.name}", file=sys.stderr)
+                async with self._cache.step(prompt) as (output, set_output):
+                    if output is not None:
+                        return output
+                    start_time = time.time()
+                    # Cast to str for current pydantic_ai Agent API expecting a string prompt
+                    ret = await self._agent.run(user_prompt=str(prompt), deps=prompt, usage_limits=UsageLimits(request_limit=100), message_history=self._history)
+                    end_time = time.time()
+                    self._history = self._repack(ret.all_messages())
+                    self._stat._update_stats(ret.usage(), duration=(end_time - start_time))
+                    set_output(ret.output)
+                    return ret.output
+            else:
+                start_time = time.time()
+                ret = await self._agent.run(str(prompt), deps=prompt, usage_limits=UsageLimits(request_limit=100), message_history=self._history)
+                end_time = time.time()
+                self._history = self._repack(ret.all_messages())
+                self._stat._update_stats(ret.usage(), duration=(end_time - start_time))
+                return ret.output
+        return _agent_run
 
     # wrapper for single shot run
     async def run(self, prompt: InputT) -> OutputT:
         """Run the agent with the given prompt."""
-        return await self.run_iter(self.iter(prompt))
+        return await self.run_iter(self._iter(prompt))
 
     @property
     def stat(self) -> AgentStats:
         """Get the agent's statistics."""
         return self._stat
+
+    def cache(self, cache: CacheASK) -> 'AgentASK[InputT, OutputT]':
+        """Cache the agent's execution results."""
+        self._cache = cache
+        return self
 
     @classmethod
     def create_from_config(cls, config: Config) -> 'AgentASK[InputT, OutputT]':
@@ -89,19 +109,21 @@ class AgentASK(Generic[InputT, OutputT]):
             model_settings["max_tokens"] = llm.max_tokens
         if llm.timeout is not None:
             model_settings["timeout"] = llm.timeout
-            
+
+        agent = Agent(
+            name=config.agent.name,
+            model=create_model(llm),
+            system_prompt=config.agent.instructions,
+            mcp_servers=create_mcp_servers(config.mcp),
+            model_settings=model_settings,
+            output_type=config.agent.output_type,
+            retries=3,
+            instrument=True,
+            deps_type=config.agent.input_type,
+            # history_processors=[make_llm_repack_processor(create_model(llm), max_history=config.llm.max_history, keep_last=2)],
+        )
         return cls(
-            agent=Agent(
-                name=config.agent.name,
-                model=create_model(llm),
-                system_prompt=config.agent.instructions,
-                mcp_servers=create_mcp_servers(config.mcp),
-                model_settings=model_settings,
-                output_type=config.agent.output_type,
-                retries=3,
-                instrument=True,
-                # history_processors=[make_llm_repack_processor(create_model(llm), max_history=config.llm.max_history, keep_last=2)],
-            ),
+            agent=agent,
             use_mcp_servers=config.mcp is not None,
             repack=repack_tools_messages if llm.compress_history else lambda x: x,
         )

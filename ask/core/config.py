@@ -2,7 +2,7 @@ import os
 import yaml
 import builtins
 import typing
-from typing import Any, Literal, Optional, List, Dict
+from typing import Any, Literal, Optional, List, Dict, Type
 from enum import Enum
 from pydantic import BaseModel, ValidationError, field_validator, ConfigDict, field_serializer
 
@@ -18,7 +18,8 @@ class ProviderEnum(str, Enum):
 class AgentConfig(BaseModel):
     name: str = "ASK Agent"
     instructions: str
-    output_type: Any = str
+    output_type: Any = str  # can be a string like "str", "int", "List[str]", or a Python type
+    input_type: Any = str  # can be a string like "str", "int", "List[str]", or a Python type
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 

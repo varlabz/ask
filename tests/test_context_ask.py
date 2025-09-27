@@ -2,7 +2,7 @@ import pytest
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field, ValidationError
-from ask.core.tools import ContextASK
+from ask.core.agent_context import ContextASK
 
 
 class TestContextASK:

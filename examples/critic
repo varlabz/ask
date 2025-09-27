@@ -79,8 +79,8 @@ agent:
       7. Stay focused - address the specific statement/proposal rather than going off-topic
 
 mcp:
-  fetch:
-    command: ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
+  converter:
+    command: ["uvx", "markitdown-mcp"]
     
   search:
     command: ["uvx", "--from", "git+https://github.com/varlabz/duckduckgo-mcp", "duckduckgo-mcp"]

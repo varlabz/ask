@@ -3,20 +3,20 @@ from __future__ import annotations
 import pytest
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
-from pydantic import BaseModel
-from ask.core.tools import ExecutorASK, ExecutorStateStore
+from pydantic import BaseModel, ValidationError
+from ask.core.agent_cache import CacheASK, CacheStoreYaml
 
 @pytest.fixture
-def state_store(tmp_path: Path) -> ExecutorStateStore:
-    """Fixture for ExecutorStateStore."""
-    return ExecutorStateStore(path=tmp_path / "test_state.yaml")
+def state_store(tmp_path: Path) -> CacheStoreYaml:
+    """Fixture for CacheStateStore."""
+    return CacheStoreYaml(path=tmp_path / "test_state.yaml")
 
-def test_executor_state_store_init(state_store: ExecutorStateStore, tmp_path: Path):
+def test_cache_state_store_init(state_store: CacheStoreYaml, tmp_path: Path):
     """Test ExecutorStateStore initialization."""
     assert state_store.path == tmp_path / "test_state.yaml"
     assert state_store._data == {}
 
-def test_executor_state_store_set_get(state_store: ExecutorStateStore):
+def test_cache_state_store_set_get(state_store: CacheStoreYaml):
     """Test ExecutorStateStore set and get methods."""
     state_store.set("key1", "value1")
     assert state_store.get("key1") == "value1"
@@ -24,130 +24,141 @@ def test_executor_state_store_set_get(state_store: ExecutorStateStore):
     assert state_store.get("key2") == {"a": 1, "b": 2}
     assert state_store.get("non_existent_key") is None
 
-def test_executor_state_store_persistence(tmp_path: Path):
+def test_cache_state_store_persistence(tmp_path: Path):
     """Test that ExecutorStateStore persists data to a YAML file."""
     # ... existing test ...
-    store1 = ExecutorStateStore(path=tmp_path / "test_state.yaml")
+    store1 = CacheStoreYaml(path=tmp_path / "test_state.yaml")
     store1.set("key1", "value1")
     store1.set("key2", [1, 2, 3])
 
     # Create a new instance to load from the same file
-    store2 = ExecutorStateStore(path=tmp_path / "test_state.yaml")
+    store2 = CacheStoreYaml(path=tmp_path / "test_state.yaml")
     assert store2.get("key1") == "value1"
     assert store2.get("key2") == [1, 2, 3]
     assert store2.get("non_existent_key") is None
 
-def test_executor_state_store_load_empty_file(tmp_path: Path):
+def test_cache_state_store_load_empty_file(tmp_path: Path):
     """Negative Test: Test loading from an empty YAML file."""
     file_path = tmp_path / "empty.yaml"
     file_path.touch()
-    store = ExecutorStateStore(path=file_path)
+    store = CacheStoreYaml(path=file_path)
     assert store._data == {}
     assert store.get("any_key") is None
 
-def test_executor_state_store_load_invalid_yaml(tmp_path: Path):
+def test_cache_state_store_load_invalid_yaml(tmp_path: Path):
     """Negative Test: Test loading from a file with invalid YAML."""
     file_path = tmp_path / "invalid.yaml"
     with open(file_path, "w") as f:
         f.write("key: - value: [")
-    store = ExecutorStateStore(path=file_path)
+    store = CacheStoreYaml(path=file_path)
     assert store._data == {}
     assert store.get("any_key") is None
 
 @pytest.mark.asyncio
-async def test_executor_step_with_different_inputs(state_store: ExecutorStateStore):
+async def test_cache_step_with_different_inputs(state_store: CacheStoreYaml):
     """Positive Test: Ensure different inputs are cached separately."""
-    executor: ExecutorASK[str, str] = ExecutorASK(store=state_store)
+    executor = CacheASK(store=state_store)
     mock_agent = MagicMock()
     mock_agent.run = AsyncMock(side_effect=["output1", "output2"])
-    mock_agent._agent.output_type = str
 
-    # First call with "input1"
-    output1 = await executor.step(mock_agent, "input1")
+    # First call with input1
+    async with executor.step("input1") as (cached, set_output):
+        if cached is None:
+            out = await mock_agent.run("input1")
+            set_output(out)
+            output1 = out
+        else:
+            output1 = cached
     assert output1 == "output1"
     mock_agent.run.assert_called_once_with("input1")
 
-    # Second call with "input2"
-    output2 = await executor.step(mock_agent, "input2")
+    # Second call with input2
+    async with executor.step("input2") as (cached, set_output):
+        if cached is None:
+            out = await mock_agent.run("input2")
+            set_output(out)
+            output2 = out
+        else:
+            output2 = cached
     assert output2 == "output2"
     mock_agent.run.assert_called_with("input2")
     assert mock_agent.run.call_count == 2
 
-    # Third call with "input1" again, should be cached
-    output3 = await executor.step(mock_agent, "input1")
+    # Third call with input1 should hit cache
+    async with executor.step("input1") as (cached, _):
+        output3 = cached
     assert output3 == "output1"
-    assert mock_agent.run.call_count == 2  # No new call to agent.run
+    assert mock_agent.run.call_count == 2
 
 @pytest.mark.asyncio
-async def test_executor_step_with_corrupted_cache(state_store: ExecutorStateStore):
-    """Negative Test: Test behavior with corrupted Pydantic data in cache."""
+async def test_cache_step_with_corrupted_cache(state_store: CacheStoreYaml):
     class InputModel(BaseModel):
         value: str
 
     class OutputModel(BaseModel):
         result: str
 
-    executor: ExecutorASK[InputModel, OutputModel] = ExecutorASK(store=state_store)
-    
-    # Manually insert corrupted data into the store
+    executor = CacheASK(store=state_store)
     input_data = InputModel(value="test")
     key = executor._get_input_key(input_data)
     state_store.set(key, {"wrong_field": "some_value"})
 
-    mock_agent = MagicMock()
-    mock_agent.run = AsyncMock(return_value=OutputModel(result="fresh_output"))
-    mock_agent._agent.output_type = OutputModel
-
-    # The executor should fail to validate the cached data and re-run the agent
-    with pytest.raises(Exception):
-        # Depending on Pydantic version, this could be ValidationError or other Exception
-        await executor.step(mock_agent, input_data)
+    with pytest.raises(ValidationError):
+        async with executor.step(input_data) as (cached, _):
+            assert cached is not None
+            OutputModel.model_validate(cached)  # type: ignore[arg-type]
 
 @pytest.mark.asyncio
-async def test_executor_step_with_string_io(state_store: ExecutorStateStore):
-    """Test Executor.step with string input and output."""
-    executor: ExecutorASK[str, str] = ExecutorASK(store=state_store)
+async def test_cache_step_with_string_io(state_store: CacheStoreYaml):
+    executor = CacheASK(store=state_store)
     mock_agent = MagicMock()
     mock_agent.run = AsyncMock(return_value="output_string")
-    mock_agent._agent.output_type = str
 
-    # First call, should call agent.run
-    output1 = await executor.step(mock_agent, "input_string")
+    async with executor.step("input_string") as (cached, set_output):
+        if cached is None:
+            out = await mock_agent.run("input_string")
+            set_output(out)
+            output1 = out
+        else:
+            output1 = cached
     assert output1 == "output_string"
     mock_agent.run.assert_called_once_with("input_string")
 
-    # Second call, should use cache
     mock_agent.run.reset_mock()
-    output2 = await executor.step(mock_agent, "input_string")
+    async with executor.step("input_string") as (cached, _):
+        output2 = cached
     assert output2 == "output_string"
     mock_agent.run.assert_not_called()
 
-
 @pytest.mark.asyncio
-async def test_executor_step_with_pydantic_io(state_store: ExecutorStateStore):
-    """Test Executor.step with Pydantic model input and output."""
+async def test_cache_step_with_pydantic_io(state_store: CacheStoreYaml):
     class InputModel(BaseModel):
         value: str
 
     class OutputModel(BaseModel):
         result: str
 
-    executor: ExecutorASK[InputModel, OutputModel] = ExecutorASK(store=state_store)
+    executor = CacheASK(store=state_store)
     mock_agent = MagicMock()
     mock_agent.run = AsyncMock(return_value=OutputModel(result="output_value"))
-    mock_agent._agent.output_type = OutputModel
 
     input_data = InputModel(value="input_value")
 
-    # First call, should call agent.run
-    output1 = await executor.step(mock_agent, input_data)
+    async with executor.step(input_data) as (cached, set_output):
+        if cached is None:
+            out = await mock_agent.run(input_data)
+            set_output(out)
+            output1 = out
+        else:
+            output1 = OutputModel.model_validate(cached)  # type: ignore[arg-type]
     assert isinstance(output1, OutputModel)
     assert output1.result == "output_value"
     mock_agent.run.assert_called_once_with(input_data)
 
-    # Second call, should use cache
     mock_agent.run.reset_mock()
-    output2 = await executor.step(mock_agent, input_data)
+    async with executor.step(input_data) as (cached, _):
+        assert cached is not None
+        output2 = OutputModel.model_validate(cached)  # type: ignore[arg-type]
     assert isinstance(output2, OutputModel)
     assert output2.result == "output_value"
     mock_agent.run.assert_not_called()

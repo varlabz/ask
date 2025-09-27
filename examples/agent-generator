@@ -98,19 +98,18 @@ agent:
     
     agent:
       instructions: |
-        {PERSONA: Define expert role and domain specialization}
-        {TASK: specific task description from user}
-        {APPROACH: Clear step-by-step execution plan matching task requirements}
-        {TOOLS: Explicit instructions for using each selected tool}
-        {QUALITY: Success criteria and validation checkpoints}
-        {OUTPUT: Required format and content specifications}
-        {SECURITY: Explicit file system boundaries and rate limits}
-
-    llm:
-      model: [provider:model-name]
-      api_key: env:[ENV_VAR]
-      max_tokens: [appropriate limit]
-      temperature: [0.0-0.3 deterministic, 0.4-0.7 creative]
+        PERSONA: 
+          Define expert role and domain specialization
+        TASK: 
+          specific task description from user
+        APPROACH: 
+          Clear step-by-step execution plan matching task requirements
+        TOOLS: 
+          Explicit instructions for using each selected tool
+        QUALITY: 
+          Success criteria and validation checkpoints
+        OUTPUT: 
+          Required format and content specifications
       
     mcp:
       [server1_name]:
@@ -138,8 +137,8 @@ mcp:
   filesystem:
     command: ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
 
-  fetch:
-    command: ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]
+  converter:
+    command: ["uvx", "markitdown-mcp"]
     
   search:
     command: ["uvx", "--from", "git+https://github.com/varlabz/duckduckgo-mcp", "duckduckgo-mcp"]

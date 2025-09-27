@@ -44,6 +44,6 @@ mcp:
   filesystem:
     command: ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
 
-  markitdown:
+  converter:
     command: ["uvx", "markitdown-mcp"]
 

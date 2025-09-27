@@ -13,7 +13,8 @@ import sys
 from pydantic import Field
 
 from ask.core.agent import AgentASK
-from ask.core.tools import ContextASK, ExecutorASK
+from ask.core.agent_cache import CacheASK
+from ask.core.agent_context import ContextASK
 
 llm = {
     "temperature": 0.7,
@@ -48,6 +49,7 @@ research_agent = AgentASK[Research, ResearchResult].create_from_dict({
         Input:
         {Research.to_input()}
     """,
+    "input_type": Research,
     "output_type": ResearchResult,
 },
 "mcp": {
@@ -89,6 +91,8 @@ outline_agent = AgentASK[OutlineInput, str].create_from_dict({
         Input:
         {OutlineInput.to_input()}
         """,
+    "input_type": OutlineInput,
+    "output_type": str,
 },
 "mcp": {
 "sequential_thinking": {
@@ -126,6 +130,8 @@ write_post_agent = AgentASK[WritePostInput, str].create_from_dict({
         4. A well-structured blog post.
         5. List of URLs used in the research.
         """,
+    "input_type": WritePostInput,
+    "output_type": str,
 },
 "mcp": {
     "sequential_thinking": {
@@ -197,6 +203,8 @@ score_agent = AgentASK[ScoreInput, str].create_from_dict({
         final_summary: "The article provides a comprehensive overview of the topic, with a clear structure and engaging style. However, it could benefit from more depth in certain areas and a more balanced presentation of perspectives.",
         total_score: 85
         """,
+    "input_type": ScoreInput,
+    "output_type": str,
 },
 "llm": {
     "model": "openai:deepseek-chat",
@@ -206,20 +214,17 @@ score_agent = AgentASK[ScoreInput, str].create_from_dict({
 
 
 async def main(query: str) -> None:
-    executor = ExecutorASK()
-    research_result = await executor.step(
-        research_agent,
+    cache = CacheASK()
+    research_result = await research_agent.cache(cache).run(
         Research(topic=query)
     )
-    outline_result = await executor.step(
-        outline_agent,
+    outline_result = await outline_agent.cache(cache).run(
         OutlineInput(
             topic=query, 
             research=research_result.report
         )
     )
-    post_result = await executor.step(
-        write_post_agent,
+    post_result = await write_post_agent.cache(cache).run(
         WritePostInput(
             topic=query,
             research=research_result.report,
@@ -227,15 +232,14 @@ async def main(query: str) -> None:
         )
     )
     print(post_result)
-    score_result = await executor.step(
-        score_agent,
+    score_result = await score_agent.cache(cache).run(
         ScoreInput(
             topic=query,
             article=post_result
         )
     )
     print(score_result, file=sys.stderr)
-    executor.clean()
+    cache.clean()
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
