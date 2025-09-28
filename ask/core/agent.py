@@ -73,43 +73,32 @@ class AgentASK[InputT, OutputT]:
         """Create an async iterator for the agent with the given prompt."""
 
         async def _agent_run() -> OutputT:
+            start_time = time.time()
+            ret = await self._agent.run(
+                str(prompt),
+                deps=prompt,
+                usage_limits=UsageLimits(request_limit=100),
+                message_history=self._history,
+            )
+            end_time = time.time()
+            self._history = self._repack(ret.all_messages())
+            self._stat._update_stats(ret.usage(), duration=(end_time - start_time))
+            return ret.output
+
+        async def _cache_run() -> OutputT:
             if self._cache is not None:
-                print(f">>> step: {self._agent.name}", file=sys.stderr)
+                # print(f">>> step: {self._agent.name}", file=sys.stderr)
                 async with self._cache.step(prompt) as (output, set_output):
                     if output is not None:
                         if isinstance(self._agent.output_type, type) and issubclass(self._agent.output_type, BaseModel):
                             return cast(OutputT, self._agent.output_type.model_validate(output))
                         else:
                             return output
-                    start_time = time.time()
-                    # Cast to str for current pydantic_ai Agent API expecting a string prompt
-                    ret = await self._agent.run(
-                        user_prompt=str(prompt),
-                        deps=prompt,
-                        usage_limits=UsageLimits(request_limit=100),
-                        message_history=self._history,
-                    )
-                    end_time = time.time()
-                    self._history = self._repack(ret.all_messages())
-                    self._stat._update_stats(
-                        ret.usage(), duration=(end_time - start_time)
-                    )
-                    set_output(ret.output)
-                    return ret.output
+                    return set_output(await _agent_run())
             else:
-                start_time = time.time()
-                ret = await self._agent.run(
-                    str(prompt),
-                    deps=prompt,
-                    usage_limits=UsageLimits(request_limit=100),
-                    message_history=self._history,
-                )
-                end_time = time.time()
-                self._history = self._repack(ret.all_messages())
-                self._stat._update_stats(ret.usage(), duration=(end_time - start_time))
-                return ret.output
+                return await _agent_run()
 
-        return _agent_run
+        return _cache_run
 
     # wrapper for single shot run
     async def run(self, prompt: InputT) -> OutputT:

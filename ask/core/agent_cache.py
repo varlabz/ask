@@ -103,10 +103,6 @@ class CacheStoreMemory(CacheStore):
 
 
 class CacheASK:
-    """
-    Executes agent steps with a pluggable state store, caching results.
-    """
-
     def __init__(self, store: CacheStore | None = None):
         self.store: CacheStore = store or CacheStoreYaml()
 
@@ -127,18 +123,19 @@ class CacheASK:
     @asynccontextmanager
     async def step[OutputT](
         self, input: Any
-    ) -> AsyncIterator[tuple[OutputT | None, Callable[[OutputT], None]]]:
+    ) -> AsyncIterator[tuple[OutputT | None, Callable[[OutputT], Any]]]:
         """
         Async context manager for executing a step.
         """
         key = self._get_input_key(input)
         output = self.store.get(key)
 
-        def set_output(x: OutputT):
+        def set_output(x: OutputT) -> OutputT:
             if isinstance(x, BaseModel):
                 self.store.set(key, x.model_dump())
             else:
                 self.store.set(key, x)
+            return x
 
         try:
             yield (output, set_output)
