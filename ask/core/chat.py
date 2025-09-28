@@ -61,7 +61,7 @@ async def _send(prompt: str) -> AsyncIterator[ChatMessage]:
         content=prompt,
     )
     yield user_msg
-    result = await agent.iter(prompt)()
+    result = await agent._iter(prompt)()
     stat = str(agent.stat)
     assistant_msg = ChatMessage(
         role="assistant",
