@@ -9,7 +9,7 @@ class TestCreateAgentFromFunction:
         async def upper_func(prompt: str) -> str:
             return prompt.upper()
 
-        agent = AgentASK.create_agent_from_function(upper_func)
+        agent = AgentASK.create_from_function(upper_func)
         assert isinstance(agent, AgentASK)
 
         result = await agent.run("hello")
@@ -20,7 +20,7 @@ class TestCreateAgentFromFunction:
         async def double_func(prompt: int) -> int:
             return prompt * 2
 
-        agent = AgentASK.create_agent_from_function(double_func)
+        agent = AgentASK.create_from_function(double_func)
         assert isinstance(agent, AgentASK)
 
         result = await agent.run(5)
@@ -31,7 +31,7 @@ class TestCreateAgentFromFunction:
         async def identity_func(prompt: str) -> str:
             return prompt
 
-        agent = AgentASK.create_agent_from_function(identity_func)
+        agent = AgentASK.create_from_function(identity_func)
         result = await agent.run("test")
         assert result == "test"
 

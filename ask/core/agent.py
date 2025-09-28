@@ -171,7 +171,7 @@ class AgentASK[InputT, OutputT]:
         )
 
     @classmethod
-    def create_agent_from_function(
+    def create_from_function(
         cls, func: Callable[[InputT], Awaitable[OutputT]]
     ) -> "AgentASK[InputT, OutputT]":
         class FunctionAgentASK(AgentASK[InputT, OutputT]):
