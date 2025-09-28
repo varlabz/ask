@@ -68,21 +68,21 @@ class AgentASK[InputT, OutputT]:
                 return await iter()
         return await iter()
 
+    async def _agent_run(self, prompt: InputT) -> OutputT:
+        start_time = time.time()
+        ret = await self._agent.run(
+            str(prompt),
+            deps=prompt,
+            usage_limits=UsageLimits(request_limit=100),
+            message_history=self._history,
+        )
+        end_time = time.time()
+        self._history = self._repack(ret.all_messages())
+        self._stat._update_stats(ret.usage(), duration=(end_time - start_time))
+        return ret.output
+
     def _iter(self, prompt: InputT) -> Callable[[], Awaitable[OutputT]]:
         """Create an async iterator for the agent with the given prompt."""
-
-        async def _agent_run() -> OutputT:
-            start_time = time.time()
-            ret = await self._agent.run(
-                str(prompt),
-                deps=prompt,
-                usage_limits=UsageLimits(request_limit=100),
-                message_history=self._history,
-            )
-            end_time = time.time()
-            self._history = self._repack(ret.all_messages())
-            self._stat._update_stats(ret.usage(), duration=(end_time - start_time))
-            return ret.output
 
         async def _cache_run() -> OutputT:
             if self._cache is not None:
@@ -97,9 +97,9 @@ class AgentASK[InputT, OutputT]:
                             )
                         else:
                             return output
-                    return set_output(await _agent_run())
+                    return set_output(await self._agent_run(prompt))
             else:
-                return await _agent_run()
+                return await self._agent_run(prompt)
 
         return _cache_run
 
@@ -134,7 +134,7 @@ class AgentASK[InputT, OutputT]:
             name=config.agent.name,
             model=create_model(llm),
             system_prompt=config.agent.instructions,
-            mcp_servers=create_mcp_servers(config.mcp),
+            toolsets=create_mcp_servers(config.mcp),
             model_settings=model_settings,
             output_type=config.agent.output_type,
             retries=3,
@@ -169,3 +169,29 @@ class AgentASK[InputT, OutputT]:
         return cls.create_from_config(
             config,
         )
+
+    @classmethod
+    def create_agent_from_function(
+        cls, func: Callable[[InputT], Awaitable[OutputT]]
+    ) -> "AgentASK[InputT, OutputT]":
+        class FunctionAgentASK(AgentASK[InputT, OutputT]):
+            def __init__(self, func: Callable[[InputT], Awaitable[OutputT]]):
+                self._func = func
+                self._agent = None  # type: ignore
+                self._use_mcp_servers = False
+                self._repack = lambda x: x
+                self._cache = None
+                self._stat = AgentStats()
+                self._history = []
+
+            async def _agent_run(self, prompt: InputT) -> OutputT:
+                start_time = time.time()
+                ret = await self._func(prompt)
+                end_time = time.time()
+                # Dummy usage for stats
+                usage = RunUsage()
+                usage.requests = 1  # Simulate one request
+                self._stat._update_stats(usage, duration=(end_time - start_time))
+                return ret
+
+        return FunctionAgentASK(func)

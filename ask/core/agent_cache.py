@@ -84,6 +84,53 @@ class CacheStoreYaml(CacheStore):
             self.path.unlink()
 
 
+class CacheStoreJson(CacheStore):
+    """
+    JSON file-backed implementation of CacheStore for caching
+    executor/agent step inputs and outputs.
+    """
+
+    def __init__(self, path: str | Path = ".ask_cache.json"):
+        self.path = Path(path).expanduser().resolve()
+        self._data = self._load()
+
+    def _load(self) -> dict[str, Any]:
+        if not self.path.exists():
+            return {}
+        with open(self.path) as f:
+            try:
+                data = json.load(f)
+                return data if isinstance(data, dict) else {}
+            except json.JSONDecodeError:
+                # Handle empty or invalid JSON file
+                return {}
+
+    def _save(self):
+        with open(self.path, "w") as f:
+            json.dump(self._data, f, indent=2)
+
+    def get(self, key: str) -> Any | None:
+        """
+        Get value by key. Returns None if key does not exist.
+        """
+        return self._data.get(key)
+
+    def set(self, key: str, value: Any):
+        """
+        Store key and value.
+        """
+        self._data[key] = value
+        self._save()
+
+    def clean(self):
+        """
+        Clear the storage by deleting the state file and clearing the in-memory data.
+        """
+        self._data.clear()
+        if self.path.exists():
+            self.path.unlink()
+
+
 class CacheStoreMemory(CacheStore):
     """
     In-memory implementation of CacheStore. Useful for tests or ephemeral runs.
