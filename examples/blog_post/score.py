@@ -1,30 +1,31 @@
-#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-run 
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-run
 
-import os
-import sys
 
 from pydantic import Field
 
 from ask.core.agent import AgentASK
 from ask.core.agent_context import ContextASK
 
+
 class ScoreInput(ContextASK):
     topic: str = Field(description="The blog post topic")
     article: str = Field(description="The blog post article")
 
-score_agent = AgentASK[ScoreInput, str].create_from_dict({
-"agent": {
-    "name": "Score",
-    "instructions": f"""
-        Role: You are an expert Article Critic. 
+
+score_agent = AgentASK[ScoreInput, str].create_from_dict(
+    {
+        "agent": {
+            "name": "Score",
+            "instructions": f"""
+        Role: You are an expert Article Critic.
         Your persona is that of a seasoned editor with a meticulous eye for detail and a profound understanding of journalistic and literary excellence.
 
-        Task: Conduct a comprehensive review of the article provided below, 
-        evaluating it against its stated topic. 
+        Task: Conduct a comprehensive review of the article provided below,
+        evaluating it against its stated topic.
         Your critique must be constructive and professional in tone.
 
         Format:
-        Your analysis must be structured into the five categories listed below. 
+        Your analysis must be structured into the five categories listed below.
         For each category, provide:
         A detailed qualitative assessment.
         A quantitative score out of 20.
@@ -67,12 +68,13 @@ score_agent = AgentASK[ScoreInput, str].create_from_dict({
         final_summary: "The article provides a comprehensive overview of the topic, with a clear structure and engaging style. However, it could benefit from more depth in certain areas and a more balanced presentation of perspectives.",
         total_score: 85
         """,
-    "input_type": ScoreInput,
-    "output_type": str,
-},
-"llm": {
-    "model": "openai:deepseek-chat",
-    "api_key": "file:~/.config/ask/deepseek",
-    "base_url": "https://api.deepseek.com/v1/"
-},})
-
+            "input_type": ScoreInput,
+            "output_type": str,
+        },
+        "llm": {
+            "model": "openai:deepseek-chat",
+            "api_key": "file:~/.config/ask/deepseek",
+            "base_url": "https://api.deepseek.com/v1/",
+        },
+    }
+)

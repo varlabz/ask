@@ -2,7 +2,6 @@
 agent.py
 """
 
-import sys
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -90,8 +89,12 @@ class AgentASK[InputT, OutputT]:
                 # print(f">>> step: {self._agent.name}", file=sys.stderr)
                 async with self._cache.step(prompt) as (output, set_output):
                     if output is not None:
-                        if isinstance(self._agent.output_type, type) and issubclass(self._agent.output_type, BaseModel):
-                            return cast(OutputT, self._agent.output_type.model_validate(output))
+                        if isinstance(self._agent.output_type, type) and issubclass(
+                            self._agent.output_type, BaseModel
+                        ):
+                            return cast(
+                                OutputT, self._agent.output_type.model_validate(output)
+                            )
                         else:
                             return output
                     return set_output(await _agent_run())

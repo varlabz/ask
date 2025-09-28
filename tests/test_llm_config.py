@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.models.openai import OpenAIChatModel
 
 from ask.core.config import LLMConfig
 from ask.core.model import create_model
@@ -15,14 +15,14 @@ class TestCreateModelFromLLMConfig:
             base_url="https://api.openai.com/v1",
         )
         model = create_model(llm_config)
-        assert isinstance(model, OpenAIModel)
+        assert isinstance(model, OpenAIChatModel)
         assert model.model_name == "gpt-4o"
         assert model.base_url == "https://api.openai.com/v1/"
 
     def test_ollama_provider(self):
         llm_config = LLMConfig(model="ollama:llama3.2", api_key=None, base_url=None)
         model = create_model(llm_config)
-        assert isinstance(model, OpenAIModel)
+        assert isinstance(model, OpenAIChatModel)
         assert model.model_name == "llama3.2"
         assert model.base_url == "http://localhost:11434/v1/"
 
@@ -33,7 +33,7 @@ class TestCreateModelFromLLMConfig:
             base_url=None,
         )
         model = create_model(llm_config)
-        assert isinstance(model, OpenAIModel)
+        assert isinstance(model, OpenAIChatModel)
         assert model.model_name == "anthropic/claude-3.5-sonnet"
 
     def test_invalid_provider(self):
