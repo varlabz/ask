@@ -6,12 +6,13 @@ import sys
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, cast
 
+from pydantic import BaseModel
 from pydantic_ai import Agent
 from pydantic_ai.messages import ModelMessage
 from pydantic_ai.settings import ModelSettings
-from pydantic_ai.usage import Usage, UsageLimits
+from pydantic_ai.usage import RunUsage, UsageLimits
 
 from ask.core.agent_cache import CacheASK
 
@@ -23,13 +24,13 @@ from .model import create_model
 
 @dataclass
 class AgentStats:
-    _usage = Usage()
+    _usage = RunUsage()
     _duration = 0
     _total_requests = 0
 
     def _update_stats(
         self,
-        usage: Usage,
+        usage: RunUsage,
         duration: float,
     ):
         self._usage = usage
@@ -76,7 +77,10 @@ class AgentASK[InputT, OutputT]:
                 print(f">>> step: {self._agent.name}", file=sys.stderr)
                 async with self._cache.step(prompt) as (output, set_output):
                     if output is not None:
-                        return output
+                        if isinstance(self._agent.output_type, type) and issubclass(self._agent.output_type, BaseModel):
+                            return cast(OutputT, self._agent.output_type.model_validate(output))
+                        else:
+                            return output
                     start_time = time.time()
                     # Cast to str for current pydantic_ai Agent API expecting a string prompt
                     ret = await self._agent.run(

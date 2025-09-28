@@ -52,7 +52,7 @@ def _create_anthropic_model(model_name: str, llm_config: LLMConfig) -> Model:
 def _create_openai_compatible_model(
     provider_name: str, model_name: str, llm_config: LLMConfig
 ) -> Model:
-    from pydantic_ai.models.openai import OpenAIModel
+    from pydantic_ai.models.openai import OpenAIChatModel
     from pydantic_ai.providers.openai import OpenAIProvider
     from pydantic_ai.providers.openrouter import OpenRouterProvider
 
@@ -73,4 +73,4 @@ def _create_openai_compatible_model(
     else:
         raise ValueError(f"Unsupported OpenAI-compatible provider: {provider_name}")
 
-    return OpenAIModel(model_name, provider=provider)
+    return OpenAIChatModel(model_name, provider=provider)
