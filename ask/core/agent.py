@@ -2,10 +2,11 @@
 agent.py
 """
 
+import inspect
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import Final, cast, get_args, get_origin
 
 from pydantic import BaseModel
 from pydantic_ai import Agent
@@ -49,16 +50,22 @@ class AgentASK[InputT, OutputT]:
     _cache: CacheASK | None = None
     _stat: AgentStats = AgentStats()
     _repack: Callable[[list[ModelMessage]], list[ModelMessage]]
+    _input_type: type[InputT]
+    _output_type: type[OutputT]
 
     def __init__(
         self,
         agent: Agent[InputT, OutputT],
         use_mcp_servers: bool,
         repack: Callable[[list[ModelMessage]], list[ModelMessage]],
+        input_type: type[InputT],
+        output_type: type[OutputT],
     ):
         self._agent = agent
         self._use_mcp_servers = use_mcp_servers
         self._repack = repack
+        self._input_type = input_type
+        self._output_type = output_type
 
     async def run_iter(self, iter) -> OutputT:
         """Run the agent with the given prompt."""
@@ -91,11 +98,11 @@ class AgentASK[InputT, OutputT]:
                         usage = RunUsage()
                         usage.requests = 1  # Simulate one request
                         self._stat._update_stats(usage, duration=0.001)
-                        if isinstance(self._agent.output_type, type) and issubclass(
-                            self._agent.output_type, BaseModel
+                        if isinstance(self._output_type, type) and issubclass(
+                            self._output_type, BaseModel
                         ):
                             return cast(
-                                OutputT, self._agent.output_type.model_validate(output)
+                                OutputT, self._output_type.model_validate(output)
                             )
                         else:
                             return output
@@ -139,6 +146,8 @@ class AgentASK[InputT, OutputT]:
             agent=agent,
             use_mcp_servers=config.mcp is not None,
             repack=repack_tools_messages if llm.compress_history else lambda x: x,
+            input_type=config.agent.input_type,
+            output_type=config.agent.output_type,
         )
 
     @classmethod
@@ -167,8 +176,17 @@ class AgentASK[InputT, OutputT]:
     def create_from_function(
         cls, func: Callable[[InputT], Awaitable[OutputT]]
     ) -> "AgentASK[InputT, OutputT]":
+        sig = inspect.signature(func)
+        return_annotation = sig.return_annotation
+        if get_origin(return_annotation) == Awaitable:
+            output_type = get_args(return_annotation)[0]
+        else:
+            output_type = return_annotation
+        params = list(sig.parameters.values())
+        input_type = params[0].annotation
+
         class FunctionAgentASK(AgentASK[InputT, OutputT]):
-            def __init__(self, func: Callable[[InputT], Awaitable[OutputT]]):
+            def __init__(self, func: Callable[[InputT], Awaitable[OutputT]], input_type: type[InputT], output_type: type[OutputT]):
                 self._func = func
                 self._agent = None  # type: ignore
                 self._use_mcp_servers = False
@@ -176,6 +194,8 @@ class AgentASK[InputT, OutputT]:
                 self._cache = None
                 self._stat = AgentStats()
                 self._history = []
+                self._input_type = input_type
+                self._output_type = output_type
 
             async def _agent_run(self, prompt: InputT) -> OutputT:
                 start_time = time.time()
@@ -185,4 +205,4 @@ class AgentASK[InputT, OutputT]:
                 self._stat._update_stats(usage, duration=max(end_time - start_time, 0.00001))
                 return ret
 
-        return FunctionAgentASK(func)
+        return FunctionAgentASK(func, input_type=input_type, output_type=output_type)
