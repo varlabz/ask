@@ -69,9 +69,10 @@ class TestCreateModelFromLLMConfig:
         """Test GeminiModel creation with Google provider."""
 
         class DummyGeminiModel:
-            def __init__(self, model_name, provider=None):
+            def __init__(self, model_name, provider=None, settings=None):
                 self.model_name = model_name
                 self.provider = provider
+                self.settings = settings
 
         class DummyGoogleGLAProvider:
             def __init__(self, api_key=None):

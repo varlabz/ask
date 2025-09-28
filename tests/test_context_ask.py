@@ -18,7 +18,7 @@ class TestContextASK:
             height: float
             is_active: bool
 
-        expected = "<name>The name field</name>\n<age>number</age>\n<height>number</height>\n<is_active>boolean</is_active>"
+        expected = "<name description='The name field'></name>\n<age type='number'></age>\n<height type='number'></height>\n<is_active type='boolean'></is_active>"
         result = TestModel.to_input()
         assert result == expected
 
@@ -29,7 +29,7 @@ class TestContextASK:
             name: str
             count: int
 
-        expected = "<name>string</name>\n<count>number</count>"
+        expected = "<name type='string'></name>\n<count type='number'></count>"
         result = TestModel.to_input()
         assert result == expected
 
@@ -41,7 +41,7 @@ class TestContextASK:
             count: int
             active: bool = Field(description="Is active status")
 
-        expected = "<title>The title</title>\n<count>number</count>\n<active>Is active status</active>"
+        expected = "<title description='The title'></title>\n<count type='number'></count>\n<active description='Is active status'></active>"
         result = TestModel.to_input()
         assert result == expected
 
@@ -225,8 +225,8 @@ class TestContextASK:
 
         # Test class method
         result = DerivedModel.to_input()
-        assert "<base_field>Base field</base_field>" in result
-        assert "<derived_field>number</derived_field>" in result
+        assert "<base_field description='Base field'></base_field>" in result
+        assert "<derived_field type='number'></derived_field>" in result
 
         # Test instance method
         instance = DerivedModel(base_field="test", derived_field=123)
@@ -278,7 +278,7 @@ class TestContextASK:
             custom_field: object  # Unknown type
 
         result = TestModel.to_input()
-        assert "<custom_field>unknown</custom_field>" in result
+        assert "<custom_field type='unknown'></custom_field>" in result
 
     def test_to_output_none_model_instance(self):
         """Test to_output() behavior with None values in complex fields."""

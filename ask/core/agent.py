@@ -10,7 +10,6 @@ from typing import Final, cast
 from pydantic import BaseModel
 from pydantic_ai import Agent
 from pydantic_ai.messages import ModelMessage
-from pydantic_ai.settings import ModelSettings
 from pydantic_ai.usage import RunUsage, UsageLimits
 
 from ask.core.agent_cache import CacheASK
@@ -89,6 +88,9 @@ class AgentASK[InputT, OutputT]:
                 # print(f">>> step: {self._agent.name}", file=sys.stderr)
                 async with self._cache.step(prompt) as (output, set_output):
                     if output is not None:
+                        usage = RunUsage()
+                        usage.requests = 1  # Simulate one request
+                        self._stat._update_stats(usage, duration=0.001)
                         if isinstance(self._agent.output_type, type) and issubclass(
                             self._agent.output_type, BaseModel
                         ):
@@ -122,20 +124,11 @@ class AgentASK[InputT, OutputT]:
     def create_from_config(cls, config: Config) -> "AgentASK[InputT, OutputT]":
         """Create a PydanticAI Agent from a Config instance."""
         llm: Final[LLMConfig] = config.llm
-        model_settings = ModelSettings()
-        if llm.temperature is not None:
-            model_settings["temperature"] = llm.temperature
-        if llm.max_tokens is not None:
-            model_settings["max_tokens"] = llm.max_tokens
-        if llm.timeout is not None:
-            model_settings["timeout"] = llm.timeout
-
         agent = Agent(
             name=config.agent.name,
             model=create_model(llm),
             system_prompt=config.agent.instructions,
             toolsets=create_mcp_servers(config.mcp),
-            model_settings=model_settings,
             output_type=config.agent.output_type,
             retries=3,
             instrument=True,
@@ -188,10 +181,8 @@ class AgentASK[InputT, OutputT]:
                 start_time = time.time()
                 ret = await self._func(prompt)
                 end_time = time.time()
-                # Dummy usage for stats
-                usage = RunUsage()
-                usage.requests = 1  # Simulate one request
-                self._stat._update_stats(usage, duration=(end_time - start_time))
+                usage = RunUsage(requests=1)
+                self._stat._update_stats(usage, duration=max(end_time - start_time, 0.00001))
                 return ret
 
         return FunctionAgentASK(func)

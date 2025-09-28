@@ -76,25 +76,7 @@ def main():
             prompt = sys.stdin.read().strip()
 
         if args.chat:
-            from ask.core import chat
-
-            if args.chat_port:
-                selected_port = args.chat_port
-            else:
-                found = chat.find_next_available_port(8000, 9999)
-                if found is None:
-                    print("No free port available in range 8000-9999", file=sys.stderr)
-                    sys.exit(1)
-                selected_port = found
-                # print(f"Auto-selected port: {selected_port}")
-
-            chat.run_web(
-                agent,
-                selected_port,
-                prompt if prompt else None,
-                native=not args.no_native,
-                reload=False,
-            )
+            run_chat(agent, prompt, args.chat_port, args.no_native)
             return
 
         if args.tchat:
@@ -112,6 +94,29 @@ def main():
 
         result = asyncio.run(agent.run(prompt))
         print(result)
+
+
+def run_chat(agent, prompt, chat_port=None, no_native=False):
+    """Run the web chat interface."""
+    from ask.core import chat
+
+    if chat_port:
+        selected_port = chat_port
+    else:
+        found = chat.find_next_available_port(8000, 9999)
+        if found is None:
+            print("No free port available in range 8000-9999", file=sys.stderr)
+            sys.exit(1)
+        selected_port = found
+        # print(f"Auto-selected port: {selected_port}")
+
+    chat.run_web(
+        agent,
+        selected_port,
+        prompt if prompt else None,
+        native=not no_native,
+        reload=False,
+    )
 
 
 if __name__ in {"__main__", "__mp_main__"}:

@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 def _pydantic_model_to_xml(model: type[BaseModel]) -> str:
     def _value(tag: str, field: Any) -> str:
         if field.description:
-            return f"<{tag}>{escape(str(field.description))}</{tag}>"
+            return f"<{tag} description='{escape(str(field.description))}'></{tag}>"
         # if field has annotations, convert to human readable type
         if field.annotation:
             type_map = {
@@ -19,10 +19,10 @@ def _pydantic_model_to_xml(model: type[BaseModel]) -> str:
                 float: "number",
                 bool: "boolean",
             }
-            return f"<{tag}>{escape(str(type_map.get(field.annotation, 'unknown')))}</{tag}>"
+            return f"<{tag} type='{escape(str(type_map.get(field.annotation, 'unknown')))}'></{tag}>"
         if field is None:
             return ""
-        return f"<{tag}>{escape(str(field))}</{tag}>"
+        return f"<{tag} default='{escape(str(field))}'></{tag}>"
 
     def _model(mod: type[BaseModel]) -> str:
         return "\n".join(_value(k, v) for k, v in mod.model_fields.items())
