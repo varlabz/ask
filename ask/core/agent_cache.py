@@ -43,7 +43,7 @@ class CacheStoreYaml(CacheStore):
     executor/agent step inputs and outputs.
     """
 
-    def __init__(self, path: str | Path = ".ask_executor_state.yaml"):
+    def __init__(self, path: str | Path = ".ask_cache.yaml"):
         self.path = Path(path).expanduser().resolve()
         self._data = self._load()
 
