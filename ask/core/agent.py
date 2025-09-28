@@ -186,7 +186,12 @@ class AgentASK[InputT, OutputT]:
         input_type = params[0].annotation
 
         class FunctionAgentASK(AgentASK[InputT, OutputT]):
-            def __init__(self, func: Callable[[InputT], Awaitable[OutputT]], input_type: type[InputT], output_type: type[OutputT]):
+            def __init__(
+                self,
+                func: Callable[[InputT], Awaitable[OutputT]],
+                input_type: type[InputT],
+                output_type: type[OutputT],
+            ):
                 self._func = func
                 self._agent = None  # type: ignore
                 self._use_mcp_servers = False
@@ -202,7 +207,9 @@ class AgentASK[InputT, OutputT]:
                 ret = await self._func(prompt)
                 end_time = time.time()
                 usage = RunUsage(requests=1)
-                self._stat._update_stats(usage, duration=max(end_time - start_time, 0.00001))
+                self._stat._update_stats(
+                    usage, duration=max(end_time - start_time, 0.00001)
+                )
                 return ret
 
         return FunctionAgentASK(func, input_type=input_type, output_type=output_type)

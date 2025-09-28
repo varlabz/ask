@@ -33,6 +33,7 @@ def create_model(llm_config: LLMConfig) -> Model:
 
     raise ValueError(f"Unsupported provider: {provider_name}")
 
+
 def _model_settings(llm_config: LLMConfig) -> ModelSettings:
     """Create ModelSettings from LLMConfig parameters."""
     model_settings = ModelSettings()
@@ -44,12 +45,15 @@ def _model_settings(llm_config: LLMConfig) -> ModelSettings:
         model_settings["timeout"] = llm_config.timeout
     return model_settings
 
+
 def _create_google_model(model_name: str, llm_config: LLMConfig) -> Model:
     from pydantic_ai.models.gemini import GeminiModel
     from pydantic_ai.providers.google_gla import GoogleGLAProvider
 
     provider = GoogleGLAProvider(api_key=llm_config.api_key)
-    return GeminiModel(model_name, provider=provider, settings=_model_settings(llm_config))
+    return GeminiModel(
+        model_name, provider=provider, settings=_model_settings(llm_config)
+    )
 
 
 def _create_anthropic_model(model_name: str, llm_config: LLMConfig) -> Model:
@@ -57,7 +61,9 @@ def _create_anthropic_model(model_name: str, llm_config: LLMConfig) -> Model:
     from pydantic_ai.providers.anthropic import AnthropicProvider
 
     provider = AnthropicProvider(api_key=llm_config.api_key)
-    return AnthropicModel(model_name, provider=provider, settings=_model_settings(llm_config))
+    return AnthropicModel(
+        model_name, provider=provider, settings=_model_settings(llm_config)
+    )
 
 
 def _create_openai_compatible_model(
@@ -84,4 +90,6 @@ def _create_openai_compatible_model(
     else:
         raise ValueError(f"Unsupported OpenAI-compatible provider: {provider_name}")
 
-    return OpenAIChatModel(model_name, provider=provider, settings=_model_settings(llm_config))
+    return OpenAIChatModel(
+        model_name, provider=provider, settings=_model_settings(llm_config)
+    )
