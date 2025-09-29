@@ -45,6 +45,7 @@ class AgentStats:
 
 class AgentASK[InputT, OutputT]:
     _agent: Agent[InputT, OutputT]
+    _name: str
     _history: list = []
     _use_mcp_servers: bool
     _cache: CacheASK | None = None
@@ -66,6 +67,10 @@ class AgentASK[InputT, OutputT]:
         self._repack = repack
         self._input_type = input_type
         self._output_type = output_type
+        if agent.name:
+            self._name = agent.name
+        else:
+            raise ValueError("Agent must have a name")
 
     async def run_iter(self, iter) -> OutputT:
         """Run the agent with the given prompt."""
@@ -93,7 +98,10 @@ class AgentASK[InputT, OutputT]:
         async def _cache_run() -> OutputT:
             if self._cache is not None:
                 # print(f">>> step: {self._agent.name}", file=sys.stderr)
-                async with self._cache.step(prompt) as (output, set_output):
+                async with self._cache.step(self._name, prompt) as (
+                    output,
+                    set_output,
+                ):
                     if output is not None:
                         usage = RunUsage()
                         usage.requests = 1  # Simulate one request
@@ -174,7 +182,7 @@ class AgentASK[InputT, OutputT]:
 
     @classmethod
     def create_from_function(
-        cls, func: Callable[[InputT], Awaitable[OutputT]]
+        cls, name: str, func: Callable[[InputT], Awaitable[OutputT]]
     ) -> "AgentASK[InputT, OutputT]":
         sig = inspect.signature(func)
         return_annotation = sig.return_annotation
@@ -194,6 +202,7 @@ class AgentASK[InputT, OutputT]:
             ):
                 self._func = func
                 self._agent = None  # type: ignore
+                self._name = name
                 self._use_mcp_servers = False
                 self._repack = lambda x: x
                 self._cache = None

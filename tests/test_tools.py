@@ -71,7 +71,7 @@ async def test_cache_step_with_different_inputs(state_store: CacheStoreYaml):
     mock_agent.run = AsyncMock(side_effect=["output1", "output2"])
 
     # First call with input1
-    async with executor.step("input1") as (cached, set_output):
+    async with executor.step("test_agent", "input1") as (cached, set_output):
         if cached is None:
             out = await mock_agent.run("input1")
             set_output(out)
@@ -82,7 +82,7 @@ async def test_cache_step_with_different_inputs(state_store: CacheStoreYaml):
     mock_agent.run.assert_called_once_with("input1")
 
     # Second call with input2
-    async with executor.step("input2") as (cached, set_output):
+    async with executor.step("test_agent", "input2") as (cached, set_output):
         if cached is None:
             out = await mock_agent.run("input2")
             set_output(out)
@@ -94,7 +94,7 @@ async def test_cache_step_with_different_inputs(state_store: CacheStoreYaml):
     assert mock_agent.run.call_count == 2
 
     # Third call with input1 should hit cache
-    async with executor.step("input1") as (cached, _):
+    async with executor.step("test_agent", "input1") as (cached, _):
         output3 = cached
     assert output3 == "output1"
     assert mock_agent.run.call_count == 2
@@ -110,11 +110,11 @@ async def test_cache_step_with_corrupted_cache(state_store: CacheStoreYaml):
 
     executor = CacheASK(store=state_store)
     input_data = InputModel(value="test")
-    key = executor._get_input_key(input_data)
+    key = executor._get_input_key(f"test_agent:{input_data}")
     state_store.set(key, {"wrong_field": "some_value"})
 
     with pytest.raises(ValidationError):
-        async with executor.step(input_data) as (cached, _):
+        async with executor.step("test_agent", input_data) as (cached, _):
             assert cached is not None
             OutputModel.model_validate(cached)  # type: ignore[arg-type]
 
@@ -125,7 +125,7 @@ async def test_cache_step_with_string_io(state_store: CacheStoreYaml):
     mock_agent = MagicMock()
     mock_agent.run = AsyncMock(return_value="output_string")
 
-    async with executor.step("input_string") as (cached, set_output):
+    async with executor.step("test_agent", "input_string") as (cached, set_output):
         if cached is None:
             out = await mock_agent.run("input_string")
             set_output(out)
@@ -136,7 +136,7 @@ async def test_cache_step_with_string_io(state_store: CacheStoreYaml):
     mock_agent.run.assert_called_once_with("input_string")
 
     mock_agent.run.reset_mock()
-    async with executor.step("input_string") as (cached, _):
+    async with executor.step("test_agent", "input_string") as (cached, _):
         output2 = cached
     assert output2 == "output_string"
     mock_agent.run.assert_not_called()
@@ -156,7 +156,7 @@ async def test_cache_step_with_pydantic_io(state_store: CacheStoreYaml):
 
     input_data = InputModel(value="input_value")
 
-    async with executor.step(input_data) as (cached, set_output):
+    async with executor.step("test_agent", input_data) as (cached, set_output):
         if cached is None:
             out = await mock_agent.run(input_data)
             set_output(out)
@@ -168,7 +168,7 @@ async def test_cache_step_with_pydantic_io(state_store: CacheStoreYaml):
     mock_agent.run.assert_called_once_with(input_data)
 
     mock_agent.run.reset_mock()
-    async with executor.step(input_data) as (cached, _):
+    async with executor.step("test_agent", input_data) as (cached, _):
         assert cached is not None
         output2 = OutputModel.model_validate(cached)  # type: ignore[arg-type]
     assert isinstance(output2, OutputModel)

@@ -169,12 +169,12 @@ class CacheASK:
 
     @asynccontextmanager
     async def step[OutputT](
-        self, input: Any
+        self, agent: str, input: Any
     ) -> AsyncIterator[tuple[OutputT | None, Callable[[OutputT], Any]]]:
         """
         Async context manager for executing a step.
         """
-        key = self._get_input_key(input)
+        key = self._get_input_key(f"{agent}:{input}")
         output = self.store.get(key)
 
         def set_output(x: OutputT) -> OutputT:

@@ -20,7 +20,7 @@ class TestCreateAgentFromFunction:
         async def upper_func(prompt: str) -> str:
             return prompt.upper()
 
-        agent = AgentASK.create_from_function(upper_func)
+        agent = AgentASK.create_from_function("upper_agent", upper_func)
         assert isinstance(agent, AgentASK)
         assert agent._input_type is str
         assert agent._output_type is str
@@ -33,7 +33,7 @@ class TestCreateAgentFromFunction:
         async def double_func(prompt: int) -> int:
             return prompt * 2
 
-        agent = AgentASK.create_from_function(double_func)
+        agent = AgentASK.create_from_function("double_agent", double_func)
         assert isinstance(agent, AgentASK)
         assert agent._input_type is int
         assert agent._output_type is int
@@ -46,7 +46,7 @@ class TestCreateAgentFromFunction:
         async def identity_func(prompt: str) -> str:
             return prompt
 
-        agent = AgentASK.create_from_function(identity_func)
+        agent = AgentASK.create_from_function("identity_agent", identity_func)
         assert agent._input_type is str
         assert agent._output_type is str
         result = await agent.run("test")
@@ -62,7 +62,7 @@ class TestCreateAgentFromFunction:
         async def process_model(prompt: InputModel) -> OutputModel:
             return OutputModel(message=f"Hello {prompt.name}", count=prompt.age * 2)
 
-        agent = AgentASK.create_from_function(process_model)
+        agent = AgentASK.create_from_function("process_agent", process_model)
         assert isinstance(agent, AgentASK)
         assert agent._input_type is InputModel
         assert agent._output_type is OutputModel
