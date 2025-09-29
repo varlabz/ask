@@ -6,13 +6,23 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ask.core.agent_cache import CacheASK, CacheStoreYaml
+from ask.core.agent_cache import CacheASK, CacheStoreSQLite, CacheStoreYaml
 
 
 @pytest.fixture
 def state_store(tmp_path: Path) -> CacheStoreYaml:
     """Fixture for CacheStateStore."""
     return CacheStoreYaml(path=tmp_path / "test_state.yaml")
+
+
+@pytest.fixture(params=[CacheStoreYaml, CacheStoreSQLite])
+def cache_store(request, tmp_path: Path):
+    """Fixture for CacheStore implementations."""
+    store_class = request.param
+    if store_class == CacheStoreYaml:
+        return store_class(path=tmp_path / "test_cache.yaml")
+    elif store_class == CacheStoreSQLite:
+        return store_class(path=tmp_path / "test_cache.db")
 
 
 def test_cache_state_store_init(state_store: CacheStoreYaml, tmp_path: Path):
@@ -64,9 +74,9 @@ def test_cache_state_store_load_invalid_yaml(tmp_path: Path):
 
 
 @pytest.mark.asyncio
-async def test_cache_step_with_different_inputs(state_store: CacheStoreYaml):
+async def test_cache_step_with_different_inputs(cache_store):
     """Positive Test: Ensure different inputs are cached separately."""
-    executor = CacheASK(store=state_store)
+    executor = CacheASK(store=cache_store)
     mock_agent = MagicMock()
     mock_agent.run = AsyncMock(side_effect=["output1", "output2"])
 
@@ -101,17 +111,17 @@ async def test_cache_step_with_different_inputs(state_store: CacheStoreYaml):
 
 
 @pytest.mark.asyncio
-async def test_cache_step_with_corrupted_cache(state_store: CacheStoreYaml):
+async def test_cache_step_with_corrupted_cache(cache_store):
     class InputModel(BaseModel):
         value: str
 
     class OutputModel(BaseModel):
         result: str
 
-    executor = CacheASK(store=state_store)
+    executor = CacheASK(store=cache_store)
     input_data = InputModel(value="test")
     key = executor._get_input_key(f"test_agent:{input_data}")
-    state_store.set(key, {"wrong_field": "some_value"})
+    cache_store.set(key, {"wrong_field": "some_value"})
 
     with pytest.raises(ValidationError):
         async with executor.step("test_agent", input_data) as (cached, _):
@@ -120,8 +130,8 @@ async def test_cache_step_with_corrupted_cache(state_store: CacheStoreYaml):
 
 
 @pytest.mark.asyncio
-async def test_cache_step_with_string_io(state_store: CacheStoreYaml):
-    executor = CacheASK(store=state_store)
+async def test_cache_step_with_string_io(cache_store):
+    executor = CacheASK(store=cache_store)
     mock_agent = MagicMock()
     mock_agent.run = AsyncMock(return_value="output_string")
 
@@ -143,14 +153,14 @@ async def test_cache_step_with_string_io(state_store: CacheStoreYaml):
 
 
 @pytest.mark.asyncio
-async def test_cache_step_with_pydantic_io(state_store: CacheStoreYaml):
+async def test_cache_step_with_pydantic_io(cache_store):
     class InputModel(BaseModel):
         value: str
 
     class OutputModel(BaseModel):
         result: str
 
-    executor = CacheASK(store=state_store)
+    executor = CacheASK(store=cache_store)
     mock_agent = MagicMock()
     mock_agent.run = AsyncMock(return_value=OutputModel(result="output_value"))
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sqlite3
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -147,6 +148,56 @@ class CacheStoreMemory(CacheStore):
 
     def clean(self) -> None:
         self._data.clear()
+
+
+class CacheStoreSQLite(CacheStore):
+    """
+    SQLite file-backed implementation of CacheStore for caching
+    executor/agent step inputs and outputs.
+    """
+
+    def __init__(self, path: str | Path = ".ask_cache.db"):
+        self.path = Path(path).expanduser().resolve()
+        self._conn = sqlite3.connect(str(self.path))
+        self._create_table()
+
+    def _create_table(self):
+        self._conn.execute(
+            "CREATE TABLE IF NOT EXISTS cache (key TEXT PRIMARY KEY, value TEXT)"
+        )
+        self._conn.commit()
+
+    def get(self, key: str) -> Any | None:
+        """
+        Get value by key. Returns None if key does not exist.
+        """
+        cursor = self._conn.cursor()
+        cursor.execute("SELECT value FROM cache WHERE key = ?", (key,))
+        row = cursor.fetchone()
+        if row:
+            try:
+                return json.loads(row[0])
+            except json.JSONDecodeError:
+                return None
+        return None
+
+    def set(self, key: str, value: Any) -> None:
+        """
+        Store key and value.
+        """
+        serialized = json.dumps(value)
+        self._conn.execute(
+            "INSERT OR REPLACE INTO cache (key, value) VALUES (?, ?)", (key, serialized)
+        )
+        self._conn.commit()
+
+    def clean(self) -> None:
+        """
+        Clear the storage by closing the connection and deleting the backing file.
+        """
+        self._conn.close()
+        if self.path.exists():
+            self.path.unlink()
 
 
 class CacheASK:
