@@ -11,7 +11,7 @@ import asyncio
 import os
 import sys
 
-from ask.core.cache import CacheASK
+from ask import CacheASK, CacheStoreJson
 
 sys.path.insert(0, os.path.dirname(__file__))
 from outline import OutlineInput, outline_agent
@@ -21,7 +21,7 @@ from writer import WriterInput, writer_agent
 
 
 async def main(query: str) -> None:
-    cache = CacheASK()
+    cache = CacheASK(CacheStoreJson(path=".blog_post_cache.json"))
     research_result = await research_agent.cache(cache).run(Research(topic=query))
     outline_result = await outline_agent.cache(cache).run(
         OutlineInput(topic=query, research=research_result.report)
