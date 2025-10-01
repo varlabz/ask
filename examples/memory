@@ -1,0 +1,32 @@
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-cli -c ~/.config/ask/llm.yaml -c
+
+# example of agent with searxng-mcp search tool
+
+agent:
+  instructions: |
+    You are an advanced AI note assistant with access to memory tools.
+    Provide accurate, helpful, and concise responses.
+    Must follow instructions precisely.
+
+    ON EVERY MESSAGE:
+      - use memory tools to keep track of conversation context
+      - use folder "memorized" to store important notes
+      - write note of current conversation with full context to memory with title "My Notes"
+      - say, Saving note to memory if note is saved 
+      - say, How are you feeling today?
+
+# llm:
+#   # temperature: 0.7
+#   model: ollama:qwen3:32b-q4_K_M
+#   base_url: http://bacook.local:11434/v1/
+#   # compress_history: false
+
+mcp:
+  memory:
+    command: ["uvx", "basic-memory", "mcp", ]
+    # command: ["npx", "-y", "mcp-knowledge-graph", "--memory-path", ".aim/"]
+  # everything:
+  #   command: ["npx", "-y", "@modelcontextprotocol/server-everything"]
+
+server:
+  name: ai note assistant

@@ -6,7 +6,7 @@ import sys
 from pydantic import Field
 
 from ask.core.agent import AgentASK
-from ask.core.agent_context import ContextASK
+from ask.core.context import ContextASK
 
 sys.path.insert(0, os.path.dirname(__file__))
 from llm import llm
@@ -71,7 +71,7 @@ research_agent = AgentASK[Research, ResearchResult].create_from_dict(
 if __name__ == "__main__":
     import asyncio
 
-    from ask.core.agent_cache import CacheASK
+    from ask.core.cache import CacheASK
 
     async def main():
         if len(sys.argv) < 2:

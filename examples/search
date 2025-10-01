@@ -20,8 +20,13 @@ agent:
       ---
 
 mcp:
+  # search:
+    # command: ["uvx", "--from", "git+https://github.com/varlabz/duckduckgo-mcp", "duckduckgo-mcp"]
   search:
-    command: ["uvx", "--from", "git+https://github.com/varlabz/duckduckgo-mcp", "duckduckgo-mcp"]
+    command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "mcp-server"]
+    env: {
+      SEARX_HOST: "http://macook.local:8080"
+    }
 
 server:
   name: ai search assistant

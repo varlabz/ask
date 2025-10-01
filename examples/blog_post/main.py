@@ -11,7 +11,7 @@ import asyncio
 import os
 import sys
 
-from ask.core.agent_cache import CacheASK
+from ask.core.cache import CacheASK
 
 sys.path.insert(0, os.path.dirname(__file__))
 from outline import OutlineInput, outline_agent

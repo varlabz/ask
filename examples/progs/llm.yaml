@@ -1,0 +1,10 @@
+llm:
+  temperature: 0.0
+  base_url: "http://bacook.local:12345/v1/"
+  # model: "lmstudio:openai-gpt-oss-20b-abliterated-uncensored-neo-imatrix"
+  # model: "lmstudio:qwen/qwen3-4b-2507"
+  model: "lmstudio:qwen3-30b-a3b-instruct-2507-mlx"     
+  # model: "lmstudio:baidu/ernie-4.5-21b-a3b"
+  # model: "lmstudio:gemma-3-27b-it"
+  # model: "lmstudio:openai/gpt-oss-20b"
+  # max_history: 1000

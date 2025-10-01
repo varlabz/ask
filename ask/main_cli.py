@@ -11,8 +11,8 @@ import contextlib
 import sys
 
 from ask.core.agent import AgentASK
-from ask.core.agent_instrumentation import setup_instrumentation
 from ask.core.config import load_config
+from ask.core.instrumentation import setup_instrumentation
 
 
 def main():

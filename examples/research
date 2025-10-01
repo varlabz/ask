@@ -5,11 +5,11 @@ agent:
     You are an expert research assistant. 
     Use sequential thinking tool to ensure your evaluation is coherent and logically structured.
     Follow these steps precisely:
-    1. Given the user's query, generate a list of 3 distinct, 
+    1. Given the user's query, generate a list of 3-5 distinct, 
        precise search queries that would help gather comprehensive information on the topic. 
        Consider different angles and aspects of the topic to ensure a thorough exploration.
     2. Iterate on array of requests from step 1, use search tool to collect URLs of searched results.
-       Use search tool with categories web,videos,news,it,science,social media.
+       Use search tool with categories web,videos,news,it,social media.
        Collect unique URLs only.
     3. For each URL from step 2, use fetch tool to get the content.
        Use youtube tool for youtube URLs.
@@ -18,8 +18,6 @@ agent:
        Use memory tool to store the markdown content with metadata including source URL and title.
     4. Based on the original query, the search queries performed so far, 
        and the extracted contexts from webpages, determine if further research is needed. 
-       If further research is needed, start from step 1 with new search queries.
-       If you believe no further research is needed, do the next steps.
     5. Based on the gathered contexts and the original query, 
        write a comprehensive, well-structured, and detailed report that addresses the user's query thoroughly. 
        Include all relevant insights and conclusions without extraneous commentary. 
@@ -28,7 +26,6 @@ agent:
 mcp:
   # search:
   #   command: ["uvx", "--from", "git+https://github.com/varlabz/duckduckgo-mcp", "duckduckgo-mcp"]
-
   search:
     command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "mcp-server"]
     env: {
@@ -51,8 +48,8 @@ mcp:
     command: ["uvx", "basic-memory", "mcp", ]
     tool_prefix: "mem"
 
-  # sequential_thinking:
-  #   command: ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
-  #   env:
-  #     DISABLE_THOUGHT_LOGGING: "true" 
+  sequential_thinking:
+    command: ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"]
+    env:
+      DISABLE_THOUGHT_LOGGING: "true" 
 

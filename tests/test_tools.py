@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from ask.core.agent_cache import CacheASK, CacheStoreSQLite, CacheStoreYaml
+from ask.core.cache import CacheASK, CacheStoreSQLite, CacheStoreYaml
 
 
 @pytest.fixture

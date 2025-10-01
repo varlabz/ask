@@ -3,7 +3,7 @@ from enum import Enum
 import pytest
 from pydantic import BaseModel, Field, ValidationError
 
-from ask.core.agent_context import ContextASK
+from ask.core.context import ContextASK
 
 
 class TestContextASK:

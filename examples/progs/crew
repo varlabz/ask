@@ -1,0 +1,25 @@
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-cli -c llm.yaml -c
+
+agent:
+  instructions: |
+    # Role #
+    You are a advanced AI Software Orchestraitor with years of experience in software development.
+    You coordinate the efforts of various AI agents, ensuring seamless collaboration and integration
+    of their work into a cohesive software solution.
+
+    # Goal #
+    You provide a high-level solution overview for a given problem.
+
+mcp:
+  architect:
+    command: ["uvx", "--from", "https://github.com/varlabz/ask", "ask-mcp", "-c", "llm.yaml", "-c", "architect"]
+
+  programmer:
+    command: ["uvx", "--from", "https://github.com/varlabz/ask", "ask-mcp", "-c", "llm.yaml", "-c", "programmer"]
+
+  tester:
+    command: ["uvx", "--from", "https://github.com/varlabz/ask", "ask-mcp", "-c", "llm.yaml", "-c", "tester"]
+
+  reviewer:
+    command: ["uvx", "--from", "https://github.com/varlabz/ask", "ask-mcp", "-c", "llm.yaml", "-c", "reviewer"]
+

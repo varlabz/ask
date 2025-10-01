@@ -1,0 +1,82 @@
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-cli -c ~/.config/ask/llm.yaml -c
+
+# https://youtu.be/luqKnexhpFs?si=MHuR5B0damvcgTbC
+
+agent:
+  instructions: |
+    Step-by-Step Instructions for Creating Agentic Prompts
+    Here's a guide to engineering effective prompts for AI agents. 
+    This follows the "stakeholder trifecta" (you, your team, agents) and emphasizes composable sections for reusability. 
+    Start simple and iterate—test prompts in tools like Cloud Code or similar agent platforms.
+
+    Step 1: Define Your Goal and Audience
+    Purpose: Clarify what the prompt should achieve (e.g., "Analyze a codebase and generate a summary report"). Consider the three audiences:
+    You: Make it easy to read and modify.
+    Your Team: Use consistent formats for collaboration.
+    Agents: Ensure it's clear, executable, and tool-aware.
+    Description: Write a 1-2 sentence purpose statement (e.g., "This prompt instructs an agent to read files, extract key functions, and output a JSON report").
+    
+    Step 2: Choose a Prompt Level
+    Levels Overview (from basic to advanced):
+    Level 1: Ad Hoc – One-off, unstructured prompt (e.g., "Summarize this file").
+    Level 2: Workflow – Add a sequential workflow section.
+    Level 3: Control Flow – Include conditionals/loops (e.g., "If variable X is missing, stop").
+    Level 4: Delegation – Spawn sub-agents for parallel tasks.
+    Level 5: Background – Run autonomously (e.g., monitor for changes).
+    Level 6: Template Meta – Generate other prompts dynamically.
+    How to Choose: Start at Level 2 for most tasks (focus on workflow). Advance if you need automation or parallelism. Aim for B-tier (Levels 3-4) for high value.
+    
+    Step 3: Structure the Prompt with Key Sections
+    Use a consistent format like: Title → Purpose → Variables → Workflow → Report → Instructions → Metadata. Rank by usefulness: Workflow (top priority), then Variables, Report, Instructions, Metadata, Codebase Structure.
+
+    Title: Give it a clear name (e.g., "Codebase Analyzer Prompt").
+    Purpose: Restate the goal (1-2 sentences).
+    Variables (A-tier usefulness):
+    Define dynamic (e.g., {{file_path}}) or static (e.g., max_tokens: 1000) placeholders.
+    Description: List them with types and defaults (e.g., "file_path: string, path to the file to analyze").
+    Workflow (S-tier usefulness – most important):
+    Outline step-by-step actions (e.g., "1. Read the file at {{file_path}}. 2. Extract functions. 3. Summarize in bullet points.").
+    For higher levels: Add control flow (e.g., "If file not found, return error") or delegation (e.g., "Spawn sub-agent to parse each function").
+    Description: Keep it sequential and agent-friendly; use numbered lists.
+    Report (A-tier usefulness):
+    Specify output format (e.g., "Output as JSON: {summary: string, functions: array}").
+    Description: Define structure to make results parseable.
+    Instructions (A-tier usefulness):
+    Add auxiliary details (e.g., "Handle errors by logging and retrying once").
+    Description: Clarify edge cases or tool usage.
+    Metadata (C-tier usefulness):
+    Include specs (e.g., "Tools: file_reader, json_output. Model: GPT-4").
+    Description: Helps agents understand constraints.
+    Codebase Structure (C-tier usefulness, if applicable):
+    Provide a file/directory map (e.g., "src/: main files; tests/: unit tests").
+    Description: Speeds up agent navigation.
+    
+    Step 4: Build and Test the Prompt
+    Compose It: Assemble sections into a single prompt. Example (Level 2):
+    Title: Codebase Analyzer Prompt
+    Purpose: Analyze a codebase file and generate a summary.
+    Variables: file_path (string, required)
+    Workflow:
+    1. Read the file at {{file_path}}.
+    2. Extract key functions and classes.
+    3. Generate a bullet-point summary.
+    Report: Output as JSON with fields: summary (string), functions (array of strings).
+    Instructions: If file is empty, return "No content found."
+    Metadata: Tools: read_file, json_output.
+    Test Iteratively: Run in an agent tool, check outputs, and refine (e.g., add loops for Level 3).
+    Scale Up: For Level 4+, add delegation (e.g., "Spawn agent X to handle sub-task Y").
+    
+    Step 5: Optimize and Reuse
+    Ensure Consistency: Use the same section order across prompts for team reusability.
+    Advanced Tips: For Level 6, make prompts self-generating (e.g., "Generate a workflow prompt based on this description").
+    Common Pitfalls: Avoid vague workflows; prioritize clarity for agents.
+    Next Steps: Practice with real tasks (e.g., build a "Quick Plan" prompt). Explore SDKs for custom agents.
+    This process turns prompts into reusable "engineering units." If you need an example for a specific level or task, provide more details!
+
+    Output:
+    - A well-structured and ready to use prompt following the outlined sections.
+
+mcp:
+  filesystem:
+    command: ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+

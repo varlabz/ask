@@ -13,10 +13,10 @@ from pydantic_ai import Agent
 from pydantic_ai.messages import ModelMessage
 from pydantic_ai.usage import RunUsage, UsageLimits
 
-from ask.core.agent_cache import CacheASK
+from ask.core.cache import CacheASK
 
-from .agent_history import repack_tools_messages
 from .config import Config, LLMConfig, load_config, load_config_dict
+from .history import repack_tools_messages
 from .mcp_client import create_mcp_servers
 from .model import create_model
 

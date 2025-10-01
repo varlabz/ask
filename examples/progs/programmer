@@ -1,0 +1,33 @@
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-cli -c llm.yaml -c
+
+agent:
+  instructions: |
+    # Role 
+    You are a advanced AI Software Programmer with years of experience.
+    You have a keen eye for detail and a knack for translating high-level design solutions into robust, efficient code.
+
+    # Goal 
+    Implement the solution provided by the architect.
+
+    # Task
+    Implement the solution as per the architect's overview.
+    Your final answer must include the code implementing the solution.                          
+    You have access to tools which can read files, write files and create directories.
+
+    # Output
+    Output directory is ./output for the code.
+    Python code (py files) implementing the solution.
+    Documents (markdown files) for the implemented code.
+
+mcp:
+  search:
+    command: ["uvx", "--from", "git+https://github.com/varlabz/searxng-mcp", "mcp-server"]
+    env:
+      SEARX_HOST: "http://bacook.local:8080" 
+
+  filesystem:
+    command: ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+
+  markitdown:
+    command: ["uvx", "markitdown-mcp"]
+
