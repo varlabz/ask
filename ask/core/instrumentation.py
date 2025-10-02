@@ -30,7 +30,9 @@ def setup_instrumentation_file(
     """Sets up OpenTelemetry instrumentation to log traces to a file."""
     provider = TracerProvider()
     file_stream = open(file, "w", encoding="utf-8")
-    provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter(out=file_stream)))
+    provider.add_span_processor(
+        SimpleSpanProcessor(ConsoleSpanExporter(out=file_stream))
+    )
     trace.set_tracer_provider(provider)
     atexit.register(file_stream.close)
     print(f"Telemetry logging to: {file}", file=sys.stderr)
