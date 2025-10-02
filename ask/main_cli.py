@@ -7,12 +7,14 @@ CLI entry point for the agent. Run with:
 
 import argparse
 import asyncio
-import contextlib
 import sys
 
 from ask.core.agent import AgentASK
 from ask.core.config import load_config
-from ask.core.instrumentation import setup_instrumentation
+from ask.core.instrumentation import (
+    setup_instrumentation_config,
+    setup_instrumentation_file,
+)
 
 
 def main():
@@ -51,49 +53,47 @@ def main():
     parser.add_argument("prompt", nargs="*", help="Prompt for the agent")
     args = parser.parse_args()
 
-    # Use default config if none provided
-    log_stream_context = (
-        open(args.log, "w", encoding="utf-8") if args.log else contextlib.nullcontext()
-    )
-    with log_stream_context as log_stream:
-        if log_stream:
-            setup_instrumentation(stream=log_stream)
+    config = load_config(args.config or [".ask.yaml"])
 
-        config = load_config(args.config or [".ask.yaml"])
-        if args.system_prompt:
-            config.agent.instructions = args.system_prompt
+    if config.langfuse:
+        setup_instrumentation_config(config.langfuse)
+    elif args.log:
+        setup_instrumentation_file(args.log)
 
-        agent = AgentASK.create_from_config(config)
+    if args.system_prompt:
+        config.agent.instructions = args.system_prompt
 
-        # can't use chat and not istty the same time
-        if args.tchat and not sys.stdin.isatty():
-            print("Error: Interactive chat mode requires a terminal.", file=sys.stderr)
-            sys.exit(1)
+    agent = AgentASK.create_from_config(config)
 
-        # Get prompt from args or stdin
-        prompt = " ".join(args.prompt).strip()
-        if not prompt and not sys.stdin.isatty():
-            prompt = sys.stdin.read().strip()
+    # can't use chat and not istty the same time
+    if args.tchat and not sys.stdin.isatty():
+        print("Error: Interactive chat mode requires a terminal.", file=sys.stderr)
+        sys.exit(1)
 
-        if args.chat:
-            run_chat(agent, prompt, args.chat_port, args.no_native)
-            return
+    # Get prompt from args or stdin
+    prompt = " ".join(args.prompt).strip()
+    if not prompt and not sys.stdin.isatty():
+        prompt = sys.stdin.read().strip()
 
-        if args.tchat:
-            from ask.core import tchat
+    if args.chat:
+        run_chat(agent, prompt, args.chat_port, args.no_native)
+        return
 
-            asyncio.run(
-                agent.run_iter(lambda: tchat.chat(agent, prompt if prompt else None))
-            )
-            return
+    if args.tchat:
+        from ask.core import tchat
 
-        if not prompt:
-            print("Error: No prompt provided.", file=sys.stderr)
-            parser.print_help(file=sys.stderr)
-            sys.exit(1)
+        asyncio.run(
+            agent.run_iter(lambda: tchat.chat(agent, prompt if prompt else None))
+        )
+        return
 
-        result = asyncio.run(agent.run(prompt))
-        print(result)
+    if not prompt:
+        print("Error: No prompt provided.", file=sys.stderr)
+        parser.print_help(file=sys.stderr)
+        sys.exit(1)
+
+    result = asyncio.run(agent.run(prompt))
+    print(result)
 
 
 def run_chat(agent, prompt, chat_port=None, no_native=False):

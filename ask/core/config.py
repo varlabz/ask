@@ -83,22 +83,7 @@ class LLMConfig(BaseModel):
 
     @field_validator("api_key", mode="before")
     def resolve_api_key(cls, v):
-        if isinstance(v, str) and v.startswith("env:"):
-            env_var = v[4:]
-            env_val = os.environ.get(env_var)
-            if env_val is None:
-                raise ValueError(f"Environment variable '{env_var}' not set for '{v}'")
-            return env_val
-        elif isinstance(v, str) and v.startswith("file:"):
-            file_path = v[5:]
-            # if file start with a tilde, expand it
-            file_path = os.path.expanduser(file_path)
-            try:
-                with open(file_path) as f:
-                    return f.read().strip()
-            except FileNotFoundError as e:
-                raise ValueError(f"File '{file_path}' not found for '{v}'") from e
-        return v
+        return _resolve_api_key(v)
 
 
 class MCPServerConfig(BaseModel):
@@ -140,6 +125,43 @@ class ServerConfig(BaseModel):  # for running ask as server
     model_config = ConfigDict(extra="forbid")
 
 
+class TraceConfig(BaseModel):  # configuration for Langfuse tracing
+    public_key: str  # can be "env:VAR_NAME" or "file:/path/to/file" or actual key
+    secret_key: str  # can be "env:VAR_NAME" or "file:/path/to/file" or actual key
+    host_url: str = "https://localhost:3000"
+    # Forbid unknown fields
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("public_key", mode="before")
+    @classmethod
+    def resolve_api_key(cls, v):
+        return _resolve_api_key(v)
+
+    @field_validator("secret_key", mode="before")
+    @classmethod
+    def resolve_secret_api_key(cls, v):
+        return _resolve_api_key(v)
+
+
+def _resolve_api_key(v):
+    if isinstance(v, str) and v.startswith("env:"):
+        env_var = v[4:]
+        env_val = os.environ.get(env_var)
+        if env_val is None:
+            raise ValueError(f"Environment variable '{env_var}' not set for '{v}'")
+        return env_val
+    elif isinstance(v, str) and v.startswith("file:"):
+        file_path = v[5:]
+        # if file start with a tilde, expand it
+        file_path = os.path.expanduser(file_path)
+        try:
+            with open(file_path) as f:
+                return f.read().strip()
+        except FileNotFoundError as e:
+            raise ValueError(f"File '{file_path}' not found for '{v}'") from e
+    return v
+
+
 class Config(BaseModel):
     """Top-level configuration for the agent, LLM, and MCP tools/services."""
 
@@ -147,6 +169,7 @@ class Config(BaseModel):
     llm: LLMConfig
     mcp: dict[str, MCPServerConfig] | None = None
     server: ServerConfig | None = None
+    trace: TraceConfig | None = None
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 
