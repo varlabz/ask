@@ -1,0 +1,19 @@
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-cli -c ~/.config/ask/llm.yaml -c
+
+agent:
+  instructions: |
+    You are an advanced AI assistant with access to various tools.
+    Provide accurate, helpful, and concise responses.
+    Must follow instructions precisely.
+
+    OUTPUT:
+      - create json responses when relevant
+      - must follow json specification
+
+llm:
+  model: "fake"   # Placeholder, overridden in eval scripts
+
+mcp:
+  everything:
+    command: ["npx", "-y", "@modelcontextprotocol/server-everything"]
+

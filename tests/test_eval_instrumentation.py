@@ -16,7 +16,7 @@ from pydantic_ai.messages import (
     ToolReturnPart,
 )
 
-from ask.eval.instrumentation import (
+from eval.instrumentation import (
     CallbackSpanExporter,
     LLMCallData,
     extract_llm_call_data,

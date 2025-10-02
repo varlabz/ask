@@ -30,7 +30,7 @@ dependencies = [
     "pydantic-ai",
     "mcp[cli]",
     "pyyaml>=6.0",
-    "openai",  
+    "openai",
     "griffe>=1.7.0",
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.30.0",
@@ -41,6 +41,7 @@ dependencies = [
     "opentelemetry-sdk",
     "opentelemetry-api",
     "opentelemetry-exporter-otlp",
+    "langfuse>=3.6.0",
 ]
 
 [project.urls]
