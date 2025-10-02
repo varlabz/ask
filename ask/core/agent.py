@@ -75,7 +75,7 @@ class AgentASK[InputT, OutputT]:
     async def run_iter(self, iter) -> OutputT:
         """Run the agent with the given prompt."""
         if self._use_mcp_servers:
-            async with self._agent.run_mcp_servers():
+            async with self._agent:
                 return await iter()
         return await iter()
 

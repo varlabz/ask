@@ -71,7 +71,7 @@ def make_lifespan(agent: AgentASK):
     async def _lifespan(app: fastapi.FastAPI):
         app.state.agent = agent
         if agent._use_mcp_servers:
-            async with agent._agent.run_mcp_servers():
+            async with agent._agent:
                 yield
         else:
             yield

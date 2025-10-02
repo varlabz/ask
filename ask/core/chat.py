@@ -166,7 +166,7 @@ def run_web(
     @asynccontextmanager
     async def lifespan_wrapper(app) -> AsyncIterator[Any]:
         if agent._use_mcp_servers:
-            async with agent._agent.run_mcp_servers():
+            async with agent._agent:
                 async with main_app_lifespan(app) as state:
                     yield state
         else:
