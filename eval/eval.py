@@ -79,6 +79,16 @@ class TestIteration:
 
 
 @dataclass
+class MetricData:
+    min: float = 0.0
+    max: float = 0.0
+    avg: float = 0.0
+
+    def __str__(self) -> str:
+        return f"(min:{self.min:.2f}, max:{self.max:.2f}, avg:{self.avg:.2f})"
+
+
+@dataclass
 class TestResult:
     """Aggregated results for a test case across multiple iterations."""
 
@@ -89,10 +99,10 @@ class TestResult:
     timestamp: str
 
     # Aggregated metrics
-    avg_duration: float = 0.0
-    avg_tokens: float = 0.0
-    avg_input_tokens: float = 0.0
-    avg_output_tokens: float = 0.0
+    duration: MetricData = field(default_factory=MetricData)
+    tokens: MetricData = field(default_factory=MetricData)
+    input_tokens: MetricData = field(default_factory=MetricData)
+    output_tokens: MetricData = field(default_factory=MetricData)
     success_rate: float = 0.0
     tools_consistency: dict[str, int] = field(default_factory=dict)
 
@@ -101,12 +111,32 @@ class TestResult:
         if not self.iterations:
             return
 
-        total = len(self.iterations)
-        self.avg_duration = sum(i.duration_seconds for i in self.iterations) / total
-        self.avg_tokens = sum(i.total_tokens for i in self.iterations) / total
-        self.avg_input_tokens = sum(i.input_tokens for i in self.iterations) / total
-        self.avg_output_tokens = sum(i.output_tokens for i in self.iterations) / total
-        self.success_rate = sum(1 for i in self.iterations if i.success) / total * 100
+        durations = [i.duration_seconds for i in self.iterations]
+        total_tokens = [i.total_tokens for i in self.iterations]
+        input_tokens = [i.input_tokens for i in self.iterations]
+        output_tokens = [i.output_tokens for i in self.iterations]
+
+        self.duration = MetricData(
+            min=min(durations), max=max(durations), avg=sum(durations) / len(durations)
+        )
+        self.tokens = MetricData(
+            min=min(total_tokens),
+            max=max(total_tokens),
+            avg=sum(total_tokens) / len(total_tokens),
+        )
+        self.input_tokens = MetricData(
+            min=min(input_tokens),
+            max=max(input_tokens),
+            avg=sum(input_tokens) / len(input_tokens),
+        )
+        self.output_tokens = MetricData(
+            min=min(output_tokens),
+            max=max(output_tokens),
+            avg=sum(output_tokens) / len(output_tokens),
+        )
+        self.success_rate = (
+            sum(1 for i in self.iterations if i.success) / len(self.iterations) * 100
+        )
 
         # Count tool usage across iterations
         tool_counts = defaultdict(int)
@@ -258,7 +288,7 @@ class EvalRunner:
 
         iteration_results = []
         iteration_id = 0
-        for i in range(iterations):
+        for _i in range(iterations):
             for prompt in test_case.prompts:
                 iteration_id += 1
                 print(
@@ -420,10 +450,26 @@ class EvalRunner:
                 config=data["config"],
                 iterations=[],  # We'll reconstruct simplified iterations
                 timestamp=data["timestamp"],
-                avg_duration=data["avg_duration"],
-                avg_tokens=data["avg_tokens"],
-                avg_input_tokens=data["avg_input_tokens"],
-                avg_output_tokens=data["avg_output_tokens"],
+                duration=MetricData(
+                    min=data.get("duration", {}).get("min", 0.0),
+                    max=data.get("duration", {}).get("max", 0.0),
+                    avg=data.get("duration", {}).get("avg", 0.0),
+                ),
+                tokens=MetricData(
+                    min=data.get("tokens", {}).get("min", 0.0),
+                    max=data.get("tokens", {}).get("max", 0.0),
+                    avg=data.get("tokens", {}).get("avg", 0.0),
+                ),
+                input_tokens=MetricData(
+                    min=data.get("input_tokens", {}).get("min", 0.0),
+                    max=data.get("input_tokens", {}).get("max", 0.0),
+                    avg=data.get("input_tokens", {}).get("avg", 0.0),
+                ),
+                output_tokens=MetricData(
+                    min=data.get("output_tokens", {}).get("min", 0.0),
+                    max=data.get("output_tokens", {}).get("max", 0.0),
+                    avg=data.get("output_tokens", {}).get("avg", 0.0),
+                ),
                 success_rate=data["success_rate"],
                 tools_consistency=data["tools_consistency"],
             )
@@ -438,30 +484,40 @@ class EvalAnalyzer:
     def __init__(self, storage_dir: str = "eval_results"):
         self.storage_dir = Path(storage_dir)
 
-    def compare_models(
-        self, results: list[TestResult], metric: str = "avg_tokens"
-    ) -> dict:
+    def compare_models(self, results: list[TestResult], metric: str = "tokens") -> dict:
         """
         Compare models based on a specific metric.
 
         Args:
             results: List of test results to compare
-            metric: Metric to compare (e.g., 'avg_tokens', 'avg_duration', 'success_rate')
+            metric: Metric to compare (e.g., 'tokens', 'duration', 'success_rate')
 
         Returns:
             Dictionary with comparison data
         """
         comparison = {}
         for result in results:
+            if metric == "success_rate":
+                metric_value = result.success_rate
+            elif hasattr(result, metric):
+                metric_obj = getattr(result, metric)
+                # print(f"Metric object for {result.model_name}: {metric_obj}")
+                if isinstance(metric_obj, MetricData):
+                    metric_value = metric_obj
+                else:
+                    metric_value = None
+            else:
+                metric_value = None
+
             comparison[result.model_name] = {
-                "metric_value": getattr(result, metric, None),
+                "metric_value": metric_value,
                 "success_rate": result.success_rate,
                 "iterations": len(result.iterations),
             }
 
         # Sort by metric
         sorted_models = sorted(
-            comparison.items(), key=lambda x: x[1]["metric_value"] or float("inf")
+            comparison.items(), key=lambda x: x[1]["metric_value"].avg or float("inf")
         )
 
         return {
@@ -489,10 +545,10 @@ class EvalAnalyzer:
             report.append(f"Timestamp: {result.timestamp}")
             report.append("-" * 40)
             report.append(f"Success Rate: {result.success_rate:.1f}%")
-            report.append(f"Avg Duration: {result.avg_duration:.2f}s")
-            report.append(f"Avg Total Tokens: {result.avg_tokens:.0f}")
-            report.append(f"Avg Input Tokens: {result.avg_input_tokens:.0f}")
-            report.append(f"Avg Output Tokens: {result.avg_output_tokens:.0f}")
+            report.append(f"Avg Duration: {result.duration.avg:.2f}s")
+            report.append(f"Avg Total Tokens: {result.tokens.avg:.0f}")
+            report.append(f"Avg Input Tokens: {result.input_tokens.avg:.0f}")
+            report.append(f"Avg Output Tokens: {result.output_tokens.avg:.0f}")
             report.append(f"Tools Used: {', '.join(result.tools_consistency.keys())}")
             report.append("")
 
@@ -534,10 +590,10 @@ class EvalAnalyzer:
                         result.timestamp,
                         len(result.iterations),
                         f"{result.success_rate:.1f}%",
-                        f"{result.avg_duration:.2f}",
-                        f"{result.avg_tokens:.0f}",
-                        f"{result.avg_input_tokens:.0f}",
-                        f"{result.avg_output_tokens:.0f}",
+                        f"{result.duration.avg:.2f}",
+                        f"{result.tokens.avg:.0f}",
+                        f"{result.input_tokens.avg:.0f}",
+                        f"{result.output_tokens.avg:.0f}",
                         ", ".join(result.tools_consistency.keys()),
                     ]
                 )
@@ -545,14 +601,13 @@ class EvalAnalyzer:
         print(f"Exported results to {output_path}")
 
 
-# Helper function to create test configurations
 def create_test_config(
     llm: LLMConfig,
 ) -> Config:
     def _here(filename: str) -> str:
         return str(Path(__file__).parent / filename)
 
-    config = load_config([_here("test.yaml")])  # Load base config from file
+    config = load_config([_here("eval.yaml")])  # Load base config from file
     config.agent.name = f"test-agent-{llm.model.replace(':', '-')}"
     config.llm = llm
     return config
