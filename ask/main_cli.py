@@ -55,8 +55,8 @@ def main():
 
     config = load_config(args.config or [".ask.yaml"])
 
-    if config.langfuse:
-        setup_instrumentation_config(config.langfuse)
+    if config.trace:
+        setup_instrumentation_config(config.trace)
     elif args.log:
         setup_instrumentation_file(args.log)
 
