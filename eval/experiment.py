@@ -22,11 +22,11 @@ parser = argparse.ArgumentParser(
     description="Run experiments with a specified model as provider:model"
 )
 parser.add_argument(
-    "-m", "--model", required=True, 
-    help="The model to use for the experiment."
+    "-m", "--model", required=True, help="The model to use for the experiment."
 )
 parser.add_argument(
-    "-u", "--base-url",
+    "-u",
+    "--base-url",
     default="http://bacook.local:11434/v1",
     help="The base URL for the model API.",
 )
@@ -37,8 +37,6 @@ print(f">>> model: {args.model}, base_url: {args.base_url}", file=sys.stderr)
 config = create_config(
     llm=local(model=args.model, base_url=args.base_url),
 )
-
-langfuse: Final[Langfuse] = setup_instrumentation()
 
 
 def serialize_config(cfg):
@@ -58,14 +56,16 @@ def serialize_config(cfg):
 
 INSTRUCTIONS: Final[str] = dedent("""
     You are an advanced AI assistant with access to various tools.
-    Provide accurate, helpful, and concise responses.
-    Must follow instructions precisely.
+    Provide accurate, and concise responses.
+    Follow instructions precisely.
 
     {instructions}
     """)
 
 
 async def _task_executor(cfg: Config, item, **kwargs):
+    global langfuse
+    langfuse.update_current_trace(session_id=config.llm.model, user_id="eval")
     question = item["input"]
     input_type: type = item["metadata"].get(
         "input_type",
@@ -80,8 +80,6 @@ async def _task_executor(cfg: Config, item, **kwargs):
     task_cfg.agent.instructions = INSTRUCTIONS.format(instructions=instructions)
     agent = AgentASK[input_type, output_type].create_from_config(task_cfg)
     result = await agent.run(question)
-    # print(f"Question: {question}", file=sys.stderr)
-    # print(f"Answer: {result}", file=sys.stderr)
     return str(result)
 
 
@@ -107,51 +105,47 @@ class OutputArray(BaseModel):
 
 inputs_tools = [
     LocalExperimentItem(
-        input="list of the all tools.",
-        expected_output="JSON array of tool names.",
-        metadata={
-            "input_type": str,
-            "output_type": OutputArray,
-            "instructions": """
-                Your task is to return a JSON array containing the names of the tools.
-                Example of the output:
-                [
-                    {"name": "tool_name1"},
-                    {"name": "tool_name2"},
-                    ...
-                ]
-            """,
-        },
-    ),
-    LocalExperimentItem(
-        input="list of the all tools.",
-        expected_output="JSON array of tool names.",
+        input="print a list of available tools.",
         metadata={
             "input_type": str,
             "output_type": str,
-            "instructions": """
-                Your task is to return a JSON array containing the names of the tools.
+            "instructions": dedent("""
+                Must return a JSON array containing the names of the tools. No other text.
                 Example of the output:
                 [
                     {"name": "tool_name1"},
                     {"name": "tool_name2"},
                     ...
                 ]
-            """,
+            """),
         },
     ),
+    # LocalExperimentItem(
+    #     input="print a list of all available tools.",
+    #     expected_output="JSON array of tool names.",
+    #     metadata={
+    #         "input_type": str,
+    #         "output_type": str,
+    #         "instructions": dedent("""
+    #             Your task is to return a JSON array containing the names of the tools.
+    #         """),
+    #     },
+    # ),
 ]
 
-result_tools = langfuse.run_experiment(
-    name="test tools listing",
-    description="testing tools listing functionality",
-    data=inputs_tools,
-    task=lambda *, item, **kwargs: task_tools(config, item=item, **kwargs),
-    evaluators=[accuracy_evaluator],
-    metadata={
-        "config": serialize_config(config),
-    },
-)
+langfuse: Final[Langfuse] = setup_instrumentation()
+for i in range(1):
+    result_tools = langfuse.run_experiment(
+        name="test tools listing",
+        description="testing tools listing functionality",
+        data=inputs_tools,
+        task=lambda *, item, **kwargs: task_tools(config, item=item, **kwargs),
+        evaluators=[accuracy_evaluator],
+        max_concurrency=1,  # Limit concurrency to 1 to avoid race timing issues
+        metadata={
+            "config": serialize_config(config),
+        },
+    )
 
-# print(codecs.decode(result_tools.format(include_item_results=True), 'unicode_escape'), file=sys.stderr)
-print(result_tools.format(), file=sys.stderr)
+    # print(codecs.decode(result_tools.format(include_item_results=True), 'unicode_escape'), file=sys.stderr)
+    print(result_tools.format(), file=sys.stderr)
