@@ -9,11 +9,3 @@ agent:
 mcp:
   playwright:
     command: ["npx", "-y", "@playwright/mcp@latest", "--cdp-endpoint", "http://localhost:9222"]
-
-# llm:
-#   model: openrouter:google/gemini-2.5-flash-preview-09-2025
-#   api_key: file:~/.config/ask/openrouter
-# #   model: openai:deepseek-chat
-# #   api_key: file:~/.config/ask/deepseek
-# #   base_url: https://api.deepseek.com/v1/
-#   temperature: 0.0
