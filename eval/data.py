@@ -1,16 +1,10 @@
 import json
-from textwrap import dedent
-from typing import Final
+from collections.abc import Callable
+
+from langfuse._client.datasets import DatasetItemClient
 
 from ask.core.agent import AgentASK
 from ask.core.config import Config
-
-INSTRUCTIONS: Final[str] = dedent("""
-    You are an advanced AI assistant with access to various tools.
-    Provide accurate, and concise responses.
-    Follow instructions precisely.
-    {instructions}
-    """)
 
 
 def serialize_config(cfg):
@@ -26,24 +20,12 @@ def serialize_config(cfg):
     return json.dumps(cfg.model_dump(), indent=2, default=default)
 
 
-async def task_executor(cfg: Config, item, langfuse, session_id, **kwargs):
-    langfuse.update_current_trace(
-        session_id=session_id, user_id="eval", tags=[cfg.llm.model]
-    )
-    question = item["input"]
-    input_type: type = item["metadata"].get(
-        "input_type",
-    )
-    output_type: type = item["metadata"].get(
-        "output_type",
-    )
-    instructions: str = item["metadata"].get("instructions", "")
-    task_cfg = cfg.model_copy(deep=True)
-    task_cfg.agent.input_type = input_type
-    task_cfg.agent.output_type = output_type
-    task_cfg.agent.instructions = INSTRUCTIONS.format(instructions=instructions)
-    agent = AgentASK[input_type, output_type].create_from_config(task_cfg)
-    result = await agent.run(question)
+async def task_executor(
+    cfg: Config, item: DatasetItemClient, callback: Callable[[], None]
+):
+    callback()
+    agent = AgentASK.create_from_config(cfg)
+    result = await agent.run(item.input)
     return str(result)
 
 

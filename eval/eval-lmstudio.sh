@@ -12,5 +12,7 @@ models=(
 
 for model in "${models[@]}"
 do
-    uv run python -m eval.experiment -m "$model" -u "http://bacook.local:12345/v1"
+    session_id="eval $(date +%Y-%m-%d_%H-%M-%S) ${model} "
+    uv run python -m eval.experiment.main -m "$model" -u "http://bacook.local:12345/v1" -s "$session_id"
+    # ssh varis@bacook.local 'ps -ef | grep ollama | awk "/\/Applications/{print \"kill \" \$2}" | sh'
 done

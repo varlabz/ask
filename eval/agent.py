@@ -1,4 +1,5 @@
 from textwrap import dedent
+from typing import Final
 
 from ask.core.config import (
     AgentConfig,
@@ -7,11 +8,12 @@ from ask.core.config import (
     MCPServerConfig,
 )
 
-agent_config = AgentConfig(
+AGENT_CONFIG: Final[AgentConfig] = AgentConfig(
     instructions=dedent("""
         You are an advanced AI assistant with access to various tools.
         Provide accurate, helpful, and concise responses.
-        Must follow instructions precisely.
+        Follow instructions precisely.
+        {instructions}
         """),
 )
 
@@ -21,6 +23,152 @@ agent_mcp = {
         command=["npx", "-y", "@modelcontextprotocol/server-everything"]
     )
 }
+agent_mcp_echo = {
+    "echo": MCPServerConfig(
+        command=[
+            "npx",
+            "-y",
+            "https://github.com/varlabz/everything-mcp",
+            "stdio",
+            "--echo",
+        ]
+    ),
+}
+agent_mcp_add = {
+    "add": MCPServerConfig(
+        command=[
+            "npx",
+            "-y",
+            "https://github.com/varlabz/everything-mcp",
+            "stdio",
+            "--add",
+        ]
+    ),
+}
+agent_mcp_longRunningOperation = {
+    "longRunningOperation": MCPServerConfig(
+        command=[
+            "npx",
+            "-y",
+            "https://github.com/varlabz/everything-mcp",
+            "stdio",
+            "--longRunningOperation",
+        ]
+    ),
+}
+agent_mcp_printEnv = {
+    "printEnv": MCPServerConfig(
+        command=[
+            "npx",
+            "-y",
+            "https://github.com/varlabz/everything-mcp",
+            "stdio",
+            "--printEnv",
+        ]
+    ),
+}
+agent_mcp_sampleLLM = {
+    "sampleLLM": MCPServerConfig(
+        command=[
+            "npx",
+            "-y",
+            "https://github.com/varlabz/everything-mcp",
+            "stdio",
+            "--sampleLLM",
+        ]
+    ),
+}
+agent_mcp_getTinyImage = {
+    "getTinyImage": MCPServerConfig(
+        command=[
+            "npx",
+            "-y",
+            "https://github.com/varlabz/everything-mcp",
+            "stdio",
+            "--getTinyImage",
+        ]
+    ),
+}
+agent_mcp_annotatedMessage = {
+    "annotatedMessage": MCPServerConfig(
+        command=[
+            "npx",
+            "-y",
+            "https://github.com/varlabz/everything-mcp",
+            "stdio",
+            "--annotatedMessage",
+        ]
+    ),
+}
+agent_mcp_getResourceReference = {
+    "getResourceReference": MCPServerConfig(
+        command=[
+            "npx",
+            "-y",
+            "https://github.com/varlabz/everything-mcp",
+            "stdio",
+            "--getResourceReference",
+        ]
+    ),
+}
+agent_mcp_elicitation = {
+    "elicitation": MCPServerConfig(
+        command=[
+            "npx",
+            "-y",
+            "https://github.com/varlabz/everything-mcp",
+            "stdio",
+            "--elicitation",
+        ]
+    ),
+}
+agent_mcp_getResourceLinks = {
+    "getResourceLinks": MCPServerConfig(
+        command=[
+            "npx",
+            "-y",
+            "https://github.com/varlabz/everything-mcp",
+            "stdio",
+            "--getResourceLinks",
+        ]
+    ),
+}
+agent_mcp_structuredContent = {
+    "structuredContent": MCPServerConfig(
+        command=[
+            "npx",
+            "-y",
+            "https://github.com/varlabz/everything-mcp",
+            "stdio",
+            "--structuredContent",
+        ]
+    ),
+}
+agent_mcp_listRoots = {
+    "listRoots": MCPServerConfig(
+        command=[
+            "npx",
+            "-y",
+            "https://github.com/varlabz/everything-mcp",
+            "stdio",
+            "--listRoots",
+        ]
+    )
+}
+agent_mcp_all = [
+    # agent_mcp_echo,
+    # agent_mcp_add,
+    agent_mcp_longRunningOperation,
+    agent_mcp_printEnv,
+    agent_mcp_sampleLLM,
+    agent_mcp_getTinyImage,
+    agent_mcp_annotatedMessage,
+    agent_mcp_getResourceReference,
+    agent_mcp_elicitation,
+    agent_mcp_getResourceLinks,
+    agent_mcp_structuredContent,
+    agent_mcp_listRoots,
+]
 
 
 def local(model: str, base_url: str) -> "LLMConfig":
@@ -31,17 +179,15 @@ def local(model: str, base_url: str) -> "LLMConfig":
     )
 
 
-def create_config(
-    llm: LLMConfig, instructions: str = "", mcp: dict = agent_mcp
-) -> Config:
+def create_config(llm: LLMConfig, instructions: str = "", mcp: dict = {}) -> Config:
     config = Config(
-        agent=agent_config,
+        agent=AGENT_CONFIG,
         llm=llm,
         mcp=mcp,
     )
     config.agent.name = f"eval-agent-{llm.model}"
-    config.agent.instructions = config.agent.instructions.format(
-        extra_instructions=instructions
+    config.agent.instructions = AGENT_CONFIG.instructions.format(
+        instructions=instructions
     )
     return config
 
