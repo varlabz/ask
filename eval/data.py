@@ -21,12 +21,22 @@ def serialize_config(cfg):
 
 
 async def task_executor(
-    cfg: Config, item: DatasetItemClient, callback: Callable[[], None]
+    cfg: Config,
+    item: DatasetItemClient,
+    callback: Callable[[], None],
 ):
     callback()
     agent = AgentASK.create_from_config(cfg)
     result = await agent.run(item.input)
     return str(result)
+
+
+async def task_executor_agent(
+    agent: AgentASK, item: DatasetItemClient, callback: Callable[[], None]
+):
+    callback()
+    result = await agent.run(item.input)
+    return result
 
 
 function_tools = [

@@ -6,9 +6,10 @@ from typing import Final
 from attr import dataclass
 from langfuse import Evaluation, Langfuse
 
-from ask.core.config import Config, MCPServerConfig
+from ask.core.agent import AgentASK
+from ask.core.config import MCPServerConfig
 from eval.agent import create_config, local
-from eval.data import function_tools, serialize_config, task_executor
+from eval.data import function_tools, serialize_config, task_executor_agent
 from eval.instrumentation import setup_instrumentation
 
 langfuse: Final[Langfuse] = setup_instrumentation()
@@ -19,7 +20,7 @@ class Metadata:
     instructions: str
 
 
-DATASET: Final[str] = "list of tools"
+DATASET: Final[str] = "list_of_tools"
 try:
     dataset = langfuse.get_dataset(name=DATASET)
 except Exception:
@@ -45,7 +46,7 @@ except Exception:
         "print a list of available tools what you have.",
         "show a list of available tools what you have.",
         "display a list of available tools what you have.",
-        "print/show a list of available tools what you have.",
+        # "print/show a list of available tools what you have.",        # stuck in a loop with this input
     ]
     for i in input:
         langfuse.create_dataset_item(
@@ -70,23 +71,25 @@ def _accuracy_evaluator(*, input, output, expected_output, size=1):
         tool_names = [tool["name"] for tool in function_tools]
         arr = json.loads(output)  # validate JSON
         cnt = sum(1 for i in arr if i["name"] in tool_names)
-        return Evaluation(name="accuracy", value=1 if cnt == size else 0)
+        return Evaluation(name="accuracy", value=cnt / size)
     except Exception as e:
         print(f"Output is not valid JSON {e}", file=sys.stderr)
         return Evaluation(name="accuracy", value=0.0)
 
 
 def run_experiment(model: str, base_url: str, session_id: str):
-    config: Final[Config] = create_config(
+    config = create_config(
         llm=local(model=model, base_url=base_url),
         mcp=agent_mcp,
         instructions=dataset.metadata.instructions if dataset.metadata else "",
     )
+    agent = AgentASK.create_from_config(config=config)
     result = dataset.run_experiment(
         name="tools listing",
+        run_name=f"{config.llm.model} with {len(function_tools)} tools",
         description="testing tools listing functionality",
-        task=lambda *, item, **kwargs: task_executor(
-            config,
+        task=lambda *, item, **kwargs: task_executor_agent(
+            agent=agent,
             item=item,
             callback=lambda: langfuse.update_current_trace(
                 session_id=session_id, user_id="eval", tags=[config.llm.model]
@@ -100,7 +103,7 @@ def run_experiment(model: str, base_url: str, session_id: str):
                 size=len(function_tools),
             )
         ],
-        # max_concurrency=1,  # Limit concurrency to 1 to avoid race timing issues
+        max_concurrency=1,  # Limit concurrency to 1 to avoid race timing issues
         metadata={
             "config": serialize_config(config),
         },

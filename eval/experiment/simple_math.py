@@ -5,9 +5,9 @@ from typing import Final
 from attr import dataclass
 from langfuse import Evaluation, Langfuse
 
-from ask.core.config import Config
+from ask.core.agent import AgentASK
 from eval.agent import create_config, local
-from eval.data import serialize_config, task_executor
+from eval.data import serialize_config, task_executor_agent
 from eval.instrumentation import setup_instrumentation
 
 langfuse: Final[Langfuse] = setup_instrumentation()
@@ -18,7 +18,7 @@ class Metadata:
     instructions: str
 
 
-DATASET: Final[str] = "simple math"
+DATASET: Final[str] = "simple_math"
 try:
     dataset = langfuse.get_dataset(name=DATASET)
 except Exception:
@@ -28,9 +28,15 @@ except Exception:
         metadata=Metadata(
             instructions=dedent(
                 """
-                    Must return a one line answer. No other text.
-                    Example of the output:
-                    3
+                    Calculate the result of the given mathematical expression.
+                    If can't calculate, respond with 'I don't know
+                    The result must be only a number. No other text.
+                    Examples of the output:
+                    -1234
+                    or
+                    1234.56
+                    or
+                    123
                 """,
             ),
         ),
@@ -87,16 +93,17 @@ def _accuracy_evaluator(
 
 
 def run_experiment(model: str, base_url: str, session_id: str):
-    config: Final[Config] = create_config(
+    config = create_config(
         llm=local(model=model, base_url=base_url),
-        mcp={},
         instructions=dataset.metadata.instructions if dataset.metadata else "",
     )
+    agent = AgentASK.create_from_config(config=config)
     result = dataset.run_experiment(
         name="simple math",
+        run_name=config.llm.model,
         description="simple math. 1 line answer",
-        task=lambda *, item, **kwargs: task_executor(
-            config,
+        task=lambda *, item, **kwargs: task_executor_agent(
+            agent=agent,
             item=item,
             callback=lambda: langfuse.update_current_trace(
                 session_id=session_id, user_id="eval", tags=[config.llm.model]

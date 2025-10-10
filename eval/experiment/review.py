@@ -6,9 +6,9 @@ from typing import Final
 from attr import dataclass
 from langfuse import Evaluation, Langfuse
 
-from ask.core.config import Config
+from ask.core.agent import AgentASK
 from eval.agent import create_config, local
-from eval.data import serialize_config, task_executor
+from eval.data import serialize_config, task_executor_agent
 from eval.instrumentation import setup_instrumentation
 
 langfuse: Final[Langfuse] = setup_instrumentation()
@@ -78,10 +78,10 @@ except Exception:
         langfuse.create_dataset_item(
             dataset_name=DATASET,
             input=i,
+            expected_output=5,
         )
 
 dataset = langfuse.get_dataset(name=DATASET)
-
 if dataset.metadata and isinstance(dataset.metadata, dict):
     dataset.metadata = Metadata(**dataset.metadata)
 
@@ -92,7 +92,9 @@ def _accuracy_evaluator(*, input, output, expected_output):
         obj = json.loads(output)  # validate JSON
         return Evaluation(
             name="accuracy",
-            value=1 if (len(obj["analysis"]) > 5 and obj["rating"] == 5) else 0,
+            value=1
+            if (len(obj["analysis"]) > 5 and obj["rating"] == expected_output)
+            else 0,
         )
     except Exception as e:
         print(f"Output is not valid JSON {e}", file=sys.stderr)
@@ -100,16 +102,17 @@ def _accuracy_evaluator(*, input, output, expected_output):
 
 
 def run_experiment(model: str, base_url: str, session_id: str):
-    config: Final[Config] = create_config(
+    config = create_config(
         llm=local(model=model, base_url=base_url),
-        mcp={},
         instructions=dataset.metadata.instructions if dataset.metadata else "",
     )
+    agent = AgentASK.create_from_config(config=config)
     result = dataset.run_experiment(
         name="review",
+        run_name=config.llm.model,
         description="testing review functionality",
-        task=lambda *, item, **kwargs: task_executor(
-            config,
+        task=lambda *, item, **kwargs: task_executor_agent(
+            agent=agent,
             item=item,
             callback=lambda: langfuse.update_current_trace(
                 session_id=session_id, user_id="eval", tags=[config.llm.model]

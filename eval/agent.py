@@ -155,21 +155,6 @@ agent_mcp_listRoots = {
         ]
     )
 }
-agent_mcp_all = [
-    # agent_mcp_echo,
-    # agent_mcp_add,
-    agent_mcp_longRunningOperation,
-    agent_mcp_printEnv,
-    agent_mcp_sampleLLM,
-    agent_mcp_getTinyImage,
-    agent_mcp_annotatedMessage,
-    agent_mcp_getResourceReference,
-    agent_mcp_elicitation,
-    agent_mcp_getResourceLinks,
-    agent_mcp_structuredContent,
-    agent_mcp_listRoots,
-]
-
 
 def local(model: str, base_url: str) -> "LLMConfig":
     return LLMConfig(
@@ -179,9 +164,13 @@ def local(model: str, base_url: str) -> "LLMConfig":
     )
 
 
-def create_config(llm: LLMConfig, instructions: str = "", mcp: dict = {}) -> Config:
+def create_config(
+    llm: LLMConfig,
+    instructions: str = "",
+    mcp: dict[str, MCPServerConfig] | None = None,
+) -> Config:
     config = Config(
-        agent=AGENT_CONFIG,
+        agent=AGENT_CONFIG.model_copy(deep=True),
         llm=llm,
         mcp=mcp,
     )
@@ -190,11 +179,3 @@ def create_config(llm: LLMConfig, instructions: str = "", mcp: dict = {}) -> Con
         instructions=instructions
     )
     return config
-
-
-# def create_agent[InputT, OutputT](config: Config, input_type: InputT, output_type: OutputT) -> AgentASK[InputT, OutputT]:
-#     # copy config to avoid mutating the original
-#     cfg = config.model_copy(deep=True)
-#     cfg.agent.input_type = input_type
-#     cfg.agent.output_type = output_type
-#     return AgentASK[InputT, OutputT].create_from_config(cfg)
