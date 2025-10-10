@@ -10,6 +10,8 @@ This document provides comprehensive guidelines for writing high-quality Python 
 - Use 4 spaces for indentation (no tabs)
 - Maximum line length: 88 characters (Black formatter standard)
 - Use meaningful variable and function names
+- Don't use trailing whitespace
+- Don't use cast function from typing module, use type annotations instead
 
 ### Import Organization
 ```python
