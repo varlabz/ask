@@ -7,7 +7,7 @@ from attr import dataclass
 from langfuse import Evaluation, Langfuse
 
 from ask.core.agent import AgentASK
-from eval.agent import create_config, local
+from eval.agent import create_config, make_llm_config
 from eval.data import serialize_config, task_executor_agent
 from eval.instrumentation import setup_instrumentation
 
@@ -103,7 +103,7 @@ def _accuracy_evaluator(*, input, output, expected_output):
 
 def run_experiment(model: str, base_url: str, session_id: str):
     config = create_config(
-        llm=local(model=model, base_url=base_url),
+        llm=make_llm_config(model=model, base_url=base_url),
         instructions=dataset.metadata.instructions if dataset.metadata else "",
     )
     agent = AgentASK.create_from_config(config=config)

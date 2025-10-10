@@ -8,7 +8,7 @@ from langfuse import Evaluation, Langfuse
 
 from ask.core.agent import AgentASK
 from ask.core.config import MCPServerConfig
-from eval.agent import create_config, local
+from eval.agent import create_config, make_llm_config
 from eval.data import (
     function_tools,
     serialize_config,
@@ -105,7 +105,7 @@ def run_experiment(model: str, base_url: str, session_id: str):
             )
         }
         config = create_config(
-            llm=local(model=model, base_url=base_url),
+            llm=make_llm_config(model=model, base_url=base_url),
             mcp=mcp,
             instructions=dataset.metadata.instructions if dataset.metadata else "",
         )
