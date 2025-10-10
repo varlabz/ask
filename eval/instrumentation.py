@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from textwrap import dedent
 
 from langfuse import Langfuse, get_client
 from pydantic_ai import Agent
@@ -25,4 +24,3 @@ def setup_instrumentation() -> Langfuse:
     ret = get_client()
     Agent.instrument_all()
     return ret
-

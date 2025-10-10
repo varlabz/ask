@@ -7,10 +7,7 @@ parser = argparse.ArgumentParser(
     description="Run experiments with a specified model as provider:model"
 )
 parser.add_argument(
-    "-m", 
-    "--model", 
-    required=True, 
-    help="The model to use for the experiment."
+    "-m", "--model", required=True, help="The model to use for the experiment."
 )
 parser.add_argument(
     "-u",

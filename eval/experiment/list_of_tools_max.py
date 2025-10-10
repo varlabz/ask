@@ -1,5 +1,6 @@
 import json
 import sys
+from collections.abc import Callable
 from textwrap import dedent
 from typing import Final
 
@@ -7,7 +8,7 @@ from attr import dataclass
 from langfuse import Evaluation, Langfuse
 
 from ask.core.agent import AgentASK
-from ask.core.config import MCPServerConfig
+from ask.core.config import Config, MCPServerConfig
 from eval.agent import create_config, make_llm_config
 from eval.data import (
     function_tools,
@@ -110,11 +111,9 @@ def run_experiment(model: str, base_url: str, session_id: str):
             instructions=dataset.metadata.instructions if dataset.metadata else "",
         )
         agent = AgentASK.create_from_config(config=config)
-        result = dataset.run_experiment(
-            name=f"tools listing with {i + 1} tools",
-            run_name=f"{config.llm.model} with {i + 1} tools",
-            description=f"testing tools listing functionality with {i + 1} tools",
-            task=lambda *, item, **kwargs: task_executor_agent(
+
+        def make_task(agent: AgentASK, config: Config) -> Callable:
+            return lambda *, item, **kwargs: task_executor_agent(
                 agent=agent,
                 item=item,
                 callback=lambda: langfuse.update_current_trace(
@@ -122,15 +121,24 @@ def run_experiment(model: str, base_url: str, session_id: str):
                     user_id="eval",
                     tags=[config.llm.model],
                 ),
-            ),
-            evaluators=[
+            )
+
+        def make_evaluator(size: int) -> Callable:
+            return (
                 lambda *, input, output, expected_output, **kwargs: _accuracy_evaluator(
                     input=input,
                     output=output,
                     expected_output=expected_output,
-                    size=i + 1,
+                    size=size,
                 )
-            ],
+            )
+
+        result = dataset.run_experiment(
+            name=f"tools listing with {i + 1} tools",
+            run_name=f"{config.llm.model} with {i + 1} tools",
+            description=f"testing tools listing functionality with {i + 1} tools",
+            task=make_task(agent, config),
+            evaluators=[make_evaluator(i + 1)],
             max_concurrency=1,  # Limit concurrency to 1 to avoid race timing issues
             metadata={
                 "config": serialize_config(config),

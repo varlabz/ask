@@ -17,7 +17,8 @@ AGENT_CONFIG: Final[AgentConfig] = AgentConfig(
         """),
 )
 
-def make_llm_config(model: str, base_url: str|None) -> "LLMConfig":
+
+def make_llm_config(model: str, base_url: str | None) -> "LLMConfig":
     return LLMConfig(
         model=model,
         base_url=base_url,
