@@ -20,10 +20,7 @@ from pydantic_ai import Agent, ToolOutput
 from pydantic_ai.messages import (
     ModelMessage,
     ModelResponse,
-    RetryPromptPart,
     TextPart,
-    ToolCallPart,
-    ToolReturnPart,
 )
 from pydantic_ai.models import Model
 from pydantic_ai.settings import ModelSettings
@@ -158,26 +155,3 @@ def make_llm_repack_processor(
         return ret
 
     return repack
-
-
-def repack_tools_messages(messages: list[ModelMessage]) -> list[ModelMessage]:
-    """Remove tool calls and tool responses; keep surrounding conversation intact.
-
-    Rules:
-    - Drop any message whose parts are exclusively tool traffic:
-      * ToolCallPart (model decided to call a tool)
-      * ToolReturnPart (tool result returned to the model)
-      * RetryPromptPart (tool error/retry prompt)
-    - Keep all other messages unchanged.
-    """
-    tool_parts = (ToolCallPart, ToolReturnPart, RetryPromptPart)
-
-    def is_tool_only_message(msg: ModelMessage) -> bool:
-        parts = getattr(msg, "parts", None)
-        if not parts:
-            return False
-        return any(isinstance(p, tool_parts) for p in parts)
-
-    # dump_messages(messages, "tmp/message_dump.txt")
-    # return dump_messages([m for m in messages if not is_tool_only_message(m)], "tmp/message_dump_filtered.txt")
-    return [m for m in messages if not is_tool_only_message(m)]

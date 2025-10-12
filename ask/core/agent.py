@@ -10,14 +10,13 @@ from typing import Final, cast, get_args, get_origin
 
 from pydantic import BaseModel
 from pydantic_ai import Agent
-from pydantic_ai.messages import ModelMessage
 from pydantic_ai.usage import RunUsage, UsageLimits
 
 from ask.core.cache import CacheASK
 
 from .config import Config, LLMConfig, load_config, load_config_dict
-from .history import repack_tools_messages
 from .mcp_client import create_mcp_servers
+from .memory import Memory, memory_factory
 from .model import create_model
 
 
@@ -46,11 +45,10 @@ class AgentStats:
 class AgentASK[InputT, OutputT]:
     _agent: Agent[InputT, OutputT]
     _name: str
-    _history: list = []
+    _memory: Memory
     _use_mcp_servers: bool
     _cache: CacheASK | None = None
     _stat: AgentStats = AgentStats()
-    _repack: Callable[[list[ModelMessage]], list[ModelMessage]]
     _input_type: type[InputT]
     _output_type: type[OutputT]
 
@@ -58,13 +56,13 @@ class AgentASK[InputT, OutputT]:
         self,
         agent: Agent[InputT, OutputT],
         use_mcp_servers: bool,
-        repack: Callable[[list[ModelMessage]], list[ModelMessage]],
+        memory: Memory,
         input_type: type[InputT],
         output_type: type[OutputT],
     ):
         self._agent = agent
         self._use_mcp_servers = use_mcp_servers
-        self._repack = repack
+        self._memory = memory
         self._input_type = input_type
         self._output_type = output_type
         if agent.name:
@@ -85,10 +83,10 @@ class AgentASK[InputT, OutputT]:
             str(prompt),
             deps=prompt,
             usage_limits=UsageLimits(request_limit=100),
-            message_history=self._history,
+            message_history=self._memory.get(),
         )
         end_time = time.time()
-        self._history = self._repack(ret.all_messages())
+        self._memory.set(ret.all_messages())
         self._stat._update_stats(ret.usage(), duration=(end_time - start_time))
         return ret.output
 
@@ -136,7 +134,9 @@ class AgentASK[InputT, OutputT]:
         return self
 
     @classmethod
-    def create_from_config(cls, config: Config) -> "AgentASK[InputT, OutputT]":
+    def create_from_config(
+        cls, config: Config, memory: Memory | None = None
+    ) -> "AgentASK[InputT, OutputT]":
         """Create a PydanticAI Agent from a Config instance."""
         llm: Final[LLMConfig] = config.llm
         agent = Agent(
@@ -148,12 +148,11 @@ class AgentASK[InputT, OutputT]:
             retries=3,
             instrument=True,
             deps_type=config.agent.input_type,
-            # history_processors=[make_llm_repack_processor(create_model(llm), max_history=config.llm.max_history, keep_last=2)],
         )
         return cls(
             agent=agent,
             use_mcp_servers=config.mcp is not None,
-            repack=repack_tools_messages if llm.compress_history else lambda x: x,
+            memory=memory if memory is not None else memory_factory(llm, None),
             input_type=config.agent.input_type,
             output_type=config.agent.output_type,
         )

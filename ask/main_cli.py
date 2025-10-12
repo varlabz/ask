@@ -15,6 +15,7 @@ from ask.core.instrumentation import (
     setup_instrumentation_config,
     setup_instrumentation_file,
 )
+from ask.core.memory import memory_factory
 
 
 def main():
@@ -50,6 +51,12 @@ def main():
     parser.add_argument(
         "--chat-port", type=int, help="Explicit chat port (disables auto selection)"
     )
+    parser.add_argument(
+        "-S",
+        "--session",
+        type=str,
+        help="File to save/load conversation history for the session",
+    )
     parser.add_argument("prompt", nargs="*", help="Prompt for the agent")
     args = parser.parse_args()
 
@@ -63,7 +70,9 @@ def main():
     if args.system_prompt:
         config.agent.instructions = args.system_prompt
 
-    agent = AgentASK.create_from_config(config)
+    agent = AgentASK.create_from_config(
+        config, memory=memory_factory(config.llm, args.session)
+    )
 
     # can't use chat and not istty the same time
     if args.tchat and not sys.stdin.isatty():

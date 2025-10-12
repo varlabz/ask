@@ -1,15 +1,13 @@
 #!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-run
 
-import os
 import sys
+from textwrap import dedent
 
+from llm import llm
 from pydantic import Field
 
 from ask.core.agent import AgentASK
 from ask.core.context import ContextASK
-
-sys.path.insert(0, os.path.dirname(__file__))
-from llm import llm
 
 
 class Research(ContextASK):
@@ -25,23 +23,23 @@ research_agent = AgentASK[Research, ResearchResult].create_from_dict(
     {
         "agent": {
             "name": "Research",
-            "instructions": f"""
-        You are an expert research assistant.
-        Research the topic for a blog post. A well-done research should include:
-        - The basic overview of the topic
-        - Historical perspective, if applicable
-        - Current opinions on the topic, if applicable
-        - Any controversies that might be surrounding the topic
-        - Any future developments around the topic
-        - Collect list of URLs used in the research
+            "instructions": dedent(f"""
+                You are an expert research assistant.
+                Research the topic for a blog post. A well-done research should include:
+                - The basic overview of the topic
+                - Historical perspective, if applicable
+                - Current opinions on the topic, if applicable
+                - Any controversies that might be surrounding the topic
+                - Any future developments around the topic
+                - Collect list of URLs used in the research
 
-        Use the tools:
-        - Search tool to find relevant URLs in categories general,videos,news,social_media with number of results 30.
-        - Fetch tool to retrieve content from the URLs with max length 100000.
+                Use the tools:
+                - Search tool to find relevant URLs in categories general,videos,news,social_media with number of results 30.
+                - Fetch tool to retrieve content from the URLs with max length 100000.
 
-        Input:
-        {Research.to_input()}
-    """,
+                Input:
+                {Research.to_input()}
+            """),
             "input_type": Research,
             "output_type": ResearchResult,
         },

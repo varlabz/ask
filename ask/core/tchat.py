@@ -26,7 +26,7 @@ async def _stream_print(text: str, sleep: float = 0.001, yield_every: int = 32) 
     print()  # Ensure newline at the end
 
 
-async def chat(agent: AgentASK, initial_prompt: str | None = None):
+async def chat(agent: AgentASK[str, str], initial_prompt: str | None = None):
     """Interactive chat with the agent."""
     session: Final = PromptSession(history=InMemoryHistory())
     counter = 0
