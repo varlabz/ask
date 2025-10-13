@@ -54,6 +54,7 @@ def cleanup_experiments():
                     )
                 except Exception as e:
                     print(f"Error deleting run {run_name}: {e}")
+            print(f"Deleted {len(runs)} runs for dataset {dataset_name}")        
 
         except Exception as e:
             print(f"Error processing dataset {dataset_name}: {e}")

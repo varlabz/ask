@@ -65,7 +65,8 @@ except Exception:
         {"question": "3×4-2×5+10÷2", "answer": "7"},
         {"question": "2*(3+4)-5/5", "answer": "13"},
     ]
-    for i in input:
+    # reverse the input to have the same order as before
+    for i in reversed(input):
         langfuse.create_dataset_item(
             dataset_name=DATASET,
             input=i["question"],

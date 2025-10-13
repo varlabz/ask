@@ -43,7 +43,8 @@ except Exception:
         "1 / 100",
         "what is the capital of France?",
     ]
-    for i in input:
+    # reverse the input to have the same order as before
+    for i in reversed(input):
         langfuse.create_dataset_item(
             dataset_name=DATASET,
             input=i,
