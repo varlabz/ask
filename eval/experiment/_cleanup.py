@@ -50,7 +50,7 @@ def cleanup_experiments():
                 run_name = run.name
                 try:
                     langfuse.api.datasets.delete_run(
-                        dataset_name=dataset_name, run_name=run_name
+                        dataset_name=run.dataset_name, run_name=run.name,
                     )
                 except Exception as e:
                     print(f"Error deleting run {run_name}: {e}")

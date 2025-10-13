@@ -7,6 +7,7 @@ CLI entry point for the agent. Run with:
 
 import argparse
 import asyncio
+import os
 import sys
 
 from ask.core.agent import AgentASK
@@ -70,8 +71,13 @@ def main():
     if args.system_prompt:
         config.agent.instructions = args.system_prompt
 
+    session_file = os.path.expanduser(args.session) if args.session else None
+    # create path for session file if it doesn't exist
+    if session_file:
+        os.makedirs(os.path.dirname(session_file), exist_ok=True)
+        
     agent = AgentASK.create_from_config(
-        config, memory=memory_factory(config.llm, args.session)
+        config, memory=memory_factory(config.llm, session_file)
     )
 
     # can't use chat and not istty the same time
