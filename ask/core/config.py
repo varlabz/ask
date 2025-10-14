@@ -174,8 +174,8 @@ class Config(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-def load_config(paths: list[str]) -> Config:
-    """Deep-merge multiple YAML config files into a `Config`. Later files override."""
+def load_config[Type](paths: list[str], model_type: type[Type] = Config) -> Type:
+    """Merge multiple YAML config files into a `Config`. Later files override."""
     merged_raw: dict = {}
     for p in paths:
         if p is None:  # skip empty paths
@@ -199,7 +199,7 @@ def load_config(paths: list[str]) -> Config:
         except Exception as e:
             raise RuntimeError(f"Error loading config file '{p}': {e}") from e
     try:
-        return Config(**merged_raw)
+        return model_type(**merged_raw)
     except ValidationError as e:
         raise RuntimeError(f"Config validation error: {e}") from e
 
