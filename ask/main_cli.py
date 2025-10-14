@@ -75,7 +75,7 @@ def main():
     # create path for session file if it doesn't exist
     if session_file:
         os.makedirs(os.path.dirname(session_file), exist_ok=True)
-        
+
     agent = AgentASK.create_from_config(
         config, memory=memory_factory(config.llm, session_file)
     )

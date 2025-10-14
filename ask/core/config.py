@@ -204,20 +204,10 @@ def load_config(paths: list[str]) -> Config:
         raise RuntimeError(f"Config validation error: {e}") from e
 
 
-def load_config_dict(config_dict: dict) -> Config:
-    """Load configuration from a dictionary.
-
-    Args:
-        config_dict: Dictionary containing configuration data.
-
-    Returns:
-        Config: Merged configuration object.
-
-    Raises:
-        RuntimeError: If the config is invalid.
-    """
+def load_config_dict[Type](config_dict: dict, model_type: type[Type] = Config) -> Type:
+    """Load configuration data into a specific Pydantic model."""
     try:
-        return Config(**config_dict)
+        return model_type(**config_dict)
     except ValidationError as e:
         raise RuntimeError(f"Config validation error: {e}") from e
 
