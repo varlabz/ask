@@ -33,10 +33,11 @@
 # Even ask: “How would I have responded to this a year ago?”
 # You’re building a living feedback loop — one that sharpens you every time you use it.
 
+import argparse
 import asyncio
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 from textwrap import dedent
 from typing import Final
 from pydantic import Field
@@ -52,8 +53,8 @@ llm = load_config(["~/.config/ask/llm.yaml"], type=LLMConfig, key="llm")
 # setup_instrumentation_config(load_config(["~/.config/ask/trace.yaml"], type=TraceConfig, key="trace"))
 
 MENTOR_HISTORY: Final = "~/.config/ask/session/mentor.json"
-history = Path(MENTOR_HISTORY).expanduser()
-history.parent.mkdir(parents=True, exist_ok=True)
+history = os.path.expanduser(MENTOR_HISTORY)
+os.makedirs(os.path.dirname(history), exist_ok=True)
 
 mentor_agent = AgentASK[str, str].create_from_config(cfg:=load_config_dict({
     "agent": {
@@ -88,7 +89,7 @@ mentor_agent = AgentASK[str, str].create_from_config(cfg:=load_config_dict({
     },
     "llm": llm,
 }), 
-memory_factory(cfg.llm, str(history)))
+memory_factory(cfg.llm, history))
 
 class MemoryAnalyze(ContextASK):
     query: str = Field(description="Original user query")
@@ -141,10 +142,48 @@ async def _main_func(input: str) -> str:
 
 main_agent = AgentASK[str, str].create_from_function("Main", _main_func)
 
+async def run_tchat(prompt: str|None):
+    return await main_agent.run_iter(lambda: 
+        mentor_agent.run_iter(lambda: 
+            memory_agent.run_iter(lambda: 
+                tchat.chat(main_agent, prompt if prompt else None)
+            )
+        )
+    )
+
 async def main():
-    await main_agent.run_iter(lambda: 
-            mentor_agent.run_iter(lambda: 
-                memory_agent.run_iter(lambda: 
-                    tchat.chat(main_agent, None))))
-    
-asyncio.run(main())
+    """Main function for the mentor CLI."""
+    parser = argparse.ArgumentParser(description="Mentor")
+    parser.add_argument(
+        "-T",
+        "--tchat",
+        action="store_true",
+        help="Start terminal interactive chat mode",
+    )
+    parser.add_argument("prompt", nargs="*", help="Prompt for the agent")
+    args = parser.parse_args()
+
+    # can't use chat and not istty the same time
+    if args.tchat and not sys.stdin.isatty():
+        print("Error: Interactive chat mode requires a terminal.", file=sys.stderr)
+        sys.exit(1)
+
+    # Get prompt from args or stdin
+    prompt = " ".join(args.prompt).strip()
+    if not prompt and not sys.stdin.isatty():
+        prompt = sys.stdin.read().strip()
+        
+    if args.tchat:
+        return await run_tchat(prompt)
+
+    if not prompt:
+        print("Error: No prompt provided.", file=sys.stderr)
+        parser.print_help(file=sys.stderr)
+        sys.exit(1)
+
+    result = await main_agent.run(prompt)
+    print(result)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
