@@ -6,8 +6,12 @@ from typing import Final
 parser = argparse.ArgumentParser(
     description="Run experiments with a specified model as provider:model"
 )
+# fmt: off
 parser.add_argument(
-    "-m", "--model", required=True, help="The model to use for the experiment."
+    "-m",
+    "--model",
+    required=True,
+    help="The model to use for the experiment."
 )
 parser.add_argument(
     "-u",
@@ -27,6 +31,7 @@ parser.add_argument(
     default="test_session",
     help="The session ID for the experiment.",
 )
+# fmt: on
 args = parser.parse_args()
 
 SESSION_ID: Final[str] = args.session_id

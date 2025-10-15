@@ -18,13 +18,16 @@ def main() -> None:
         description="Execute a Python file.",
         usage="ask-run <file_path> [-- <script_args...>]",
     )
-    parser.add_argument("file_path", help="The path to the Python file to execute.")
+    # fmt: off
+    parser.add_argument(
+        "file_path",
+        help="The path to the Python file to execute.")
     parser.add_argument(
         "script_args",
         nargs=argparse.REMAINDER,
         help="Arguments for the script. Use '--' to separate script args.",
     )
-
+    # fmt: on
     args = parser.parse_args()
 
     script_path = Path(args.file_path).expanduser()
