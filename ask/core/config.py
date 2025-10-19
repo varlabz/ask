@@ -85,6 +85,19 @@ class LLMConfig(BaseModel):
     def resolve_api_key(cls, v):
         return _resolve_api_key(v)
 
+class EmbedderConfig(BaseModel):
+    model: str  # e.g., "openai:gpt-4", "google:gemini-pro"
+    api_key: str | None = (
+        None  # can be "env:VAR_NAME" or "file:/path/to/file" or actual key
+    )
+    base_url: str | None = None  # for custom endpoints, e.g. local LLM server
+    # Forbid unknown fields
+    model_config = ConfigDict(extra="forbid")
+
+    @field_validator("api_key", mode="before")
+    def resolve_api_key(cls, v):
+        return _resolve_api_key(v)
+
 
 class MCPServerConfig(BaseModel):
     """Configuration for an MCP server tool/service."""
