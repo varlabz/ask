@@ -34,8 +34,8 @@ research_agent = AgentASK[Research, ResearchResult].create_from_dict(
                 - Collect list of URLs used in the research
 
                 Use the tools:
-                - Search tool to find relevant URLs in categories general,videos,news,social_media with number of results 30.
-                - Fetch tool to retrieve content from the URLs with max length 100000.
+                - Search tool to find relevant URLs in categories web,videos,news,social media with no more than 30 results.
+                - Converter tool to retrieve content from the URLs and other resources.
 
                 Input:
                 {Research.to_input()}
@@ -44,15 +44,34 @@ research_agent = AgentASK[Research, ResearchResult].create_from_dict(
             "output_type": ResearchResult,
         },
         "mcp": {
+            # "search": {
+            #     "command": [
+            #         "uvx",
+            #         "--from",
+            #         "git+https://github.com/varlabz/duckduckgo-mcp",
+            #         "duckduckgo-mcp",
+            #     ]
+            # },
             "search": {
                 "command": [
                     "uvx",
                     "--from",
-                    "git+https://github.com/varlabz/duckduckgo-mcp",
-                    "duckduckgo-mcp",
-                ]
+                    "git+https://github.com/varlabz/searxng-mcp",
+                    "mcp-server",
+                ],
+                "env": {"SEARX_HOST": "http://macook.local:8080"},
             },
-            "fetch": {"command": ["uvx", "mcp-server-fetch", "--ignore-robots-txt"]},
+            "converter": {
+                "command": [
+                    "uvx",
+                    "--from",
+                    "git+https://github.com/varlabz/markitdown-mhtml.git@mhtml#subdirectory=packages/markitdown-mcp",
+                    "markitdown-mcp",
+                ],
+                "env": {
+                    "MARKITDOWN_ENABLE_PLUGINS": "true",
+                },
+            },
             "sequential_thinking": {
                 "command": [
                     "npx",

@@ -19,29 +19,46 @@ from research import Research, research_agent
 from score import ScoreInput, score_agent
 from writer import WriterInput, writer_agent
 
+from ask.core.config import TraceConfig, load_config
+from ask.core.instrumentation import setup_instrumentation_config
+
+# uncomment to use trace. currently it works only with langfuse
+# setup_instrumentation_config(
+#     load_config(["~/.config/ask/trace.yaml"], type=TraceConfig, key="trace"),
+# )
+
 
 async def main(query: str) -> None:
     cache = CacheASK(CacheStoreJson(path=".blog_post_cache.json"))
-    research_result = await research_agent.cache(cache).run(Research(topic=query))
+    # fmt: off
+    research_result = await research_agent.cache(cache).run(
+        Research(topic=query)
+    )
     outline_result = await outline_agent.cache(cache).run(
-        OutlineInput(topic=query, research=research_result.report)
+        OutlineInput(
+            topic=query,
+            research=research_result.report
+        )
     )
     post_result = await writer_agent.cache(cache).run(
         WriterInput(
-            topic=query, research=research_result.report, outline=outline_result
+            topic=query,
+            research=research_result.report,
+            outline=outline_result
         )
     )
     print(post_result)
     score_result = await score_agent.cache(cache).run(
         ScoreInput(topic=query, article=post_result)
     )
+    # fmt: on
     print(score_result, file=sys.stderr)
     cache.clean()
 
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} <blog post topic>")
-        sys.exit(1)
-    query = " ".join(sys.argv[1:])
-    asyncio.run(main(query))
+if len(sys.argv) < 2:
+    print(f"Usage: {sys.argv[0]} <blog post topic>")
+    sys.exit(1)
+
+query = " ".join(sys.argv[1:])
+asyncio.run(main(query))

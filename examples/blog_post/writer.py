@@ -25,6 +25,7 @@ writer_agent = AgentASK[WriterInput, str].create_from_dict(
                 The blog post will follow the outline and further enrich it with relevant details from the research report.
                 The blog post writing style should come across as musings of an intellectual who is trying to examine the topic from various angles.
                 Add as much details as possible.
+                Add links of the URLs in the body of the blog post where relevant.
 
                 Input:
                 {WriterInput.to_input()}

@@ -85,6 +85,7 @@ class LLMConfig(BaseModel):
     def resolve_api_key(cls, v):
         return _resolve_api_key(v)
 
+
 class EmbedderConfig(BaseModel):
     model: str  # e.g., "openai:gpt-4", "google:gemini-pro"
     api_key: str | None = (

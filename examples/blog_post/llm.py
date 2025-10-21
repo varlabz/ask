@@ -1,5 +1,11 @@
-llm = {
-    "temperature": 0.7,
-    "model": "openrouter:x-ai/grok-code-fast-1",
-    "api_key": "file:~/.config/ask/openrouter",
-}
+from ask.core.config import LLMConfig, load_config
+
+llm = load_config(
+    ["~/.config/ask/llm-ollama.yaml"],
+    type=LLMConfig,
+    key="llm",
+)
+# use diffetrent LLM config if needed
+llm_score = load_config(
+    ["~/.config/ask/llm-ollama-no-tools.yaml"], type=LLMConfig, key="llm"
+)

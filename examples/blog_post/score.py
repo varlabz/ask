@@ -3,6 +3,7 @@
 
 from textwrap import dedent
 
+from llm import llm_score
 from pydantic import Field
 
 from ask.core.agent import AgentASK
@@ -35,29 +36,29 @@ score_agent = AgentASK[ScoreInput, str].create_from_dict(
 
                 Critical Review
 
-                1. Clarity & Readability (Score: __/20)
+                1. Clarity & Readability (Score: __ of 20)
                 Assessment: Evaluate the clarity of the language. Is the writing concise and easily understood by the target audience? Is the sentence structure effective and varied? Is vocabulary precise and appropriate, or is there confusing jargon?
                 Score:
 
-                2. Depth & Accuracy (Score: __/20)
+                2. Depth & Accuracy (Score: __ of 20)
                 Assessment: How comprehensively does the article cover the Stated Topic? Does it stay focused? Is there sufficient detail, evidence, and context? Are arguments well-supported by credible facts, data, or expert opinions? (Use external search tools if necessary to verify accuracy). Are there any significant gaps in the information presented relative to the stated topic?
                 Score:
 
-                3. Structure & Organization (Score: __/20)
+                3. Structure & Organization (Score: __ of 20)
                 Assessment: Analyze the article's logical flow. Does it have a clear introduction that engages the reader, body paragraphs that transition smoothly, and a conclusion that provides a sense of closure? How effective is the use of headings and subheadings in organizing the content?
                 Score:
 
-                4. Objectivity & Bias (Score: __/20)
+                4. Objectivity & Bias (Score: __ of 20)
                 Assessment: Scrutinize the article for objectivity. Does it present a balanced view with multiple perspectives? Is the author's tone neutral, or does it betray a particular bias? Are claims presented as fact without sufficient evidence?
                 Score:
 
-                5. Style & Engagement (Score: __/20)
+                5. Style & Engagement (Score: __ of 20)
                 Assessment: Evaluate the overall writing style. Is it engaging and does it hold the reader's interest? Is the tone appropriate for the subject matter? Assess the effectiveness of the author's voice.
                 Score:
 
                 Final Summary & Total Score
                 Overall Summary: Provide a concise, holistic summary of the article's primary strengths and areas for improvement.
-                Total Score: (Calculate and insert the sum of the five scores) / 100
+                Total Score: (Calculate and insert the sum of the five scores) of 100
 
                 Input:
                 {ScoreInput.to_input()}
@@ -73,10 +74,6 @@ score_agent = AgentASK[ScoreInput, str].create_from_dict(
             "input_type": ScoreInput,
             "output_type": str,
         },
-        "llm": {
-            "model": "openai:deepseek-chat",
-            "api_key": "file:~/.config/ask/deepseek",
-            "base_url": "https://api.deepseek.com/v1/",
-        },
+        "llm": llm_score,
     }
 )
