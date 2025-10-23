@@ -20,13 +20,12 @@ from score import ScoreInput, score_agent
 from writer import WriterInput, writer_agent
 
 from ask.core.cache import CacheStoreJson
+from ask.core.config import TraceConfig, load_config
+from ask.core.instrumentation import setup_instrumentation_config
 
-# uncomment to use trace. currently it works only with langfuse
-# from ask.core.instrumentation import setup_instrumentation_config
-# from ask.core.config import TraceConfig, load_config
-# setup_instrumentation_config(
-#     load_config(["~/.config/ask/trace.yaml"], type=TraceConfig, key="trace"),
-# )
+setup_instrumentation_config(
+    load_config(["~/.config/ask/trace.yaml"], type=TraceConfig, key="trace"),
+)
 
 
 async def main(query: str) -> None:
