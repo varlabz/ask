@@ -181,6 +181,7 @@ class Config(BaseModel):
 
     agent: AgentConfig
     llm: LLMConfig
+    embedder: EmbedderConfig | None = None
     mcp: dict[str, MCPServerConfig] | None = None
     server: ServerConfig | None = None
     trace: TraceConfig | None = None
