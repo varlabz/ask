@@ -45,7 +45,7 @@ class AgentStats:
         )
 
 
-class AgentASK[InputT: BaseModel, OutputT: BaseModel | str]:
+class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
     _agent: Agent[InputT, OutputT]
     _name: str
     _memory: Memory
@@ -260,7 +260,7 @@ if __name__ == "__main__":
     )
 
     llm = LLMConfig(
-        model="ollama:qwen3:1.7b-q4_K_M", #gemma3:4b-it-q4_K_M",  #
+        model="ollama:qwen3:1.7b-q4_K_M",  # gemma3:4b-it-q4_K_M",  #
         base_url="http://bacook.local:11434/v1/",
         temperature=0.0,
         # use_tools=False,
