@@ -27,7 +27,7 @@ def create_mcp_servers(
                     timeout=60,
                 )
             )
-        elif transport == "http" or transport == "streamable-http":
+        elif transport == "http":
             if not cfg.url:
                 raise ValueError(f"HTTP transport requires 'url' for server '{name}'")
             servers.append(

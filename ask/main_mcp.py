@@ -62,7 +62,11 @@ async def ask(request: str, ctx: Context[ServerSession, None]) -> str:
 
 
 def main() -> None:
-    server.run(transport=server_config.transport)
+    server.run(
+        transport="streamable-http"
+        if server_config.transport == "http"
+        else server_config.transport
+    )
 
 
 if __name__ == "__main__":

@@ -11,6 +11,8 @@ from ask.core.config import LLMConfig
 
 
 class Memory:
+    """Basic in-memory message history storage."""
+
     _history: list[ModelMessage] = []
     _next: "Memory | None" = None
 
@@ -28,12 +30,26 @@ class Memory:
             self._next.set(messages)
 
 
+class NoMemory(Memory):
+    """Memory implementation that does not store any messages."""
+
+    def get(self) -> list:
+        return []
+
+    def set(self, messages: list):
+        pass
+
+
 class MemoryToolsCompression(Memory):
+    """Memory implementation that compresses tool messages."""
+
     def set(self, messages: list[ModelMessage]):
         super().set(_repack_tools_messages(messages))
 
 
 class FileMemory(Memory):
+    """File-based memory implementation."""
+
     def __init__(self, file_path: str):
         self._file_path = file_path
         self._history = self.load_from_file(file_path)
@@ -59,6 +75,7 @@ class FileMemory(Memory):
 
 
 def memory_factory(llm: LLMConfig, file_path: str | None) -> Memory:
+    """Create a Memory instance based on LLMConfig and optional file path."""
     if file_path is not None:
         return (
             MemoryToolsCompression(FileMemory(file_path))

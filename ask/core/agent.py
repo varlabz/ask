@@ -2,21 +2,24 @@
 agent.py
 """
 
+import asyncio
 import inspect
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from textwrap import dedent
 from typing import Final, cast, get_args, get_origin
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from pydantic_ai.usage import RunUsage, UsageLimits
 
 from ask.core.cache import CacheASK
+from ask.core.context import example
 
 from .config import Config, LLMConfig, load_config, load_config_dict
 from .mcp_client import create_mcp_servers
-from .memory import Memory, memory_factory
+from .memory import Memory, NoMemory, memory_factory
 from .model import create_model
 
 
@@ -42,7 +45,7 @@ class AgentStats:
         )
 
 
-class AgentASK[InputT, OutputT]:
+class AgentASK[InputT: BaseModel, OutputT: BaseModel]:
     _agent: Agent[InputT, OutputT]
     _name: str
     _memory: Memory
@@ -54,13 +57,13 @@ class AgentASK[InputT, OutputT]:
 
     def __init__(
         self,
-        agent: Agent[InputT, OutputT],
+        agent: Agent,  # type: ignore. if use llm without tools, InputT and OutputT will be generated with another way
         use_mcp_servers: bool,
         memory: Memory,
         input_type: type[InputT],
         output_type: type[OutputT],
     ):
-        self._agent = agent
+        self._agent = agent  # type: ignore if use llm without tools, InputT and OutputT will be generated with another way
         self._use_mcp_servers = use_mcp_servers
         self._memory = memory
         self._input_type = input_type
@@ -77,10 +80,17 @@ class AgentASK[InputT, OutputT]:
                 return await iter()
         return await iter()
 
+    def _convert_input(self, prompt: InputT) -> str:
+        """Convert the input prompt to the expected type."""
+        if isinstance(prompt, BaseModel):
+            return prompt.model_dump_json()
+        return str(prompt)
+
     async def _agent_run(self, prompt: InputT) -> OutputT:
+        """Run the agent with the given prompt."""
         start_time = time.time()
         ret = await self._agent.run(
-            str(prompt),
+            self._convert_input(prompt),
             deps=prompt,
             usage_limits=UsageLimits(request_limit=100),
             message_history=self._memory.get(),
@@ -133,6 +143,20 @@ class AgentASK[InputT, OutputT]:
         self._cache = cache
         return self
 
+    @staticmethod
+    def _prompt_template(
+        prompt: str, input_type: type[InputT], output_type: type[OutputT]
+    ) -> str:
+        return (
+            f"{prompt}\n\n"
+            "Input schema:\n"
+            f"{input_type.model_json_schema()}\n\n"
+            "Output schema:\n"
+            f"{output_type.model_json_schema()}\n\n"
+            "Must print only in JSON format.\n"
+            "No additional text or explanation.\n"
+        )
+
     @classmethod
     def create_from_config(
         cls, config: Config, memory: Memory | None = None
@@ -142,12 +166,18 @@ class AgentASK[InputT, OutputT]:
         agent = Agent(
             name=config.agent.name,
             model=create_model(llm),
-            system_prompt=config.agent.instructions,
+            system_prompt=config.agent.instructions
+            if config.llm.use_tools
+            else cls._prompt_template(
+                config.agent.instructions,
+                config.agent.input_type,
+                config.agent.output_type,
+            ),
             toolsets=create_mcp_servers(config.mcp),
-            output_type=config.agent.output_type,
+            output_type=config.agent.output_type if config.llm.use_tools else str,
             retries=3,
             instrument=True,
-            deps_type=config.agent.input_type,
+            deps_type=config.agent.input_type if config.llm.use_tools else str,
         )
         return cls(
             agent=agent,
@@ -221,3 +251,101 @@ class AgentASK[InputT, OutputT]:
                 return ret
 
         return FunctionAgentASK(func, input_type=input_type, output_type=output_type)
+
+
+if __name__ == "__main__":
+    from ask.core.config import TraceConfig, load_config
+    from ask.core.instrumentation import setup_instrumentation_config
+
+    setup_instrumentation_config(
+        load_config(["~/.config/ask/trace.yaml"], type=TraceConfig, key="trace"),
+    )
+
+    llm = LLMConfig(
+        model="ollama:gemma3:4b-it-q4_K_M",  # qwen3:1.7b-q4_K_M", #
+        base_url="http://bacook.local:11434/v1/",
+        temperature=0.0,
+        use_tools=False,
+    )
+
+    class AnalysisInput(BaseModel):
+        query: str = Field(..., description="The analysis query or prompt")
+        response: str = Field(..., description="The content to be analyzed")
+
+    class AnalysisOutput(BaseModel):
+        context: str = Field(
+            "Summary of the content",
+            description=(
+                "One sentence summarizing with: "
+                "- Main topic/domain."
+                "- Key arguments/points."
+                "- Intended audience/purpose."
+            ),
+        )
+        keywords: list[str] = Field(
+            ...,
+            description=(
+                "Several specific, distinct keywords that capture key concepts and terminology."
+                "Order from most to least important."
+                "Don't include keywords that are the name of the speaker or time."
+                "At least three keywords, but don't be too redundant."
+            ),
+        )
+        tags: list[str] = Field(
+            ...,
+            description=(
+                "Several broad categories/themes for classification."
+                "Include domain, format, and type tags."
+                "At least three tags, but don't be too redundant."
+            ),
+        )
+
+    def create_analysis_agent(
+        llm: LLMConfig,
+    ) -> AgentASK[AnalysisInput, AnalysisOutput]:
+        return AgentASK[AnalysisInput, AnalysisOutput].create_from_config(
+            load_config_dict(
+                {
+                    "agent": {
+                        "name": "Analysis",
+                        "instructions": dedent(f"""
+                    Generate an analysis of the following content by:
+                    1. Identifying the most salient keywords (focus on nouns, verbs, and key concepts)
+                    2. Extracting core themes and contextual elements
+                    3. Creating relevant categorical tags
+
+                    Output example:
+                    {
+                            example(
+                                AnalysisOutput(
+                                    context="A brief summary of the content.",
+                                    keywords=[
+                                        "keyword1",
+                                        "keyword2",
+                                        "keyword3",
+                                        "keyword4",
+                                    ],
+                                    tags=["tag1", "tag2", "tag3", "tag4", "tag5"],
+                                )
+                            )
+                        }
+                """),
+                        "input_type": AnalysisInput,
+                        "output_type": AnalysisOutput,
+                    },
+                    "llm": llm,
+                }
+            ),
+            NoMemory(),
+        )
+
+    agent = create_analysis_agent(llm)
+    res = asyncio.run(
+        agent.run(
+            AnalysisInput(
+                query="What is the capitol of France?",
+                response="Paris is the capital of France.",
+            )
+        )
+    )
+    print(res)

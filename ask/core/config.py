@@ -78,6 +78,7 @@ class LLMConfig(BaseModel):
         0  # 0 - no history, >0 - keep summary in ~N of words. more means more context
     )
     compress_history: bool = True  # whether to clean up history messages to save tokens
+    use_tools: bool = True  # whether to enable tool use by LLM
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")
 
@@ -104,7 +105,7 @@ class MCPServerConfig(BaseModel):
     """Configuration for an MCP server tool/service."""
 
     enabled: bool = True
-    transport: Literal["stdio", "sse", "streamable-http", "http"] = "stdio"
+    transport: Literal["stdio", "sse", "http"] = "stdio"
     command: list[str] | None = None  # for stdio transport
     url: str | None = None  # for sse and http transports
     tool_prefix: str | None = None
@@ -130,7 +131,7 @@ class MCPServerConfig(BaseModel):
 class ServerConfig(BaseModel):  # for running ask as server
     name: str = "ASK Server"
     instructions: str | None = None
-    transport: Literal["stdio", "sse", "streamable-http"] = "stdio"
+    transport: Literal["stdio", "sse", "http"] = "stdio"
     debug: bool = False
     port: int = 8000
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "ERROR"
@@ -157,6 +158,19 @@ class TraceConfig(BaseModel):  # configuration for Langfuse tracing
         return _resolve_api_key(v)
 
 
+class Config(BaseModel):
+    """Top-level configuration for the agent, LLM, and MCP tools/services."""
+
+    agent: AgentConfig
+    llm: LLMConfig
+    embedder: EmbedderConfig | None = None
+    mcp: dict[str, MCPServerConfig] | None = None
+    server: ServerConfig | None = None
+    trace: TraceConfig | None = None
+    # Forbid unknown fields
+    model_config = ConfigDict(extra="forbid")
+
+
 def _resolve_api_key(v):
     if isinstance(v, str) and v.startswith("env:"):
         env_var = v[4:]
@@ -174,19 +188,6 @@ def _resolve_api_key(v):
         except FileNotFoundError as e:
             raise ValueError(f"File '{file_path}' not found for '{v}'") from e
     return v
-
-
-class Config(BaseModel):
-    """Top-level configuration for the agent, LLM, and MCP tools/services."""
-
-    agent: AgentConfig
-    llm: LLMConfig
-    embedder: EmbedderConfig | None = None
-    mcp: dict[str, MCPServerConfig] | None = None
-    server: ServerConfig | None = None
-    trace: TraceConfig | None = None
-    # Forbid unknown fields
-    model_config = ConfigDict(extra="forbid")
 
 
 def load_config[Type](
