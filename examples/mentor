@@ -35,22 +35,23 @@
 
 import argparse
 import asyncio
+from datetime import date
 import os
 import sys
 from pathlib import Path
 from textwrap import dedent
 from typing import Final
-from pydantic import Field
+from pydantic import BaseModel, Field
 
-from ask import AgentASK, ContextASK
 from ask.core import tchat
+from ask.core.agent import AgentASK
 from ask.core.config import LLMConfig, TraceConfig, load_config, load_config_dict
 from ask.core.instrumentation import setup_instrumentation_config
 from ask.core.memory import memory_factory
 
 llm = load_config(["~/.config/ask/llm.yaml"], type=LLMConfig, key="llm")
-# uncomment to use trace. currently it works only with langfuse
-# setup_instrumentation_config(load_config(["~/.config/ask/trace.yaml"], type=TraceConfig, key="trace"))
+# comment to disable trace. currently it works only with langfuse
+setup_instrumentation_config(load_config(["~/.config/ask/trace.yaml"], type=TraceConfig, key="trace"), )
 
 MENTOR_HISTORY: Final = "~/.config/ask/session/mentor.json"
 history = os.path.expanduser(MENTOR_HISTORY)
@@ -91,7 +92,7 @@ mentor_agent = AgentASK[str, str].create_from_config(cfg:=load_config_dict({
 }), 
 memory_factory(cfg.llm, history))
 
-class MemoryAnalyze(ContextASK):
+class MemoryAnalyze(BaseModel):
     query: str = Field(description="Original user query")
     content: str = Field(description="Mentor response to analyze")
 
@@ -121,12 +122,6 @@ memory_agent = AgentASK[MemoryAnalyze, str].create_from_dict({
             - Extract key insights, recurring themes, emotional cues, and potential growth areas from our exchanges.
             - Identify any patterns in my thinking, behavior, or emotional responses that could inform future mentoring.
             - Keep relevant information to my memory for future reference using memory tool.
-            
-            INPUT 
-            {MemoryAnalyze.to_input()}
-            
-            OUTPUT
-            - A very short confirmation once you have saved the notes to memory.
         """),
         "input_type": MemoryAnalyze,
         "output_type": str,
@@ -154,13 +149,19 @@ async def run_tchat(prompt: str|None):
 async def main():
     """Main function for the mentor CLI."""
     parser = argparse.ArgumentParser(description="Mentor")
+    # fmt: off
     parser.add_argument(
         "-T",
         "--tchat",
         action="store_true",
         help="Start terminal interactive chat mode",
     )
-    parser.add_argument("prompt", nargs="*", help="Prompt for the agent")
+    parser.add_argument(
+        "prompt", 
+        nargs="*", 
+        help="Prompt for the agent"
+    )
+    # fmt: on
     args = parser.parse_args()
 
     # can't use chat and not istty the same time
