@@ -4,17 +4,16 @@ import sys
 from textwrap import dedent
 
 from llm import llm
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from ask.core.agent import AgentASK
-from ask.core.context import ContextASK
 
 
-class Research(ContextASK):
+class Research(BaseModel):
     topic: str = Field(description="The topic of the blog post")
 
 
-class ResearchResult(ContextASK):
+class ResearchResult(BaseModel):
     report: str = Field(description="The research report")
     urls: list[str] = Field(description="List of URLs used in the research")
 
@@ -23,7 +22,7 @@ research_agent = AgentASK[Research, ResearchResult].create_from_dict(
     {
         "agent": {
             "name": "Research",
-            "instructions": dedent(f"""
+            "instructions": dedent("""
                 You are an expert research assistant.
                 Research the topic for a blog post. A well-done research should include:
                 - The basic overview of the topic
@@ -36,9 +35,6 @@ research_agent = AgentASK[Research, ResearchResult].create_from_dict(
                 Use the tools:
                 - Search tool to find relevant URLs in categories web,videos,news,social media with no more than 30 results.
                 - Converter tool to retrieve content from the URLs and other resources.
-
-                Input:
-                {Research.to_input()}
             """),
             "input_type": Research,
             "output_type": ResearchResult,

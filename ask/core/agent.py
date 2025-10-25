@@ -15,7 +15,7 @@ from pydantic_ai import Agent
 from pydantic_ai.usage import RunUsage, UsageLimits
 
 from ask.core.cache import CacheASK
-from ask.core.context import example
+from ask.core.context import example, schema
 
 from .config import Config, LLMConfig, load_config, load_config_dict
 from .mcp_client import create_mcp_servers
@@ -45,7 +45,7 @@ class AgentStats:
         )
 
 
-class AgentASK[InputT: BaseModel, OutputT: BaseModel]:
+class AgentASK[InputT: BaseModel, OutputT: BaseModel | str]:
     _agent: Agent[InputT, OutputT]
     _name: str
     _memory: Memory
@@ -149,10 +149,8 @@ class AgentASK[InputT: BaseModel, OutputT: BaseModel]:
     ) -> str:
         return (
             f"{prompt}\n\n"
-            "Input schema:\n"
-            f"{input_type.model_json_schema()}\n\n"
             "Output schema:\n"
-            f"{output_type.model_json_schema()}\n\n"
+            f"{schema(output_type) if issubclass(output_type, BaseModel) else str(output_type)}\n\n"
             "Must print only in JSON format.\n"
             "No additional text or explanation.\n"
         )
@@ -262,10 +260,10 @@ if __name__ == "__main__":
     )
 
     llm = LLMConfig(
-        model="ollama:gemma3:4b-it-q4_K_M",  # qwen3:1.7b-q4_K_M", #
+        model="ollama:qwen3:1.7b-q4_K_M", #gemma3:4b-it-q4_K_M",  #
         base_url="http://bacook.local:11434/v1/",
         temperature=0.0,
-        use_tools=False,
+        # use_tools=False,
     )
 
     class AnalysisInput(BaseModel):
