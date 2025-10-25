@@ -1,8 +1,9 @@
-import pytest
 import json
+
+import pytest
 from pydantic import BaseModel, ValidationError
 
-from ask.core.context import example, schema, load_string_json
+from ask.core.context import example, load_string_json, schema
 
 
 class SampleModel(BaseModel):
@@ -61,10 +62,10 @@ def test_load_string_json_invalid_json():
 def test_load_string_json_empty_string():
     """Test load_string_json with empty string."""
     with pytest.raises(ValidationError):
-        load_string_json('', SampleModel)
+        load_string_json("", SampleModel)
 
 
 def test_load_string_json_not_json():
     """Test load_string_json with non-JSON string."""
     with pytest.raises(ValidationError):
-        load_string_json('not a json string', SampleModel)
+        load_string_json("not a json string", SampleModel)
