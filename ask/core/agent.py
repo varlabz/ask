@@ -15,7 +15,7 @@ from pydantic_ai import Agent
 from pydantic_ai.usage import RunUsage, UsageLimits
 
 from ask.core.cache import CacheASK
-from ask.core.context import example, schema
+from ask.core.context import example, load_string_json, schema
 
 from .config import Config, LLMConfig, load_config, load_config_dict
 from .mcp_client import create_mcp_servers
@@ -46,7 +46,7 @@ class AgentStats:
 
 
 class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
-    _agent: Agent[InputT, OutputT]
+    _agent: Agent  # input and output types depend on the agent configuration with use_tools config
     _name: str
     _memory: Memory
     _use_mcp_servers: bool
@@ -91,14 +91,18 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
         start_time = time.time()
         ret = await self._agent.run(
             self._convert_input(prompt),
-            deps=prompt,
             usage_limits=UsageLimits(request_limit=100),
             message_history=self._memory.get(),
         )
         end_time = time.time()
         self._memory.set(ret.all_messages())
         self._stat._update_stats(ret.usage(), duration=(end_time - start_time))
-        return ret.output
+        # if agent output type is string but output type is pydantic model, convert it
+        if self._agent.output_type is str and issubclass(self._output_type, BaseModel):
+            return load_string_json(ret.output, self._output_type)
+
+        # otherwise, cast directly
+        return cast(OutputT, ret.output)
 
     def _iter(self, prompt: InputT) -> Callable[[], Awaitable[OutputT]]:
         """Create an async iterator for the agent with the given prompt."""
