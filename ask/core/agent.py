@@ -153,10 +153,10 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
     ) -> str:
         return (
             f"{prompt}\n\n"
-            "Output schema:\n"
-            f"{schema(output_type) if issubclass(output_type, BaseModel) else str(output_type)}\n\n"
             "Must print only in JSON format.\n"
             "No additional text or explanation.\n"
+            "Output schema:\n"
+            f"{schema(output_type) if issubclass(output_type, BaseModel) else ''}\n\n"
         )
 
     @classmethod
