@@ -1,6 +1,7 @@
 import argparse
 import importlib
 import sys
+from pathlib import Path
 from typing import Final
 
 parser = argparse.ArgumentParser(
@@ -31,6 +32,11 @@ parser.add_argument(
     default="test_session",
     help="The session ID for the experiment.",
 )
+parser.add_argument(
+    "-d",
+    "--module-dir",
+    help="Directory containing the experiment modules.",
+)
 # fmt: on
 args = parser.parse_args()
 
@@ -38,6 +44,9 @@ SESSION_ID: Final[str] = args.session_id
 MODEL: Final[str] = args.model
 BASE_URL: Final[str] = args.base_url
 PACKAGES: Final[list[str]] = args.packages
+
+if args.module_dir:
+    sys.path.insert(0, str(Path(args.module_dir).resolve()))
 
 print(
     f">>> model: {MODEL}, base_url: {BASE_URL}, session_id: {SESSION_ID}, packages: {PACKAGES}",

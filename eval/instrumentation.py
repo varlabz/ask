@@ -4,16 +4,12 @@ from pathlib import Path
 from langfuse import Langfuse, get_client
 from pydantic_ai import Agent
 
-from ask.core.config import load_config
-
-
-def _here(filename: str) -> str:
-    return str(Path(__file__).parent / filename)
+from ask.core.config import load_config,TraceConfig
 
 
 def setup_instrumentation() -> Langfuse:
     """Sets up OpenTelemetry instrumentation with Langfuse."""
-    config = load_config([_here(".trace.yaml")]).trace
+    config = load_config(["~/.config/ask/trace-eval.yaml"], type=TraceConfig, key="trace")
     if config is None:
         raise RuntimeError("Trace configuration is missing in .trace.yaml")
 
