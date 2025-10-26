@@ -50,8 +50,8 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
     _name: str
     _memory: Memory
     _use_mcp_servers: bool
-    _cache: CacheASK | None = None
     _stat: AgentStats = AgentStats()
+    _cache: CacheASK | None = None
     _input_type: type[InputT]
     _output_type: type[OutputT]
 
@@ -189,27 +189,34 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
     def create_from_file(
         cls,
         paths: list[str],
+        memory: Memory | None = None,
     ) -> "AgentASK[InputT, OutputT]":
         """Create a PydanticAI Agent from a config file paths."""
         config = load_config(paths)
         return cls.create_from_config(
             config,
+            memory=memory,
         )
 
     @classmethod
     def create_from_dict(
         cls,
         config_dict: dict,
+        memory: Memory | None = None,
     ) -> "AgentASK[InputT, OutputT]":
         """Create a PydanticAI Agent from a config dictionary."""
         config = load_config_dict(config_dict)
         return cls.create_from_config(
             config,
+            memory=memory,
         )
 
     @classmethod
     def create_from_function(
-        cls, name: str, func: Callable[[InputT], Awaitable[OutputT]]
+        cls,
+        name: str,
+        func: Callable[[InputT], Awaitable[OutputT]],
+        memory: Memory | None = None,
     ) -> "AgentASK[InputT, OutputT]":
         sig = inspect.signature(func)
         return_annotation = sig.return_annotation
@@ -228,15 +235,12 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
                 output_type: type[OutputT],
             ):
                 self._func = func
-                self._agent = None  # type: ignore
                 self._name = name
-                self._use_mcp_servers = False
-                self._repack = lambda x: x
-                self._cache = None
                 self._stat = AgentStats()
-                self._history = []
+                self._use_mcp_servers = False
                 self._input_type = input_type
                 self._output_type = output_type
+                self._memory = memory if memory is not None else NoMemory()
 
             async def _agent_run(self, prompt: InputT) -> OutputT:
                 start_time = time.time()
