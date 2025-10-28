@@ -86,6 +86,15 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
             return prompt.model_dump_json()
         return str(prompt)
 
+    def _convert_output(self, output: str) -> OutputT:
+        """Convert the output to the expected type."""
+        # if agent output type is string but output type is pydantic model, convert it
+        if self._agent.output_type is str and issubclass(self._output_type, BaseModel):
+            return load_string_json(output, self._output_type)
+
+        # otherwise, cast directly
+        return cast(OutputT, output)
+
     async def _agent_run(self, prompt: InputT) -> OutputT:
         """Run the agent with the given prompt."""
         start_time = time.time()
@@ -97,12 +106,7 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
         end_time = time.time()
         self._memory.set(ret.all_messages())
         self._stat._update_stats(ret.usage(), duration=(end_time - start_time))
-        # if agent output type is string but output type is pydantic model, convert it
-        if self._agent.output_type is str and issubclass(self._output_type, BaseModel):
-            return load_string_json(ret.output, self._output_type)
-
-        # otherwise, cast directly
-        return cast(OutputT, ret.output)
+        return self._convert_output(ret.output)
 
     def _iter(self, prompt: InputT) -> Callable[[], Awaitable[OutputT]]:
         """Create an async iterator for the agent with the given prompt."""
@@ -118,14 +122,8 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
                         usage = RunUsage()
                         usage.requests = 1  # Simulate one request
                         self._stat._update_stats(usage, duration=0.001)
-                        if isinstance(self._output_type, type) and issubclass(
-                            self._output_type, BaseModel
-                        ):
-                            return cast(
-                                OutputT, self._output_type.model_validate(output)
-                            )
-                        else:
-                            return output
+                        return self._convert_output(output)
+
                     return set_output(await self._agent_run(prompt))
             else:
                 return await self._agent_run(prompt)
