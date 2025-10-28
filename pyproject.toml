@@ -30,7 +30,6 @@ dependencies = [
     "pydantic-ai",
     "mcp[cli]",
     "pyyaml>=6.0",
-    "openai",
     "griffe>=1.7.0",
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.30.0",
@@ -42,6 +41,8 @@ dependencies = [
     "opentelemetry-api",
     "opentelemetry-exporter-otlp",
     "langfuse>=3.6.0",
+    "searxng-mcp",
+    "markitdown",
 ]
 
 [project.urls]
@@ -88,6 +89,10 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "test_*.py" = ["B011"]
+
+[tool.uv.sources]
+searxng-mcp = { git = "https://github.com/varlabz/searxng-mcp" }
+markitdown = { git = "https://github.com/varlabz/markitdown-mhtml.git", subdirectory = "packages/markitdown", rev = "mhtml" }
 
 [dependency-groups]
 dev = [
