@@ -127,6 +127,7 @@ class MCPServerConfig(BaseModel):
                 raise ValueError("env keys and values must be strings")
         return v
 
+
 class ServerConfig(BaseModel):  # for running ask as server
     name: str = "ASK Server"
     instructions: str | None = None
@@ -156,7 +157,9 @@ class TraceConfig(BaseModel):  # configuration for Langfuse tracing
     def resolve_secret_api_key(cls, v):
         return _resolve_api_key(v)
 
+
 ToolConfig = dict[str, Any] | None
+
 
 class Config(BaseModel):
     """Top-level configuration for the agent, LLM, and MCP tools/services."""
