@@ -21,8 +21,6 @@ from .config import Config, LLMConfig, load_config, load_config_dict
 from .mcp_client import create_mcp_servers
 from .memory import Memory, NoMemory, memory_factory
 from .model import create_model
-from .tools import get_tool_by_name
-
 
 @dataclass
 class AgentStats:
@@ -179,7 +177,6 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
             retries=3,
             instrument=True,
             deps_type=config.agent.input_type if config.llm.use_tools else str,
-            tools=[get_tool_by_name(name, cfg) for name, cfg in (config.tools or {}).items()],
         )
         return cls(
             agent=agent,
