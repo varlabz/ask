@@ -11,7 +11,7 @@ def example(model: BaseModel) -> str:
 
 def schema(model: type[BaseModel]) -> dict:
     """Get the json schema for a pydantic model."""
-    return model.model_json_schema()
+    return model.model_json_schema().get("properties", {})
 
 
 def load_string_json[Type: BaseModel](text: str, model: type[Type]) -> Type:
