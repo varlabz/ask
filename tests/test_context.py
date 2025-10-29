@@ -24,9 +24,8 @@ def test_schema_positive():
     """Test schema function with valid model type."""
     result = schema(SampleModel)
     assert isinstance(result, dict)
-    assert "properties" in result
-    assert "name" in result["properties"]
-    assert "age" in result["properties"]
+    assert "name" in result
+    assert "age" in result
 
 
 def test_load_string_json_plain():
