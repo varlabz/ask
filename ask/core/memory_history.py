@@ -244,17 +244,42 @@ class History:
         if days:
             now = now.replace(hour=0, minute=0, second=0, microsecond=0)
             # yesterday is -1, but we want the start of the day after midnight
-            days += 1 # because we want the start of the day after
+            days += 1  # because we want the start of the day after
         if months:
             # last month is -1, but we want the start of the month after midnight
             now = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            months += 1 # because we want the start of the month after
+            months += 1  # because we want the start of the month after
 
         offset = timedelta(
             seconds=seconds, minutes=minutes, hours=hours, days=days + (months * 30)
         )
         result_time = now + offset
         return int(result_time.timestamp())
+
+    def get_time_by_timestamp(self, timestamp: int) -> str:
+        """
+        Convert a Unix timestamp to an ISO 8601 formatted string with timezone.
+
+        Use this tool to:
+        - Convert Unix timestamps to human-readable date/time strings
+        - Display timestamps from history entries in a readable format
+        - Get timezone-aware time representations
+
+        The function automatically detects and uses the local timezone.
+
+        Args:
+            timestamp: Unix timestamp (seconds since Jan 1, 1970 UTC)
+
+        Returns:
+            ISO 8601 formatted string with timezone (e.g., "2025-10-31T14:30:00-07:00")
+
+        Example:
+            history = History()
+            iso_time = history.get_time_by_timestamp(1730400000)
+            print(iso_time)  # "2024-10-31T12:00:00-07:00"
+        """
+        dt = datetime.fromtimestamp(timestamp)
+        return dt.isoformat()
 
 
 if __name__ == "__main__":

@@ -59,7 +59,7 @@ history = History()
 mentor_agent = AgentASK.create_from_dict({
     "agent": {
         "name": "Mentor",
-        "instructions": dedent(f"""
+        "instructions": dedent("""
             You are now my Mentor — a dedicated, insightful, and challenging guide focused on my personal growth across mental clarity, 
             discipline, mindset, career, health, and emotional intelligence.
 
@@ -90,14 +90,17 @@ mentor_agent = AgentASK.create_from_dict({
             - Don't repeat yourself unnecessarily.
             - Don't mention you are an AI model.
             - Don't give any other answers not related to mentoring me for personal growth.
-            
+
             TOOLS:
             - Use history get page tool to get specific pages from history based on timestamp with page size 15.
             - Use timestamp tool to get current date and time.
+            - Use time by timestamp tool to get date and time from a given timestamp in ISO 8601 format.
+
+            ALWAYS use the tools when relevant to get context from history or current time.
         """),
     },
     "llm": llm,
-}, NoMemory(), [history.get_timestamp, history.get_page, history.clear])
+}, NoMemory(), [history.get_timestamp, history.get_time_by_timestamp, history.get_page, history.clear])
 
 async def _main_func(input: str) -> str:
     res = await mentor_agent._iter(input)()
@@ -140,7 +143,7 @@ async def main():
     prompt = " ".join(args.prompt).strip()
     if not prompt and not sys.stdin.isatty():
         prompt = sys.stdin.read().strip()
-        
+
     if args.tchat:
         return await run_tchat(prompt)
 
