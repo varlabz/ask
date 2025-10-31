@@ -44,7 +44,7 @@ class MemoryToolsCompression(Memory):
     """Memory implementation that compresses tool messages."""
 
     def set(self, messages: list[ModelMessage]):
-        super().set(_repack_tools_messages(messages))
+        super().set(_strip_tools_messages(messages))
 
 
 class FileMemory(Memory):
@@ -76,17 +76,20 @@ class FileMemory(Memory):
 
 def memory_factory(llm: LLMConfig, file_path: str | None) -> Memory:
     """Create a Memory instance based on LLMConfig and optional file path."""
-    if file_path is not None:
-        return (
-            MemoryToolsCompression(FileMemory(file_path))
-            if llm.compress_history
-            else Memory(FileMemory(file_path))
-        )
+    return _get_memory_type(llm)(FileMemory(file_path) if file_path else None)
+
+
+def _get_memory_type(llm: LLMConfig) -> type[Memory]:
+    """Get appropriate Memory instance based on LLMConfig."""
+    if llm.compress_history == "none":
+        return Memory
+    elif llm.compress_history == "tools":
+        return MemoryToolsCompression
     else:
-        return MemoryToolsCompression() if llm.compress_history else Memory()
+        return Memory
 
 
-def _repack_tools_messages(messages: list[ModelMessage]) -> list[ModelMessage]:
+def _strip_tools_messages(messages: list[ModelMessage]) -> list[ModelMessage]:
     """
     Remove tool calls and tool responses; keep surrounding conversation intact.
 

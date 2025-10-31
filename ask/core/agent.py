@@ -45,7 +45,10 @@ class AgentStats:
         )
 
 
-class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
+AgentType = BaseModel | str | int | float | list | dict
+
+
+class AgentASK[InputT: AgentType, OutputT: AgentType]:
     _agent: Agent  # input and output types depend on the agent configuration with use_tools config
     _name: str
     _memory: Memory
@@ -84,6 +87,7 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
         """Convert the input prompt to the expected type."""
         if isinstance(prompt, BaseModel):
             return prompt.model_dump_json()
+
         return str(prompt)
 
     def _convert_output(self, output: str) -> OutputT:
@@ -159,7 +163,10 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
 
     @classmethod
     def create_from_config(
-        cls, config: Config, memory: Memory | None = None
+        cls,
+        config: Config,
+        memory: Memory | None = None,
+        tools: list[Callable] | None = None,
     ) -> "AgentASK[InputT, OutputT]":
         """Create a PydanticAI Agent from a Config instance."""
         llm: Final[LLMConfig] = config.llm
@@ -178,6 +185,7 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
             retries=3,
             instrument=True,
             deps_type=config.agent.input_type if config.llm.use_tools else str,
+            tools=tools or [],
         )
         return cls(
             agent=agent,
@@ -192,12 +200,14 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
         cls,
         paths: list[str],
         memory: Memory | None = None,
+        tools: list[Callable] | None = None,
     ) -> "AgentASK[InputT, OutputT]":
         """Create a PydanticAI Agent from a config file paths."""
         config = load_config(paths)
         return cls.create_from_config(
             config,
             memory=memory,
+            tools=tools,
         )
 
     @classmethod
@@ -205,12 +215,14 @@ class AgentASK[InputT: BaseModel | str, OutputT: BaseModel | str]:
         cls,
         config_dict: dict,
         memory: Memory | None = None,
+        tools: list[Callable] | None = None,
     ) -> "AgentASK[InputT, OutputT]":
         """Create a PydanticAI Agent from a config dictionary."""
         config = load_config_dict(config_dict)
         return cls.create_from_config(
             config,
             memory=memory,
+            tools=tools,
         )
 
     @classmethod

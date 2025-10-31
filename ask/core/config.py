@@ -77,7 +77,9 @@ class LLMConfig(BaseModel):
     max_history: int = (
         0  # 0 - no history, >0 - keep summary in ~N of words. more means more context
     )
-    compress_history: bool = True  # whether to clean up history messages to save tokens
+    compress_history: Literal["none", "tools", "history"] = (
+        "tools"  # whether to clean up history messages to save tokens
+    )
     use_tools: bool = True  # whether to enable tool use by LLM
     # Forbid unknown fields
     model_config = ConfigDict(extra="forbid")

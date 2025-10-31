@@ -35,7 +35,7 @@
 
 import argparse
 import asyncio
-from datetime import date
+from datetime import date, datetime, timedelta
 import os
 import sys
 from pathlib import Path
@@ -47,21 +47,21 @@ from ask.core import tchat
 from ask.core.agent import AgentASK
 from ask.core.config import LLMConfig, TraceConfig, load_config, load_config_dict
 from ask.core.instrumentation import setup_instrumentation_config
-from ask.core.memory import memory_factory
+from ask.core.memory import NoMemory
+from ask.core.memory_history import History
 
-llm = load_config(["~/.config/ask/llm.yaml"], type=LLMConfig, key="llm")
+llm = load_config(["~/.config/ask/llm-ollama.yaml"], type=LLMConfig, key="llm")
 # comment to disable trace. currently it works only with langfuse
 setup_instrumentation_config(load_config(["~/.config/ask/trace.yaml"], type=TraceConfig, key="trace"), )
 
-MENTOR_HISTORY: Final = "~/.config/ask/session/mentor.json"
-history = os.path.expanduser(MENTOR_HISTORY)
-os.makedirs(os.path.dirname(history), exist_ok=True)
+history = History()
 
-mentor_agent = AgentASK[str, str].create_from_config(cfg:=load_config_dict({
+mentor_agent = AgentASK.create_from_dict({
     "agent": {
         "name": "Mentor",
         "instructions": dedent(f"""
-            You are now my Mentor AI — a dedicated, insightful, and challenging guide focused on my personal growth across mental clarity, discipline, mindset, career, health, and emotional intelligence.
+            You are now my Mentor — a dedicated, insightful, and challenging guide focused on my personal growth across mental clarity, 
+            discipline, mindset, career, health, and emotional intelligence.
 
             Your core mission is to help me think better, act more consistently, and grow intentionally over time.
 
@@ -85,54 +85,23 @@ mentor_agent = AgentASK[str, str].create_from_config(cfg:=load_config_dict({
             - Clear, concise, human-sounding.
             - Use structure when helpful (e.g., lists, pros and cons, reflections).
             - Occasionally reframe things to challenge limiting beliefs or blind spots.
-           
+            - Always end with a question to keep me engaged and thinking.
+            - Give practical, actionable advice I can implement immediately.
+            - Don't repeat yourself unnecessarily.
+            - Don't mention you are an AI model.
+            - Don't give any other answers not related to mentoring me for personal growth.
+            
+            TOOLS:
+            - Use history get page tool to get specific pages from history based on timestamp with page size 15.
+            - Use timestamp tool to get current date and time.
         """),
     },
     "llm": llm,
-}), 
-memory_factory(cfg.llm, history))
-
-class MemoryAnalyze(BaseModel):
-    query: str = Field(description="Original user query")
-    content: str = Field(description="Mentor response to analyze")
-
-memory_agent = AgentASK[MemoryAnalyze, str].create_from_dict({
-    "agent": {
-        "name": "Memory",
-        "instructions": dedent(f"""
-            You are now my Mentor AI — a dedicated, insightful, and challenging guide focused on my personal growth across mental clarity, 
-            discipline, mindset, career, health, and emotional intelligence.
-
-            Your core mission is to help me think better, act more consistently, and grow intentionally over time.
-
-            ROLE & PERSONALITY
-            - Act like a cross between a trusted executive coach, a rational Stoic, and a compassionate psychologist.
-            - Prioritize truth, clarity, and growth over comfort or flattery.
-            - Hold me accountable when I drift or make excuses.
-            - Be direct when needed, supportive when I’m struggling, and always growth-oriented.
-
-            CONTEXT TO REMEMBER
-            - I value deep thinking, strategic action, and sustainable self-improvement.
-            - My key goals.
-            - My core challenges right now.
-
-            TOOLS
-            - Analyze and summarize the conversation between me and you.
-            - Skip chit-chat, irrelevant or off-topic exchanges.
-            - Extract key insights, recurring themes, emotional cues, and potential growth areas from our exchanges.
-            - Identify any patterns in my thinking, behavior, or emotional responses that could inform future mentoring.
-            - Keep relevant information to my memory for future reference using memory tool.
-        """),
-        "input_type": MemoryAnalyze,
-        "output_type": str,
-    },
-    "llm": llm,
-})
+}, NoMemory(), [history.get_timestamp, history.get_page, history.clear])
 
 async def _main_func(input: str) -> str:
     res = await mentor_agent._iter(input)()
-    # res_mem = await memory_agent._iter(MemoryAnalyze(query=input, content=res))()
-    # print(f"mem: {res_mem}", file=sys.stderr)
+    history.add_history(input, res)
     return res
 
 main_agent = AgentASK[str, str].create_from_function("Main", _main_func)
@@ -140,9 +109,7 @@ main_agent = AgentASK[str, str].create_from_function("Main", _main_func)
 async def run_tchat(prompt: str|None):
     return await main_agent.run_iter(lambda: 
         mentor_agent.run_iter(lambda: 
-            memory_agent.run_iter(lambda: 
-                tchat.chat(main_agent, prompt if prompt else None)
-            )
+            tchat.chat(main_agent, prompt if prompt else None)
         )
     )
 
