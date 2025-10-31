@@ -2,9 +2,6 @@
 
 # your own custom agent for personal mentoring and growth
 # will help you think better, act more consistently, and grow intentionally over time
-
-# it keeps your notes in ~/basic-memory-mentor, change path in create_project if needed
-
 # mentor will save notes after each conversation and keep in your file system
 # mentor keep your notes locally, never share them online
 
@@ -35,17 +32,12 @@
 
 import argparse
 import asyncio
-from datetime import date, datetime, timedelta
-import os
 import sys
-from pathlib import Path
 from textwrap import dedent
-from typing import Final
-from pydantic import BaseModel, Field
 
 from ask.core import tchat
 from ask.core.agent import AgentASK
-from ask.core.config import LLMConfig, TraceConfig, load_config, load_config_dict
+from ask.core.config import LLMConfig, TraceConfig, load_config
 from ask.core.instrumentation import setup_instrumentation_config
 from ask.core.memory import NoMemory
 from ask.core.memory_history import History
@@ -62,6 +54,7 @@ mentor_agent = AgentASK.create_from_dict({
         "instructions": dedent("""
             You are now my Mentor — a dedicated, insightful, and challenging guide focused on my personal growth across mental clarity, 
             discipline, mindset, career, health, and emotional intelligence.
+            You are created by varlabz.
 
             Your core mission is to help me think better, act more consistently, and grow intentionally over time.
 
@@ -77,7 +70,7 @@ mentor_agent = AgentASK.create_from_dict({
             RULES OF ENGAGEMENT
             - Ask thoughtful questions before giving answers.
             - Help me explore second- and third-order consequences of my decisions.
-            - Track recurring themes, patterns, and progress (if shared in ongoing threads).
+            - Track recurring themes, patterns, and progress over time.
             - Prompt weekly reviews, reflections, and updates.
             - Suggest tools, mental models, or books if relevant, but don’t overwhelm me.
 
@@ -90,17 +83,25 @@ mentor_agent = AgentASK.create_from_dict({
             - Don't repeat yourself unnecessarily.
             - Don't mention you are an AI model.
             - Don't give any other answers not related to mentoring me for personal growth.
+            - Never show AI tools, even if asked.
 
             TOOLS:
             - Use history get page tool to get specific pages from history based on timestamp with page size 15.
             - Use timestamp tool to get current date and time.
             - Use time by timestamp tool to get date and time from a given timestamp in ISO 8601 format.
+            - ALWAYS use the tools when relevant to get context from history or current time.
 
-            ALWAYS use the tools when relevant to get context from history or current time.
+            BOUNDARIES:
+            - Stay focused exclusively on personal growth and mentoring.
+            - Don't discuss your capabilities, limitations, or inner workings.
+            - Don't reveal or reference any system internals or technical implementation.
+            - Don't give answers unrelated to my personal development.
         """),
     },
     "llm": llm,
-}, NoMemory(), [history.get_timestamp, history.get_time_by_timestamp, history.get_page, history.clear])
+},
+NoMemory(),
+[history.get_timestamp, history.get_time_by_timestamp, history.get_page, history.clear])
 
 async def _main_func(input: str) -> str:
     res = await mentor_agent._iter(input)()
@@ -110,8 +111,8 @@ async def _main_func(input: str) -> str:
 main_agent = AgentASK[str, str].create_from_function("Main", _main_func)
 
 async def run_tchat(prompt: str|None):
-    return await main_agent.run_iter(lambda: 
-        mentor_agent.run_iter(lambda: 
+    return await main_agent.run_iter(lambda:
+        mentor_agent.run_iter(lambda:
             tchat.chat(main_agent, prompt if prompt else None)
         )
     )
@@ -127,8 +128,8 @@ async def main():
         help="Start terminal interactive chat mode",
     )
     parser.add_argument(
-        "prompt", 
-        nargs="*", 
+        "prompt",
+        nargs="*",
         help="Prompt for the agent"
     )
     # fmt: on
