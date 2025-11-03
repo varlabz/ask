@@ -41,6 +41,9 @@ dependencies = [
     "opentelemetry-api",
     "opentelemetry-exporter-otlp",
     "langfuse>=3.6.0",
+    "markitdown",
+    "duckduckgo",
+    "searxng-mcp",
 ]
 
 [project.urls]
@@ -87,6 +90,11 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "test_*.py" = ["B011"]
+
+[tool.uv.sources]
+markitdown = { git = "https://github.com/varlabz/markitdown-mhtml.git", subdirectory = "packages/markitdown", rev = "mhtml" }
+duckduckgo = { git = "https://github.com/varlabz/duckduckgo-mcp" }
+searxng-mcp = { git = "https://github.com/varlabz/searxng-mcp" }
 
 [dependency-groups]
 dev = [
