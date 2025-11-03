@@ -174,7 +174,10 @@ class AgentASK[InputT: AgentType, OutputT: AgentType]:
             raise ValueError("Cannot provide both tools and config.tools")
 
         if config.tools is not None:
-            tools = [get_tool_by_name(name, cfg) for name, cfg in (config.tools or {}).items()]
+            tools = [
+                get_tool_by_name(name, cfg)
+                for name, cfg in (config.tools or {}).items()
+            ]
 
         llm: Final[LLMConfig] = config.llm
         agent = Agent(

@@ -14,10 +14,13 @@ def create_searx_tool(**kwargs) -> Callable:
 
 def create_search_tool(**kwargs) -> Callable:
     from duckduckgo.mcp import search_tool
+
     return search_tool
+
 
 def create_convert_tool(**kwargs) -> Callable:
     from markitdown import MarkItDown
+
     async def convert_to_markdown(uri: str) -> str:
         """Convert a resource described by an http:, https:, file: or data: URI to markdown"""
         return MarkItDown(enable_plugins=True).convert_uri(uri).markdown
