@@ -1,0 +1,320 @@
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-run
+
+# Orchestrator Agent for Multi-Agent Workflow Design
+# This agent takes a complex user task and breaks it down into a series of simpler, atomic
+# tasks that can be delegated to specialized agents. Each agent is designed to perform
+# a single function, ensuring clarity and efficiency in task execution.
+# Strictly speaking, the LLM for the orchestrator is not the same as for the agents.
+
+
+import sys
+from pathlib import Path
+from textwrap import dedent
+
+import yaml
+from pydantic import BaseModel, Field
+
+from ask.core.agent import AgentASK
+from ask.core.cache import CacheASK, CacheStoreJson
+from ask.core.config import LLMConfig, TraceConfig, load_config
+from ask.core.context import schema
+from ask.core.instrumentation import setup_instrumentation_config
+from ask.core.memory import Memory
+
+llm = load_config(["~/.config/ask/llm-ollama-orchestrator.yaml"], type=LLMConfig, key="llm")
+llm_agent = load_config(["~/.config/ask/llm-ollama.yaml"], type=LLMConfig, key="llm")
+# llm = load_config(["~/.config/ask/llm-lmstudio-orchestrator.yaml"], type=LLMConfig, key="llm")
+# llm_agent = load_config(["~/.config/ask/llm-lmstudio.yaml"], type=LLMConfig, key="llm")
+# comment to disable trace. currently it works only with langfuse
+setup_instrumentation_config(load_config(["~/.config/ask/trace.yaml"], type=TraceConfig, key="trace"), )
+
+# setup yaml formatter for long strings
+def str_representer(dumper, data):
+    if len(data.splitlines()) > 1 or len(data) > 80:  # Use literal style for multiline or long strings
+        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+yaml.add_representer(str, str_representer)
+
+# Define available tools and MCP configurations
+TOOLS_TO_MCP = {
+    "search": {
+        "description": "For looking up current information on the web.",
+        "mcp": {
+            # "search": {
+            #     "command": [
+            #         "uvx",
+            #         "--from",
+            #         "git+https://github.com/varlabz/duckduckgo-mcp",
+            #         "duckduckgo-mcp",
+            #     ]
+            # },
+            "search": {
+                "command": [
+                    "uvx",
+                    "--from",
+                    "git+https://github.com/varlabz/searxng-mcp",
+                    "mcp-server",
+                ],
+                "env": {"SEARX_HOST": "http://macook.local:8080"},
+            },
+        }
+    },
+    "convert": {
+        "description": "For reading various file formats (e.g., read PDF, fetch html page, etc).",
+        "mcp": {
+            "reader": {
+                "command": [
+                    "uvx",
+                    "--from",
+                    "git+https://github.com/varlabz/markitdown-mhtml.git@mhtml#subdirectory=packages/markitdown-mcp",
+                    "markitdown-mcp",
+                ],
+                "env": {
+                    "MARKITDOWN_ENABLE_PLUGINS": "true",
+                },
+            },
+            "youtube": {
+                "command": ["npx", "-y", "https://github.com/varlabz/youtube-mcp", "--mcp"],
+            },
+        },
+    },
+    "file_system": {
+        "description": "For file/directory management on the local file system. Must be used only if they are required for the task explicitly.",
+        "mcp": {
+            "file_system": {
+                "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."],
+            },
+        },
+    },
+    "sequential_thinking": {
+        "description": "For breaking down complex tasks into sequential steps.",
+        "mcp": {
+            "sequential_thinking": {
+                "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+                "env": {"DISABLE_THOUGHT_LOGGING": "true"},
+            },
+        },
+    },
+}
+
+class OrchestratorInput(BaseModel):
+    task: str = Field(description="User task or problem to solve.")
+
+class OrchestratorOutput(BaseModel):
+    name: str = Field(description="Name of the agent/task.")
+    instructions: str = Field(description="Instructions for the agent.")
+    tools: list[str] = Field(..., description="List of tools required by the agent.")
+
+def get_orchestrator_agent(skills: str): return AgentASK[OrchestratorInput, list[OrchestratorOutput]].create_from_dict({
+    "agent": {
+        "name": "Orchestrator",
+        "instructions": dedent(f"""
+            # **Role and Mission**
+            You are the **Orchestrator Agent**, a master planner and project manager for a team of specialized AI agents.
+            Your sole mission is to take a user's complex task and devise a perfect execution plan by delegating specific,
+            simple sub-tasks to a team of agents.
+            You do not execute the tasks yourself; you create the blueprint for success.
+
+            # **Core Responsibilities**
+            Your process must follow these three steps:
+            1.  **Understand and Deconstruct:** Analyze the user's request to its core. Identify the main goal, all constraints, requirements, and the desired final output.
+            2.  **Formulate an Agent Plan:** Break down the main task into a sequence of smaller, independent steps.
+                For each step, you will define a single-purpose agent.
+                **Crucially, each agent's task must be atomic, simple, and clean.** An agent should do one thing and do it well.
+            3.  **Define the Final Synthesis:** Plan how the outputs from each agent will be combined to produce the final, comprehensive answer for the user. Your plan must include a final, dedicated synthesis agent whose sole job is to deliver the user-ready response.
+
+            # **Guiding Principles**
+            *   **Atomicity:** Each agent's task should be focused on a single, well-defined objective.
+                Avoid tasks that require an agent to "do a little research and then write a summary."
+                Instead, create a `ResearcherAgent` and a `SummarizerAgent`, etc.
+            *   **Clarity:** The task description for each agent must be unambiguous.
+                A junior agent should be able to read the task and know exactly what to do without asking for clarification.
+            *   **Dependency Management:** Clearly define the input for each agent.
+                If `Agent B` needs the output from `Agent A`, state it explicitly. This creates a clear execution flow.
+            *   **Execution Order:** List agents in the exact sequence they must run so that each agent receives the output it expects from the previous one.
+            *   **Completeness:** The team of agents, when their tasks are combined, must fully and completely solve the user's original request.
+            *   **Instructiveness:** Write instructions that empower the agents to succeed.
+                Provide details, context, and examples to guide them effectively.
+            *   **Skills utilization:** Ensure that the skills required for each agent are clearly defined and aligned with their tasks.
+            *   **Original Task Focus:** Always keep the user's original task at the forefront of your planning and pass it to every agent only what is necessary to achieve that task.
+                Don't loose focus by adding irrelevant details.
+
+            # **Instruction Template for Each Agent**
+            For every agent you create, write its `instructions` using this structure:
+            1. **Goal** — 1–2 sentences describing the single, atomic outcome this agent must achieve.
+            2. **Inputs** — Bullet list of required inputs and where they come from (user or prior agents).
+            3. **Steps** — Numbered, concrete actions the agent must perform to reach the goal.
+            4. **Tool Plan** — Which tools from the allowed list to use and how; if none are needed, state "No tools".
+            5. **Constraints** — Boundaries, assumptions, and things to avoid (e.g., do not fabricate sources, stay within scope).
+            6. **Edge Cases** — 2–4 likely pitfalls and how to handle them.
+            7. **Success Criteria** — What constitutes a correct, complete result for this agent.
+            8. **Output Format** — Exact format the agent must produce (e.g., Markdown sections, JSON shape, or a concise paragraph).
+
+            # **Skills to use**
+            {skills}
+
+            # **Tools**
+            The agents can use the following tools to accomplish their tasks:
+            {'\n'.join([f"- `{tool}`: {info['description']}" for tool, info in TOOLS_TO_MCP.items()])}
+            - Only these tools are available. Use the smallest sufficient set per agent.
+
+            # **Output Format**
+            Create a pure JSON list of agents in execution order from first to last.
+            Don't add any extra text outside the JSON structure.
+            No extra markdown code formatting.
+            Each agent must be represented as an object with the following fields:
+            -   `name`: A concise, descriptive name for the agent/task.
+            -   `instructions`: Clear, detailed instructions for what the agent must do.
+            -   `tools`: A list of tools that the agent will need to accomplish its task.
+            -   Ensure the final agent in the list produces the complete response for the user using the accumulated context from prior agents.
+            -   Prefer 3–10 agents in total; keep the plan as small as possible while remaining complete.
+            -   The final agent should be a dedicated synthesis/finishing agent and must not introduce new tools.
+
+            # **Input**
+            {schema(OrchestratorInput)}
+        """),
+        "input_type": OrchestratorInput,
+        "output_type": list[OrchestratorOutput],
+    },
+    "llm": llm,
+}, Memory())
+
+class ReviewerInput(BaseModel):
+    task: str = Field(description="User task or problem to solve.")
+    name: str = Field(description="Name of the agent/task.")
+    instructions: str = Field(description="Instructions for the agent.")
+
+class ReviewerOutput(BaseModel):
+    analysis: str = Field(description="Critical analysis of the original instructions, identifying strengths, weaknesses, and areas for improvement.")
+    instructions: str = Field(description="Improved version of the agent instructions that better align with the goal.")
+    rationale: str = Field(description="Explanation of the changes made and why they improve the instructions.")
+    rate: int = Field(description="Confidence level of the final instructions from 1-10.")
+
+def get_reviewer_agent() -> AgentASK[ReviewerInput, ReviewerOutput]:
+    return AgentASK[ReviewerInput, ReviewerOutput].create_from_dict({
+        "agent": {
+            "name": "Reviewer",
+            "instructions": dedent(f"""
+                # **Role and Mission**
+                You are the **Reviewer Agent**, an expert editor for agent instructions.
+                Your mission is to diagnose weaknesses and deliver a stronger, more actionable rewrite that is precisely aligned to the stated goal.
+
+                # **Review Workflow**
+                Follow this sequence strictly:
+                1. **Understand the Goal** — Restate the agent's intended outcome in one sentence to lock scope.
+                2. **Evaluate the Instructions** — Audit against the checklist below:
+                   - Clarity (no ambiguity; concrete verbs)
+                   - Alignment (each section directly drives the goal)
+                   - Actionability (step-by-step guidance, decision rules)
+                   - Completeness (inputs, constraints, edge cases, success criteria)
+                   - Structure (logical sections, skimmable)
+                   - Output format (explicit and testable)
+                3. **Identify Improvements** — Pinpoint gaps, risks, or bloat and propose targeted fixes.
+                4. **Rewrite** — Produce a clean, structured set of instructions using the required template below.
+
+                # **Required Template for Improved Instructions**
+                Rewrite the instructions using these headings exactly and keep them concise but complete:
+                - **Goal** — 1–2 sentences.
+                - **Inputs** — Bullet list with sources (user or prior agents).
+                - **Steps** — Numbered, specific actions; include decision rules where relevant.
+                - **Tool Plan** — Which tools (if any) and how they are used; say "No tools" if none.
+                - **Constraints** — Boundaries, assumptions, and things to avoid.
+                - **Edge Cases** — 2–4 likely pitfalls and handling strategies.
+                - **Success Criteria** — What a correct result looks like.
+                - **Output Format** — Exact required format (Markdown/JSON/paragraph).
+
+                # **Evaluation Criteria**
+                - Goal alignment, clarity, actionability, completeness, structure, edge-case coverage, and explicit output format.
+
+                # **Tools**
+                The agent can use the following tools to accomplish their tasks:
+                {'\n'.join([f"- `{tool}`: {info['description']}" for tool, info in TOOLS_TO_MCP.items()])}
+                - Only these tools are available. Use the smallest sufficient set per agent.
+
+                # **Output Requirements**
+                Provide:
+                1. **Analysis** — Specific strengths, weaknesses, and risks.
+                2. **Improved Instructions** — The full rewrite using the template above.
+                3. **Rationale** — Brief explanation of major changes and their benefits.
+                4. **Rate** — Integer 1–10 reflecting confidence in the improved instructions.
+
+                # **Input Format**
+                You will receive a goal and instructions to review.
+            """),
+            "input_type": ReviewerInput,
+            "output_type": ReviewerOutput,
+        },
+        "llm": llm,
+    }, Memory())
+
+async def review(task: str, res: list[OrchestratorOutput], file_agent: str | None) -> None:
+    # review agents and improve instructions
+    for i, r in enumerate(res):
+        reviewer_agent = get_reviewer_agent()
+        review = await reviewer_agent.run(ReviewerInput(
+            task=task,
+            name=r.name,
+            instructions=r.instructions,
+        ))
+        print(f"--- Agent {i+1}: {r.name} Review ---", file=sys.stderr)
+        print(f"Analysis:\n{review.analysis}\n", file=sys.stderr)
+        print(f"Rationale:\n{review.rationale}\n", file=sys.stderr)
+        print(f"Rate: {review.rate}\n", file=sys.stderr)
+        r.instructions = review.instructions
+    if file_agent:
+        with open(file_agent, 'w') as f:
+            yaml.dump(res, f, default_flow_style=False, sort_keys=False, allow_unicode=True, width=100, indent=2)
+        print(f"saved to {file_agent}", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    async def main():
+        import argparse
+
+        parser = argparse.ArgumentParser(description="Orchestrator Agent for Multi-Agent Workflow Design")
+        parser.add_argument("-a","--agent", type=str, help="Agent file path to save result in YAML format.")
+        parser.add_argument("-s", "--skills", type=str, help="A file containing skills required by each agent. Can use as 'n:filename' to skip the first n lines.")
+        parser.add_argument("task", nargs="*", help="Task for the agent")
+        args = parser.parse_args()
+        args.task = " ".join(args.task)
+
+        skills = ""
+        if args.skills:
+            # if the skills argument contains a colon, split by ':'
+            if ':' in args.skills:
+                n, skills_files = args.skills.split(':')
+                n = int(n)
+            else:
+                skills_files = args.skills
+                n = 1
+            lines = Path(skills_files).read_text().splitlines()
+            skills = "\n".join(lines[n:]) if len(lines) > 1 else ""
+        orchestrator_agent = get_orchestrator_agent(skills)
+        res = await orchestrator_agent.run(OrchestratorInput(task=args.task))
+        res = [{
+                "agent": {
+                    "name": item.name,
+                    "instructions": item.instructions,
+                },
+                "mcp": {k: v for tool in item.tools for k, v in TOOLS_TO_MCP[tool]["mcp"].items()},
+            } for item in res]
+        if args.agent:
+            with open(args.agent, 'w') as f:
+                yaml.dump(res, f, default_flow_style=False, sort_keys=False, allow_unicode=True, width=100, indent=2)
+            print(f"saved to {args.agent}", file=sys.stderr)
+        # agent execution
+        agents = [AgentASK.create_from_dict({**r, "llm": llm_agent}) for r in res]
+        async def _main_func(input: str) -> str:
+            cache = CacheASK(CacheStoreJson(path=".oxi-cache.json"))
+            for agent in agents:
+                print(f">>> {agent._agent.name}", file=sys.stderr)
+                input = await agent.cache(cache).run(input)
+            cache.clean()
+            return input
+
+        result = await _main_func(args.task)
+        print(result)
+
+    asyncio.run(main())

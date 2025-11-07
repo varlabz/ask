@@ -1,0 +1,25 @@
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-run ./examples/oxi --skills
+
+## Research the topic for a blog post. A well-done research should include:
+- The basic overview of the topic
+- Historical perspective, if applicable
+- Current opinions on the topic, if applicable
+- Any controversies that might be surrounding the topic
+- Any future developments around the topic
+- Collect list of URLs used in the research
+- Search for recent information (within last 2 years) only in different blogs, news,articles, and research papers.
+
+## The outline will weave together the following details:
+- The basic overview of the topic
+- Historical perspective, if applicable
+- Current opinions on the topic, if applicable
+- Any controversies that might be surrounding the topic
+- Any future developments around the topic
+- Keep track of original topics and subtopics to ensure all are covered in the outline.
+
+## Produce a blog post using the research report and the blog post outline.
+- Keep track of original topics and subtopics to ensure all are covered in the outline.
+- The blog post will follow the outline and further enrich it with relevant details from the research report.
+- The blog post writing style should come across as musings of an intellectual who is trying to examine the topic from various angles.
+- Add as much details as possible.
+- Add links of the URLs in the body of the blog post where relevant.

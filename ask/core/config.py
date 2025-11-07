@@ -1,6 +1,5 @@
 import builtins
 import os
-import typing
 from enum import Enum
 from typing import Any, Literal
 
@@ -9,9 +8,10 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     ValidationError,
-    field_serializer,
     field_validator,
 )
+
+AgentType = BaseModel | str | int | float | list | dict
 
 
 class ProviderEnum(str, Enum):
@@ -39,7 +39,7 @@ class AgentConfig(BaseModel):
 
     @field_validator("output_type", mode="before")
     @classmethod
-    def convert_output_type(cls, v: Any) -> type:
+    def convert_output_type(cls, v: Any) -> Any:
         """Convert string type descriptions to Python types."""
         if v is None:
             return str
@@ -49,7 +49,6 @@ class AgentConfig(BaseModel):
             return v
 
         safe_namespace = {
-            **{name: getattr(typing, name) for name in typing.__all__},
             **{name: getattr(builtins, name) for name in dir(builtins)},
         }
         try:
@@ -57,12 +56,38 @@ class AgentConfig(BaseModel):
         except (NameError, SyntaxError) as e:
             raise ValueError(f"Unknown or invalid type string: {v}") from e
 
-    @field_serializer("output_type")
-    def serialize_output_type(self, value: type) -> str:
-        """Serialize the output_type to a string for JSON compatibility."""
-        if hasattr(value, "__name__"):
-            return value.__name__
-        return str(value)
+    # @field_serializer("output_type")
+    # def serialize_output_type(self, value: type) -> str:
+    #     """Serialize the output_type to a string for JSON compatibility."""
+    #     if hasattr(value, "__name__"):
+    #         return value.__name__
+    #     return str(value)
+
+    @field_validator("input_type", mode="before")
+    @classmethod
+    def convert_input_type(cls, v: Any) -> Any:
+        """Convert string type descriptions to Python types."""
+        if v is None:
+            return str
+        if isinstance(v, type) or hasattr(v, "__origin__"):
+            return v
+        if not isinstance(v, str):
+            return v
+
+        safe_namespace = {
+            **{name: getattr(builtins, name) for name in dir(builtins)},
+        }
+        try:
+            return eval(v, {"__builtins__": {}}, safe_namespace)
+        except (NameError, SyntaxError) as e:
+            raise ValueError(f"Unknown or invalid type string: {v}") from e
+
+    # @field_serializer("input_type")
+    # def serialize_input_type(self, value: type) -> str:
+    #     """Serialize the input_type to a string for JSON compatibility."""
+    #     if hasattr(value, "__name__"):
+    #         return value.__name__
+    #     return str(value)
 
 
 class LLMConfig(BaseModel):
@@ -74,6 +99,7 @@ class LLMConfig(BaseModel):
     temperature: float | None = None  # 0.0 to 1.0
     max_tokens: int | None = None  # max tokens for response
     timeout: float | None = None  # in seconds
+    thinking_tags: tuple[str, str] | None = None  # e.g., ("<think>", "</think>")
     max_history: int = (
         0  # 0 - no history, >0 - keep summary in ~N of words. more means more context
     )
@@ -160,16 +186,12 @@ class TraceConfig(BaseModel):  # configuration for Langfuse tracing
         return _resolve_api_key(v)
 
 
-ToolConfig = dict[str, Any] | None
-
-
 class Config(BaseModel):
     """Top-level configuration for the agent, LLM, and MCP tools/services."""
 
     agent: AgentConfig
     llm: LLMConfig
     embedder: EmbedderConfig | None = None
-    tools: dict[str, ToolConfig] | None = None  # list of predefined tools
     mcp: dict[str, MCPServerConfig] | None = None
     server: ServerConfig | None = None
     trace: TraceConfig | None = None

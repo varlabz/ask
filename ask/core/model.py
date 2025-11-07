@@ -1,3 +1,4 @@
+from pydantic_ai import ModelProfile
 from pydantic_ai.models import Model
 from pydantic_ai.settings import ModelSettings
 
@@ -73,6 +74,12 @@ def _create_openai_compatible_model(
     from pydantic_ai.providers.openai import OpenAIProvider
     from pydantic_ai.providers.openrouter import OpenRouterProvider
 
+    profile = None
+    if llm_config.thinking_tags is not None:
+        profile = ModelProfile(
+            thinking_tags=(llm_config.thinking_tags[0], llm_config.thinking_tags[1])
+        )
+
     if provider_name == ProviderEnum.OLLAMA.value:
         provider = OpenAIProvider(
             base_url=llm_config.base_url or "http://localhost:11434/v1"
@@ -91,5 +98,8 @@ def _create_openai_compatible_model(
         raise ValueError(f"Unsupported OpenAI-compatible provider: {provider_name}")
 
     return OpenAIChatModel(
-        model_name, provider=provider, settings=_model_settings(llm_config)
+        model_name,
+        provider=provider,
+        profile=profile,
+        settings=_model_settings(llm_config),
     )

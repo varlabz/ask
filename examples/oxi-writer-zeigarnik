@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+exec uvx --from git+https://github.com/varlabz/ask ask-run "$(dirname $0)/oxi" --skills 3:$0 "$@" 
+exit 0
+
+- **Topic Selection and Research (Foundation Skill)**  
+  Identify a compelling, audience-relevant topic by brainstorming ideas, analyzing trends, and conducting initial research (e.g., via keyword tools or surveys). Dive deep into sources like books, articles, and data to gather facts, quotes, and insights.  
+  *Zeigarnik Tip for Engagement*: End your research phase with an "open question" in your outline—e.g., "What if this trend reverses?"—to create mental tension that propels you (and later, readers) into writing without resolution yet.
+
+- **Outlining and Structuring (Planning Skill)**  
+  Create a clear blueprint: Define your thesis, break the article into sections (introduction, body, conclusion), and map key points with subheadings. Use tools like mind maps or bullet-point hierarchies to ensure logical flow.  
+  *Zeigarnik Tip for Engagement*: Leave one section outline intentionally "incomplete" during drafting—e.g., jot a teaser note like "Explore counterarguments here [TBD]"—to mimic interruption and motivate you to fill it in, while in the final article, use mid-section hooks like "But what happens next? Let's uncover it..."
+
+- **Drafting the Content (Writing Skill)**  
+  Write freely without over-editing: Start with the introduction to hook readers, flesh out body paragraphs with evidence and storytelling, and draft a conclusion that ties everything together. Aim for a conversational tone to build rapport.  
+  *Zeigarnik Tip for Engagement*: Interrupt your own flow by pausing mid-draft after a pivotal point (e.g., right after revealing a surprising fact), then resume later—this leverages Zeigarnik for your creative momentum. In the article, embed "teaser sentences" like "This discovery changes everything... but we'll get to why in the next part."
+
+- **Incorporating Engagement Elements (Storytelling Skill)**  
+  Weave in narratives, analogies, questions, and visuals to make the article dynamic. Use active voice, vary sentence length, and include calls-to-action (e.g., "What do you think?"). Tailor to your audience's pain points or interests.  
+  *Zeigarnik Tip for Engagement*: Strategically withhold full resolutions—e.g., pose a problem in one paragraph and delay the solution until two sections later. This creates "cognitive itch" that keeps readers scrolling, as their brains crave closure.
+
+- **Editing and Revising (Refinement Skill)**  
+  Review for clarity, coherence, and conciseness: Cut redundancies, fix grammar, strengthen transitions, and ensure the article aligns with your thesis. Read aloud or use tools like Grammarly for objectivity; seek beta feedback if possible.  
+  *Zeigarnik Tip for Engagement*: During revisions, flag "engagement gaps" like unresolved threads (e.g., "Does this hook lead to a payoff?"), treating them as mini-tasks to complete. This prevents the article from feeling "done too soon," mirroring Zeigarnik's interruption benefit.
+
+- **Proofreading and Polishing (Finalization Skill)**  
+  Check for typos, formatting (e.g., bold key phrases, add images), and SEO elements (e.g., meta descriptions, keywords). Optimize for readability with short paragraphs and subheadings.  
+  *Zeigarnik Tip for Engagement*: Intentionally end the article with an open-ended question or call for reader input (e.g., "How will you apply this? Share below"), leaving a sense of continuation to encourage comments, shares, or follow-up reads.
+
+

@@ -16,9 +16,8 @@ from pydantic_ai.usage import RunUsage, UsageLimits
 
 from ask.core.cache import CacheASK
 from ask.core.context import example, load_string_json, schema
-from ask.core.tools import get_tool_by_name
 
-from .config import Config, LLMConfig, load_config, load_config_dict
+from .config import AgentType, Config, LLMConfig, load_config, load_config_dict
 from .mcp_client import create_mcp_servers
 from .memory import Memory, NoMemory, memory_factory
 from .model import create_model
@@ -44,9 +43,6 @@ class AgentStats:
             f"total: {self._usage.total_tokens}, tps: {(self._usage.total_tokens or 0) / self._duration:.2f}, "
             f"requests: {self._total_requests}, details: {self._usage.details}"
         )
-
-
-AgentType = BaseModel | str | int | float | list | dict
 
 
 class AgentASK[InputT: AgentType, OutputT: AgentType]:
@@ -170,15 +166,6 @@ class AgentASK[InputT: AgentType, OutputT: AgentType]:
         tools: list[Callable] | None = None,
     ) -> "AgentASK[InputT, OutputT]":
         """Create a PydanticAI Agent from a Config instance."""
-        if tools is not None and config.tools is not None:
-            raise ValueError("Cannot provide both tools and config.tools")
-
-        if config.tools is not None:
-            tools = [
-                get_tool_by_name(name, cfg)
-                for name, cfg in (config.tools or {}).items()
-            ]
-
         llm: Final[LLMConfig] = config.llm
         agent = Agent(
             name=config.agent.name,
