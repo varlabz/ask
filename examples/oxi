@@ -22,14 +22,8 @@ from ask.core.context import schema
 from ask.core.instrumentation import setup_instrumentation_config
 from ask.core.memory import Memory
 
-# llm = load_config(["~/.config/ask/llm.yaml"], type=LLMConfig, key="llm")
-# llm_agent = load_config(["~/.config/ask/llm.yaml"], type=LLMConfig, key="llm")
-# llm = load_config(["~/.config/ask/llm-ollama.yaml"], type=LLMConfig, key="llm")
-# llm_agent = load_config(["~/.config/ask/llm-ollama.yaml"], type=LLMConfig, key="llm")
-llm = load_config(["~/.config/ask/llm-llama-cpp.yaml"], type=LLMConfig, key="llm")
-llm_agent = load_config(["~/.config/ask/llm-llama-cpp.yaml"], type=LLMConfig, key="llm")
-# llm = load_config(["~/.config/ask/llm-lmstudio.yaml"], type=LLMConfig, key="llm")
-# llm_agent = load_config(["~/.config/ask/llm-lmstudio.yaml"], type=LLMConfig, key="llm")
+llm = load_config(["~/.config/ask/llm.yaml"], type=LLMConfig, key="llm")
+llm_agent = load_config(["~/.config/ask/llm.yaml"], type=LLMConfig, key="llm")
 # comment to disable trace. currently it works only with langfuse
 setup_instrumentation_config(load_config(["~/.config/ask/trace.yaml"], type=TraceConfig, key="trace"), )
 
