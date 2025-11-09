@@ -42,9 +42,9 @@ from ask.core.instrumentation import setup_instrumentation_config
 from ask.core.memory import NoMemory
 from ask.core.memory_history import History
 
-llm = load_config(["~/.config/ask/llm-ollama.yaml"], type=LLMConfig, key="llm")
+llm = load_config(["~/.config/ask/llm.yaml"], type=LLMConfig)
 # comment to disable trace. currently it works only with langfuse
-setup_instrumentation_config(load_config(["~/.config/ask/trace.yaml"], type=TraceConfig, key="trace"), )
+setup_instrumentation_config(load_config(["~/.config/ask/trace.yaml"], type=TraceConfig))
 
 history = History()
 

@@ -1,7 +1,8 @@
 import builtins
 import os
+from collections.abc import Sequence
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 import yaml
 from pydantic import (
@@ -219,15 +220,12 @@ def _resolve_api_key(v):
     return v
 
 
-def load_config[Type](
-    paths: list[str], type: type[Type] = Config, key: str | None = None
-) -> Type:
+def load_config[Type](paths: Sequence[str | None], type: type[Type] = Config) -> Type:
     """Merge multiple YAML config files into a `Config`. Later files override."""
     merged_raw: dict = {}
     for p in paths:
         if p is None:  # skip empty paths
             continue
-
         try:
             with open(os.path.expanduser(p)) as f:
                 raw = yaml.safe_load(f)
@@ -246,12 +244,19 @@ def load_config[Type](
         except Exception as e:
             raise RuntimeError(f"Error loading config file '{p}': {e}") from e
     try:
-        if key is not None:
-            if key not in merged_raw:
-                raise RuntimeError(f"Key '{key}' not found in config.")
-            return type(**merged_raw[key])
+        if type is Config:
+            return type(**merged_raw)
 
-        return type(**merged_raw)
+        # Find the field name in Config where the type matches
+        for field_name, field in Config.model_fields.items():
+            # Check if the annotation matches directly or is within a Union (e.g., EmbedderConfig | None)
+            if field.annotation == type or type in get_args(field.annotation):
+                key = field_name
+                if key not in merged_raw:
+                    raise RuntimeError(f"Key '{key}' not found in config.")
+                return type(**merged_raw[key])
+
+        raise RuntimeError(f"Type '{type}' not found in Config.")
     except ValidationError as e:
         raise RuntimeError(f"Config validation error: {e}") from e
 

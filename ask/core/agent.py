@@ -271,7 +271,7 @@ if __name__ == "__main__":
     from ask.core.instrumentation import setup_instrumentation_config
 
     setup_instrumentation_config(
-        load_config(["~/.config/ask/trace.yaml"], type=TraceConfig, key="trace"),
+        load_config(["~/.config/ask/trace.yaml"], type=TraceConfig),
     )
 
     llm = LLMConfig(
