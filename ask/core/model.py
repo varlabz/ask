@@ -48,11 +48,11 @@ def _model_settings(llm_config: LLMConfig) -> ModelSettings:
 
 
 def _create_google_model(model_name: str, llm_config: LLMConfig) -> Model:
-    from pydantic_ai.models.gemini import GeminiModel
-    from pydantic_ai.providers.google_gla import GoogleGLAProvider
+    from pydantic_ai.models.google import GoogleModel
+    from pydantic_ai.providers.google import GoogleProvider
 
-    provider = GoogleGLAProvider(api_key=llm_config.api_key)
-    return GeminiModel(
+    provider = GoogleProvider(api_key=llm_config.api_key or "")
+    return GoogleModel(
         model_name, provider=provider, settings=_model_settings(llm_config)
     )
 

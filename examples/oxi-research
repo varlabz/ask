@@ -1,0 +1,18 @@
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-run ./examples/oxi --skills
+
+1.  Given the user's query, generate a list of 3-5 distinct, 
+    precise search queries that would help gather comprehensive information on the topic. 
+    Consider different angles and aspects of the topic to ensure a thorough exploration.
+
+2.  Iterate on array of requests from step 1, use search tool to collect URLs of searched results.
+    Use search tool with categories web, videos, news, it, social media.
+    Collect unique URLs only.
+
+3.  For each URL from step 2 get the content.
+    Accumulate the content from all pages.
+    
+4.  Based on the gathered contexts and the original query, 
+    write a comprehensive, well-structured, and detailed report that addresses the user's query thoroughly. 
+    Include all relevant insights and conclusions without extraneous commentary. 
+
+5.  Create a full report of what queries were made, what URLs were fetched, how many pages were retrieved, and rejected, and the final short summary.

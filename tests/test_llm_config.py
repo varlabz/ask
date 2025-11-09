@@ -66,30 +66,30 @@ class TestCreateModelFromLLMConfig:
             LLMConfig(model="openai:gpt-4o", api_key=f"file:{fake_path}")
 
     def test_google_gemini_model(self, monkeypatch):
-        """Test GeminiModel creation with Google provider."""
+        """Test GoogleModel creation with Google provider."""
 
-        class DummyGeminiModel:
+        class DummyGoogleModel:
             def __init__(self, model_name, provider=None, settings=None):
                 self.model_name = model_name
                 self.provider = provider
                 self.settings = settings
 
-        class DummyGoogleGLAProvider:
+        class DummyGoogleProvider:
             def __init__(self, api_key=None):
                 self.api_key = api_key
 
-        monkeypatch.setattr("pydantic_ai.models.gemini.GeminiModel", DummyGeminiModel)
+        monkeypatch.setattr("pydantic_ai.models.google.GoogleModel", DummyGoogleModel)
         monkeypatch.setattr(
-            "pydantic_ai.providers.google_gla.GoogleGLAProvider", DummyGoogleGLAProvider
+            "pydantic_ai.providers.google.GoogleProvider", DummyGoogleProvider
         )
 
         llm_config = LLMConfig(
             model="google:gemini-2.5-pro", api_key="google-key", base_url=None
         )
         model = create_model(llm_config)
-        assert isinstance(model, DummyGeminiModel)
+        assert isinstance(model, DummyGoogleModel)
         assert model.model_name == "gemini-2.5-pro"
-        assert isinstance(model.provider, DummyGoogleGLAProvider)
+        assert isinstance(model.provider, DummyGoogleProvider)
         assert model.provider.api_key == "google-key"
 
     def test_invalid_google_model_format(self):

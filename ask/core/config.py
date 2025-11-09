@@ -23,6 +23,7 @@ class ProviderEnum(str, Enum):
     LMSTUDIO = "lmstudio"
     GOOGLE = "google"
     ANTHROPIC = "anthropic"
+    LLAMACPP = "llamacpp"
 
 
 class AgentConfig(BaseModel):
@@ -208,7 +209,7 @@ def _resolve_api_key(v):
         return env_val
     elif isinstance(v, str) and v.startswith("file:"):
         file_path = v[5:]
-        # if file start with a tilde, expand it
+        # if file starts with a tilde, expand it
         file_path = os.path.expanduser(file_path)
         try:
             with open(file_path) as f:
@@ -247,7 +248,7 @@ def load_config[Type](
     try:
         if key is not None:
             if key not in merged_raw:
-                raise RuntimeError(f"Key '{key}' not found in merged config.")
+                raise RuntimeError(f"Key '{key}' not found in config.")
             return type(**merged_raw[key])
 
         return type(**merged_raw)

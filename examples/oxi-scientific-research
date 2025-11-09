@@ -1,0 +1,74 @@
+#!/usr/bin/env -S uvx --from git+https://github.com/varlabz/ask ask-run ./examples/oxi --skills
+
+### 1. **Identify the Research Question or Problem**
+   - **Description**: Start by defining a clear, focused question or gap in knowledge. This could stem from observations, real-world issues, or prior studies. Ensure it's feasible, original, and testable.
+   - **Key Skills**:
+     - Critical thinking and curiosity to spot gaps.
+     - Problem-solving to refine vague ideas into specific questions (e.g., using SMART criteria: Specific, Measurable, Achievable, Relevant, Time-bound).
+     - Basic domain knowledge to assess relevance.
+   - **Tips**: Brainstorm ideas, discuss with peers, or review news/current events for inspiration.
+
+### 2. **Conduct a Literature Review**
+   - **Description**: Search and synthesize existing research to understand the current state of knowledge, avoid duplication, and build on prior work. Use databases like Google Scholar, PubMed, or JSTOR.
+   - **Key Skills**:
+     - Information literacy and search strategies (e.g., Boolean operators, keywords).
+     - Reading comprehension and note-taking to summarize key findings.
+     - Citation management (tools like Zotero or EndNote) to track sources ethically.
+   - **Tips**: Aim for 20–50 sources initially; identify trends, contradictions, and methodologies used.
+
+### 3. **Formulate a Hypothesis or Research Objectives**
+   - **Description**: Based on the literature, propose a testable hypothesis (e.g., "If X, then Y") or clear objectives. This guides your study design.
+   - **Key Skills**:
+     - Logical reasoning and deductive thinking to predict outcomes.
+     - Writing precision to articulate falsifiable statements.
+     - Ethical awareness to ensure the hypothesis doesn't promote harm or bias.
+   - **Tips**: Make it specific and grounded in evidence; include null hypotheses for statistical rigor.
+
+### 4. **Design the Methodology**
+   - **Description**: Plan how to test your hypothesis—choose qualitative, quantitative, or mixed methods; select tools, samples, and controls. Consider variables, sampling techniques, and potential biases.
+   - **Key Skills**:
+     - Experimental design and statistical planning (e.g., understanding randomization, sample size calculation).
+     - Technical proficiency with tools (e.g., lab equipment, surveys, software like SPSS or R).
+     - Risk assessment to anticipate challenges and ethical issues (e.g., IRB approval for human subjects).
+   - **Tips**: Pilot test your methods; document everything in a protocol for reproducibility.
+
+### 5. **Collect Data**
+   - **Description**: Gather empirical evidence through experiments, surveys, observations, or simulations. Ensure data quality and integrity.
+   - **Key Skills**:
+     - Attention to detail and organizational skills for accurate recording.
+     - Adaptability to handle unexpected issues (e.g., equipment failure).
+     - Data management (e.g., using spreadsheets or databases to store raw data securely).
+   - **Tips**: Follow safety protocols; maintain a research log for timestamps and notes.
+
+### 6. **Analyze Data**
+   - **Description**: Process and interpret the data using appropriate techniques to test your hypothesis. Look for patterns, correlations, or anomalies.
+   - **Key Skills**:
+     - Statistical analysis (e.g., t-tests, regression; proficiency in software like Python, MATLAB, or Excel).
+     - Data visualization (e.g., creating graphs with tools like Tableau or ggplot).
+     - Critical interpretation to distinguish signal from noise and address limitations.
+   - **Tips**: Use descriptive and inferential stats; validate results with sensitivity analyses.
+
+### 7. **Interpret Results and Draw Conclusions**
+   - **Description**: Relate findings back to your hypothesis and literature. Discuss implications, limitations, and future directions. Reject, support, or refine your original ideas.
+   - **Key Skills**:
+     - Analytical synthesis to connect dots across data and theory.
+     - Objectivity to avoid confirmation bias.
+     - Communication to explain complex results simply.
+   - **Tips**: Consider alternative explanations; emphasize what the results mean in broader contexts.
+
+### 8. **Write and Disseminate the Research**
+   - **Description**: Compile findings into a report, paper, or presentation. Submit for peer review, publish in journals, or share via conferences/preprints (e.g., arXiv).
+   - **Key Skills**:
+     - Scientific writing and editing (structure: abstract, intro, methods, results, discussion).
+     - Presentation skills for visuals and storytelling.
+     - Collaboration and networking to seek feedback.
+   - **Tips**: Follow journal guidelines (e.g., APA, MLA); cite all sources to avoid plagiarism.
+
+### 9. **Peer Review, Revision, and Iteration**
+   - **Description**: Respond to feedback, revise, and potentially replicate or extend the study. Science is iterative—use results to inform new questions.
+   - **Key Skills**:
+     - Resilience and openness to criticism.
+     - Project management to track revisions and timelines.
+     - Lifelong learning to stay updated with evolving methods.
+   - **Tips**: Engage in open science practices like data sharing (e.g., via Zenodo) for transparency.
+
